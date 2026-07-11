@@ -1,57 +1,6 @@
 {
-  "manifest_version": "release-integrity-v1",
-  "static": {
-    "train": {
-      "path": "artifacts/bts-static-seed/train.jsonl",
-      "rows": 356,
-      "bytes": 1144863,
-      "sha256": "9b5249ed7b89331b50bd26376f3f79a99e3fd326617f5da8851a278dd22134d7"
-    },
-    "dev": {
-      "path": "artifacts/bts-static-seed/dev.jsonl",
-      "rows": 87,
-      "bytes": 273433,
-      "sha256": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d"
-    },
-    "test": {
-      "path": "artifacts/bts-static-seed/test.jsonl",
-      "rows": 89,
-      "bytes": 271563,
-      "sha256": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
-    }
-  },
-  "final": {
-    "train": {
-      "path": "artifacts/bts-canonical-final/train.jsonl",
-      "rows": 356,
-      "bytes": 26428307,
-      "sha256": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43"
-    },
-    "dev": {
-      "path": "artifacts/bts-canonical-final/dev.jsonl",
-      "rows": 87,
-      "bytes": 6412885,
-      "sha256": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04"
-    },
-    "test": {
-      "path": "artifacts/bts-canonical-final/test.jsonl",
-      "rows": 89,
-      "bytes": 6544531,
-      "sha256": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
-    }
-  },
+  "manifest_version": "paper-submission-exact-release-v2",
   "contract_preflight_issue_count": 0,
-  "archive": {
-    "path": "release/bts-canonical-final.zip",
-    "bytes": 2497869,
-    "sha256": "106d284876e6c4ef8f8506a85d522bb28438959965987afeb89d2670730b8b8e"
-  },
-  "human_validation_archive": {
-    "path": "release/human-validation-packet.zip",
-    "bytes": 13552,
-    "sha256": "6f02dafe3ebc84c5a636f7b50f29651f10e842d35d52bf1a0322236669694232",
-    "completed_results_included": false
-  },
   "submitted_dataset_snapshot": {
     "path": "release/submitted-dataset-bundle.zip",
     "bytes": 4540069,
@@ -178,5 +127,11 @@
       "bytes": 508064,
       "sha256": "48213c639ca6a17c63cd15dce1266ca5180218bb6a39a3d2375e8a2baae857d1"
     }
+  },
+  "human_readable_replay_trace": {
+    "path": "examples/REPLAY_TRACE.md",
+    "scenario_id": "test_timestamp_value_lookup_00051",
+    "bytes": 4980,
+    "sha256": "41535180bc8e296155042c346e26bdee0fcf1896a69a0a8584dbbd81c96fbe52"
   }
 }

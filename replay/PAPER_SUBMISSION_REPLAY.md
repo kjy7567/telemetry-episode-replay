@@ -2,7 +2,17 @@
 
 This report compares the immutable benchmark supplied with the paper against fresh deterministic reconstructions. Model APIs are not called.
 
-## Result
+## Plain-Language Result
+
+The reconstruction starts from raw timestamp/value archives and the retained semantic mapping, rebuilds the read-only telemetry database, reruns every family builder, and reconstructs every submitted interaction contract.
+
+- All 532 static tasks were regenerated from telemetry-backed candidates.
+- All 532 final episodes matched the submitted rows as complete JSON objects in Replay 1 and Replay 2.
+- The equality check covers user turns, clarification answers, goal revisions, tool calls, phase golds, final actions, evidence, verifiers, provenance, and serialization.
+- Both replay runs completed with zero coded preflight issues.
+- A full raw-to-static-to-agentic example is shown in [`examples/REPLAY_TRACE.md`](../examples/REPLAY_TRACE.md).
+
+## Integrity Identifiers
 
 - Overall replay passed: `true`
 - Construction runs: `2`
@@ -60,19 +70,19 @@ The two DuckDB container files are not byte-identical because their physical sto
 
 ## Family-Wise Submitted vs Replay
 
-`Exact rows` counts complete JSON-object equality, including user turns, calls, phase targets, evidence, verifiers, provenance, and metadata.
+The final action below is shown directly so that replay is visible without interpreting a hash. `Exact rows` counts complete JSON-object equality, including user turns, calls, phase targets, evidence, verifiers, provenance, and metadata.
 
-| Family | Submitted train/dev/test | Submitted rows | Replay 1 exact | Replay 2 exact |
-|---|---:|---:|---:|---:|
-| Point disambiguation | 40/10/10 | 60 | 60/60 | 60/60 |
-| Day mean lookup | 40/10/10 | 60 | 60/60 | 60/60 |
-| Relative 24h mean lookup | 40/10/10 | 60 | 60/60 | 60/60 |
-| Window mean lookup | 36/7/10 | 53 | 53/53 | 53/53 |
-| Window pairwise compare | 40/10/10 | 60 | 60/60 | 60/60 |
-| Window rank | 40/10/10 | 60 | 60/60 | 60/60 |
-| Timestamp value lookup | 40/10/10 | 60 | 60/60 | 60/60 |
-| Timestamp nearest lookup | 40/10/10 | 60 | 60/60 | 60/60 |
-| Quality gate | 40/10/9 | 59 | 59/59 | 59/59 |
+| Family | Rows train/dev/test | Representative submitted final | Replay 1 final | Replay 2 final | Exact rows in both replays |
+|---|---:|---|---|---|---:|
+| Point disambiguation | 40/10/10 | `{"commitment_action": "abstain", "reason": "long_gap"}` | `{"commitment_action": "abstain", "reason": "long_gap"}` | `{"commitment_action": "abstain", "reason": "long_gap"}` | 60/60; 60/60 |
+| Day mean lookup | 40/10/10 | `{"commitment_action": "abstain", "reason": "low_coverage"}` | `{"commitment_action": "abstain", "reason": "low_coverage"}` | `{"commitment_action": "abstain", "reason": "low_coverage"}` | 60/60; 60/60 |
+| Relative 24h mean lookup | 40/10/10 | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | 60/60; 60/60 |
+| Window mean lookup | 36/7/10 | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | 53/53; 53/53 |
+| Window pairwise compare | 40/10/10 | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | 60/60; 60/60 |
+| Window rank | 40/10/10 | `{"commitment_action": "answer", "reason": "healthy_quality"}` | `{"commitment_action": "answer", "reason": "healthy_quality"}` | `{"commitment_action": "answer", "reason": "healthy_quality"}` | 60/60; 60/60 |
+| Timestamp value lookup | 40/10/10 | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}` | 60/60; 60/60 |
+| Timestamp nearest lookup | 40/10/10 | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | 60/60; 60/60 |
+| Quality gate | 40/10/9 | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | `{"commitment_action": "abstain", "reason": "marginal_quality"}` | 59/59; 59/59 |
 
 ## Frozen Controller Audit
 
@@ -95,14 +105,15 @@ This confirms that the predefined exclusion rule remains satisfied. It is not re
 ### Point disambiguation
 
 - Scenario: `test_point_disambiguation_00003`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "long_gap"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "long_gap"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "long_gap"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> resolve_point -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
 - Retained static identity: `251848beaae3136cff5fe2460d3221bca071fe4883ee138eef5db56f080feb5c`
-- Tool path: `resolve_point -> resolve_point -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "abstain", "reason": "long_gap"}`
-- Submitted row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
-- Replay 1 row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
-- Replay 2 row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -111,14 +122,15 @@ Initial request:
 ### Day mean lookup
 
 - Scenario: `test_day_mean_lookup_00003`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "low_coverage"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "low_coverage"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "low_coverage"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
 - Retained static identity: `dbef22b11e52b6c13718c0360e9e96f02e3b25dae061bf3a2e868abf29a9838c`
-- Tool path: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "abstain", "reason": "low_coverage"}`
-- Submitted row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
-- Replay 1 row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
-- Replay 2 row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -127,14 +139,15 @@ Initial request:
 ### Relative 24h mean lookup
 
 - Scenario: `test_relative_24h_mean_lookup_00003`
+- Submitted final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Replay 1 final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Replay 2 final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
 - Retained static identity: `0469215db1dc7a7788bc5f83a974a569a506bc02da0a5821bd229048d8a664f5`
-- Tool path: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
-- Submitted row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
-- Replay 1 row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
-- Replay 2 row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -143,14 +156,15 @@ Initial request:
 ### Window mean lookup
 
 - Scenario: `test_window_mean_lookup_00003`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
 - Retained static identity: `fc1cf101e10a9aa6b54d7fb98f9486d14995998d2f8e59e670a8963ec5baa3a2`
-- Tool path: `resolve_point -> aggregate_window -> aggregate_window -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
-- Submitted row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
-- Replay 1 row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
-- Replay 2 row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -159,14 +173,15 @@ Initial request:
 ### Window pairwise compare
 
 - Scenario: `test_window_pairwise_compare_00003`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> resolve_point -> compare_window -> compare_window -> lookup_observation -> lookup_observation -> inspect_quality_window -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
 - Retained static identity: `e8f9cfe64c582a6b8e80000c9fd0a9fca5c18e9e4c5ff6ae9b9ee9d9c9835918`
-- Tool path: `resolve_point -> resolve_point -> compare_window -> compare_window -> lookup_observation -> lookup_observation -> inspect_quality_window -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
-- Submitted row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
-- Replay 1 row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
-- Replay 2 row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -175,14 +190,15 @@ Initial request:
 ### Window rank
 
 - Scenario: `test_window_rank_00003`
+- Submitted final gold: `{"commitment_action": "answer", "reason": "healthy_quality"}`
+- Replay 1 final gold: `{"commitment_action": "answer", "reason": "healthy_quality"}`
+- Replay 2 final gold: `{"commitment_action": "answer", "reason": "healthy_quality"}`
+- Gold tool path in submitted and replayed rows: `list_points -> rank_window -> rank_window -> inspect_quality_window`
+- Phase gold trace identical: `yes` (5 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
 - Retained static identity: `4aafec087baec84f0753f7bf6028739c704c12ef24cab5446e03dbf47d7f0d56`
-- Tool path: `list_points -> rank_window -> rank_window -> inspect_quality_window`
-- Phase count: `5`
-- Final gold: `{"commitment_action": "answer", "reason": "healthy_quality"}`
-- Submitted row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
-- Replay 1 row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
-- Replay 2 row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -191,14 +207,15 @@ Initial request:
 ### Timestamp value lookup
 
 - Scenario: `test_timestamp_value_lookup_00051`
+- Submitted final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Replay 1 final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Replay 2 final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> lookup_observation -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (4 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
 - Retained static identity: `ecede82e935558e3ba0e0ee7cf723df3a0575dd6602803864ac78915aea62f6d`
-- Tool path: `resolve_point -> lookup_observation -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `4`
-- Final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
-- Submitted row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
-- Replay 1 row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
-- Replay 2 row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -207,14 +224,15 @@ Initial request:
 ### Timestamp nearest lookup
 
 - Scenario: `test_timestamp_nearest_lookup_00051`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> lookup_observation -> lookup_observation -> inspect_quality_window`
+- Phase gold trace identical: `yes` (3 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
 - Retained static identity: `eb9abbd778d2d4a7a3b8ef2ff265f0d4ec22963c116e2fc64484b7892f0c7758`
-- Tool path: `resolve_point -> lookup_observation -> lookup_observation -> inspect_quality_window`
-- Phase count: `3`
-- Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
-- Submitted row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
-- Replay 1 row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
-- Replay 2 row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
-- All available digests equal: `yes`
 
 Initial request:
 
@@ -223,14 +241,15 @@ Initial request:
 ### Quality gate
 
 - Scenario: `test_quality_gate_00051`
+- Submitted final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 1 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Replay 2 final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
+- Gold tool path in submitted and replayed rows: `resolve_point -> inspect_quality_window -> inspect_quality_window`
+- Phase gold trace identical: `yes` (4 phases)
+- Gold tool trace identical: `yes`
+- Complete submitted/replay row equality: `yes`
+- Secondary integrity digest shared by all copies: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
 - Retained static identity: `1b8da74bbe9b2b792faf4afa8a3b37f52dd79e760209cbaf3b6a2eb5ee2b990e`
-- Tool path: `resolve_point -> inspect_quality_window -> inspect_quality_window`
-- Phase count: `4`
-- Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
-- Submitted row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
-- Replay 1 row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
-- Replay 2 row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
-- All available digests equal: `yes`
 
 Initial request:
 

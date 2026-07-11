@@ -1,36 +1,102 @@
-# Telemetry-to-Agent Episode Replay Artifact
+# Telemetry-to-Agent Episode Replay
 
-This repository reconstructs the 532 BTS benchmark episodes used in the paper submission from checksummed building telemetry and metadata. It contains the construction code, immutable retained-row contract, submitted supplementary bundles, fixed model traces, deterministic audits, and a single raw-to-final replay entry point.
+This repository reconstructs the exact 532 BTS agent episodes used in the paper submission. It starts from timestamped building telemetry, builds a read-only analytical database, compiles executable static tasks, and expands them into multi-turn agent interactions with phase-level gold answers, evidence, and deterministic scoring contracts.
+
+No LLM is used to choose telemetry values, tool results, gold answers, clarification replies, or evaluator targets.
 
 ```text
-three BTS raw ZIPs + retained normalized metadata contract
-  -> read-only telemetry tool store and aggregates
-  -> submitted static candidate identities (356/87/89)
-  -> deterministic interaction contracts
-  -> operator-facing multi-turn episodes
-  -> phase golds, typed repairs, and verifiers
-  -> exact paper-submission JSONL files
+raw timestamp/value streams + building metadata
+  -> read-only DuckDB tool store and aggregate tables
+  -> executable static tasks with tool-derived gold answers
+  -> clarification, revision, quality, and evidence obligations
+  -> phase-structured agent episodes
+  -> 356 train + 87 dev + 89 test = 532 submitted rows
 ```
 
-No LLM is used to construct telemetry values, tool results, gold targets, simulator replies, or scores.
+## See One Episode Replayed
 
-## Verified Result
+The example below is generated from the submitted files by `scripts/trace_scenario.py`. The complete trace is in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
 
-The exact submission replay currently verifies all 532 rows and zero contract-preflight issues.
+### 1. Raw telemetry
 
-| Split | Static rows | Static SHA-256 | Final SHA-256 |
-|---|---:|---|---|
-| Train | 356 | `65f0384bf97318b628ff9431c8bdbd36a2347fcb0ee4a521169fbf3a22b7d825` | `9e5afdf45fafcd28c408d131216950800717a891b2e530eae15c645db7720a65` |
-| Dev | 87 | `294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d` | `4082a8625ede78bb7528bf544fc8e896bff9dfa929d5f999dad5b64a557339d6` |
-| Test | 89 | `1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e` | `a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867` |
+```text
+archive:      Site_Caa.zip
+member:       Site_Caa/2254.pickle
+stream:       c24589e8_a1f3_4529_b409_5a56761c9d20
+point:        Air_Differential_Pressure_Sensor on BTS_C Zone 005
+observations: 194,563
 
-These are raw-file hashes, not only semantic hashes. The replay also records sorted-key canonical JSON hashes and exact object equality.
+2022-02-03T07:03:23.640000+00:00 -> 12.9457
+```
 
-The checked evidence includes two independent raw telemetry preprocessing executions. Their 11 sorted logical tool-store exports are byte-identical, and the two raw stores support three exact static-to-final reconstructions in total. See [PAPER_SUBMISSION_REPLAY.md](replay/PAPER_SUBMISSION_REPLAY.md), [paper_submission_replay_report.json](replay/paper_submission_replay_report.json), and [independent_raw_replays_report.json](replay/independent_raw_replays_report.json).
+### 2. Static executable task
 
-## Run From Raw Telemetry
+```text
+At 07:03 UTC on February 3, 2022, what reading did the air differential
+pressure reading attached to Zone 005 report in BTS_C?
+```
 
-Install Python 3.11 dependencies:
+Static gold:
+
+```json
+{
+  "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+  "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+  "value": 12.9457,
+  "exact_match_found": true
+}
+```
+
+### 3. Agentic interaction
+
+```text
+USER: Operator handoff: "What was the air differential pressure reading on
+      Zone 005 in BTS_C?" Ask for any missing site or time detail.
+
+CLARIFICATION: I mean 07:03:23.64 UTC on February 3, 2022.
+
+REVISION 1: If I only know it was around 07:03 UTC, give me the nearest reading.
+REVISION 2: For that week, would you answer or abstain based on data quality?
+REVISION 3: Should I report the public-time reading or abstain?
+EVIDENCE:   Which stream or point did you base that on?
+```
+
+### 4. Gold tool and phase trace
+
+```text
+C1 resolve_point(BTS_C, Air_Differential_Pressure_Sensor, BTS_C Zone 005)
+C2 lookup_observation(07:03:23.640, exact)
+C3 lookup_observation(07:03:00, exact)
+C4 lookup_observation(07:03:00, nearest)
+C5 inspect_quality_window(2022-01-31, 2022-02-07, week)
+
+P1 exact reading:      12.9457 at 07:03:23.640
+P2 nearest reading:    12.9457, offset 23.64 seconds
+P3 quality decision:   answer; coverage 1.0, gap ratio 1.0563
+P4 reporting decision: answer; nearest_but_acceptable
+
+FINAL ACTION: {"commitment_action": "answer", "reason": "nearest_but_acceptable"}
+EVIDENCE:     c24589e8_a1f3_4529_b409_5a56761c9d20
+```
+
+After reconstruction, the same command compares every field in the submitted and replayed rows and prints:
+
+```text
+8. REPLAY CHECK
+   exact match: YES
+```
+
+This is the replayability claim: the pipeline regenerates the task wording, tool plan, interaction turns, phase golds, final action, evidence, verifier fields, and provenance. SHA-256 values are retained only as compact integrity checks.
+
+## Quick Start
+
+### Requirements
+
+- Python 3.11
+- approximately 25 GB of free disk space
+- the three BTS raw ZIP archives, approximately 19 GB compressed
+
+Install the pinned environment:
 
 ```bash
 python -m venv .venv
@@ -39,114 +105,416 @@ pip install -r requirements.lock
 pip install -e . --no-deps
 ```
 
-Download and checksum the upstream archives:
+### Use the released rows without rebuilding
+
+The submitted bundle contains the 532 BTS rows, the 204-row XAI4HEAT portability artifact, retained model traces, and runner snapshots:
+
+```bash
+unzip release/submitted-dataset-bundle.zip \
+  -d ./data/local-build/released
+```
+
+Load one split:
+
+```python
+import json
+from pathlib import Path
+
+path = Path(
+    "data/local-build/released/"
+    "dataset_bundle/bts_agentbench_532/test.jsonl"
+)
+rows = [json.loads(line) for line in path.read_text().splitlines() if line]
+print(len(rows))              # 89
+print(rows[0]["scenario_id"])
+print(rows[0]["phase_gold_final_answers"])
+```
+
+### Rebuild from raw telemetry
+
+Download the three attributed raw archives and verify them:
 
 ```bash
 ./scripts/download_raw_archives.sh ./data/local-build/raw
 ```
 
-Build a fresh raw tool store, then run two clean episode reconstructions:
+Run the complete paper reconstruction:
 
 ```bash
 python scripts/replay_paper_submission.py \
   --raw-dir ./data/local-build/raw \
-  --work-dir ./data/local-build/paper-submission-replay \
-  --runs 2
+  --work-dir ./data/local-build/paper-replay \
+  --runs 2 \
+  --controller-audit
 ```
 
-The command validates the submitted normalized metadata contract, rebuilds the tool store, regenerates static candidates, reconstructs every intermediate episode stage twice, runs contract preflight, and compares both outputs byte for byte with the submitted benchmark. It exits nonzero on any mismatch.
+The command performs the following operations without reading submitted output rows during construction:
 
-To rerun the construction-time controller audit once on the first exact reconstruction, add `--controller-audit`.
+1. verifies the raw archives, normalized metadata contract, and retained-row contract;
+2. decodes and indexes every usable telemetry stream;
+3. writes a fresh read-only DuckDB tool store and aggregate tables;
+4. reruns all nine static-task builders;
+5. finds each of the 532 retained candidate identities exactly once;
+6. creates clarification, revision, quality, commitment, and evidence turns;
+7. executes read-only tools to derive every phase gold answer;
+8. applies typed contract repairs and runs preflight validation;
+9. compares the reconstructed static and final rows with the submitted release;
+10. repeats the static-to-final construction in a second clean run directory;
+11. optionally reruns the frozen construction-exclusion controller.
 
-## Fast Replay
+## Output Layout
 
-With an existing tool store:
+```text
+data/local-build/paper-replay/
+  tool-store/
+    tool_store.duckdb
+    point_inventory.parquet
+    tool_ready_points.parquet
+    raw_stream_index.parquet
+    quality_metrics.parquet
+    daily_aggregates.parquet
+    weekly_aggregates.parquet
+    monthly_aggregates.parquet
+    calendar_profiles.parquet
+    stream_previews.parquet
+  run_1/
+    static/
+    e2e/
+    agentic/
+    canonical-seed/
+    canonical-seed-core/
+    final/
+  run_2/
+    static/
+    e2e/
+    agentic/
+    canonical-seed/
+    canonical-seed-core/
+    final/
+  submission_replay_report.json
+```
+
+The final benchmark used by the runners is:
+
+```text
+data/local-build/paper-replay/run_1/final/
+```
+
+## How Raw BTS Becomes a Database
+
+The raw input contains one timestamp/value history per stream UUID. The retained metadata contract maps each UUID to a site, Brick point class, equipment, and location. `bts_agentbench.preprocess.preprocess_raw_archives` joins those two inputs and writes queryable tables.
+
+| Table | Rows | Purpose |
+|---|---:|---|
+| `point_inventory` | 19,665 | All metadata streams and semantic labels |
+| `tool_ready_points` | 14,422 | Metadata streams with usable raw telemetry |
+| `raw_stream_index` | 14,422 | ZIP member, time range, and observation count |
+| `quality_metrics` | 14,422 | Coverage, sampling interval, gaps, duplicates, NaNs |
+| `daily_aggregates` | 16,199,756 | Per-stream daily statistics |
+| `weekly_aggregates` | 2,354,644 | Monday-bounded weekly statistics |
+| `monthly_aggregates` | 548,797 | Calendar-month statistics |
+| `calendar_profiles` | 2,419,416 | Hour-of-week profiles |
+| `stream_previews` | 14,422 | Small deterministic stream previews |
+| `entities` | 22,997 | Normalized Brick entities |
+| `relations` | 26,749 | Normalized semantic relationships |
+
+The runtime opens `tool_store.duckdb` read-only and exposes nine tools: point resolution, point listing, exact/nearest observation lookup, window aggregation, pairwise comparison, ranking, stream quality, and window-bounded quality.
+
+No missing observation is synthesized. Exact lookup requires timestamp equality. Nearest lookup minimizes absolute time distance and reports the selected timestamp and offset. Windows are inclusive at the start and exclusive at the end.
+
+Inspect an aggregate table directly with DuckDB:
+
+```python
+import duckdb
+
+db = "data/local-build/paper-replay/tool-store/tool_store.duckdb"
+con = duckdb.connect(db, read_only=True)
+rows = con.execute(
+    """
+    SELECT stream_id, window_start, mean_value
+    FROM daily_aggregates
+    WHERE site_id = 'BTS_C'
+    ORDER BY stream_id, window_start
+    LIMIT 5
+    """
+).fetchall()
+print(rows)
+con.close()
+```
+
+Use the same read-only runtime used by task construction and agent evaluation:
+
+```python
+from bts_agentbench.runtime import ToolStoreRuntime
+
+runtime = ToolStoreRuntime(
+    "data/local-build/paper-replay/tool-store/tool_store.duckdb"
+)
+point = runtime.execute_tool(
+    "resolve_point",
+    {
+        "site_id": "BTS_C",
+        "point_class": "Air_Differential_Pressure_Sensor",
+        "equipment_label": "BTS_C Zone 005",
+    },
+)
+reading = runtime.execute_tool(
+    "lookup_observation",
+    {
+        "stream_id": point["stream_id"],
+        "timestamp": "2022-02-03T07:03:23.640000+00:00",
+        "mode": "exact",
+    },
+)
+print(reading)
+runtime.close()
+```
+
+That lookup returns the timestamp and value used in the static and phase gold shown above.
+
+## Run Each Construction Stage Manually
+
+The one-command replay is recommended. These commands expose the boundary between stages for auditing or adaptation.
+
+### Stage 1: raw telemetry to tool store
+
+Exact paper replay uses the checked normalized metadata under `data/source/bts-processed-catalog/`:
 
 ```bash
-python scripts/replay_paper_submission.py \
-  --tool-store-db /absolute/path/to/tool_store.duckdb \
-  --work-dir ./data/local-build/paper-submission-replay-fast \
-  --runs 2
+python scripts/preprocess_tool_store.py \
+  --raw-dir ./data/local-build/raw \
+  --processed-dir ./data/source/bts-processed-catalog \
+  --out-dir ./data/local-build/manual/tool-store
 ```
 
-This still regenerates and verifies the submitted static and final splits. It skips only retained-catalog verification and raw telemetry preprocessing by accepting an existing tool store.
+For a new metadata corpus, normalize CSV and Brick TTL inputs first:
 
-## Construction Details
+```bash
+python scripts/build_catalog.py \
+  --meta-dir ./path/to/metadata \
+  --out-dir ./data/local-build/manual/processed-catalog
+```
 
-[CONSTRUCTION_WALKTHROUGH.md](CONSTRUCTION_WALKTHROUGH.md) follows one real test row from `Site_Caa/2254.pickle` and observation `2022-02-03T07:03:23.640Z = 12.9457` through:
+The maintained metadata compiler sorts files, RDF triples, entities, relations, and candidate targets. The exact paper replay does not replace the submitted normalized mapping because historical unordered RDF traversal cannot reproduce every old first-target choice.
 
-1. metadata and stream resolution;
-2. raw quality and aggregate computation;
-3. static family selection and gold generation;
-4. clarification and operator-surface compilation;
-5. phase-level exact/nearest/quality/commitment targets;
-6. typed repair, preflight, and exact replay checks.
+### Stage 2: tool store to 532 static tasks
 
-[REPRODUCIBILITY.md](REPRODUCIBILITY.md) lists every entry point, input, output, and audit boundary. [DATA_SOURCES.md](DATA_SOURCES.md) records upstream attribution, sizes, and checksums.
+```bash
+python scripts/generate_scenario_benchmark.py \
+  --tool-store-db ./data/local-build/manual/tool-store/tool_store.duckdb \
+  --raw-dir ./data/local-build/raw \
+  --out-dir ./data/local-build/manual/static \
+  --heldout-site-id BTS_C \
+  --selection-contract ./provenance/submission_static_selection.jsonl
+```
 
-[PORTABILITY_XAI4HEAT.md](PORTABILITY_XAI4HEAT.md) separates the reusable telemetry contract from the XAI4HEAT-specific seven-signal adapter and states the five-family portability boundary.
+Nine family builders query the tool store for eligible points, timestamps, windows, pairs, or candidate groups. Each candidate is materialized as an executable task containing:
 
-## Immutable Selection Contract
+- a user query;
+- canonical and acceptable read-only tool paths;
+- a tool-derived gold answer;
+- required evidence streams;
+- answer, tool-process, evidence, and protocol checks;
+- selection and difficulty metadata.
 
-`provenance/submission_static_selection.jsonl` freezes the candidate identities retained in the paper. It does not contain final episodes or model outputs. During replay, each family builder recomputes eligible candidates from the fresh tool store and fails unless each frozen identity matches exactly once.
+The selection contract does not contain final conversations or model responses. It identifies the fixed candidates retained in the paper release. Replay fails if a retained identity is missing or matches more than one regenerated candidate.
 
-This contract is necessary because the paper evaluates one fixed sample. It also prevents later SQL ordering maintenance from silently replacing training rows while claiming to reproduce the submitted benchmark.
+### Stage 3: static tasks to agent episodes
 
-## Artifact Map
+```bash
+python scripts/build_bts_canonical_final.py \
+  --static-dir ./data/local-build/manual/static \
+  --e2e-out-dir ./data/local-build/manual/e2e \
+  --agentic-out-dir ./data/local-build/manual/agentic \
+  --canonical-seed-out-dir ./data/local-build/manual/canonical-seed \
+  --canonical-seed-core-out-dir ./data/local-build/manual/canonical-seed-core \
+  --final-out-dir ./data/local-build/manual/final \
+  --tool-store-db ./data/local-build/manual/tool-store/tool_store.duckdb \
+  --corpus-name bts \
+  --submission-compatible \
+  --skip-controller-audit
+```
+
+This stage deterministically:
+
+1. masks a recoverable site or time slot when clarification is required;
+2. derives the simulator reply from the static task;
+3. renders the initial operator request;
+4. adds family-specific goal revisions and evidence follow-ups;
+5. executes the read-only telemetry tools for each phase;
+6. attaches phase gold answers and the final reporting action;
+7. aligns streams, windows, fallback policy, quality decisions, and evidence through typed repairs;
+8. records every transformation in `generation_history`;
+9. runs the final contract preflight.
+
+## Inspect Any Scenario
+
+Show a submitted scenario without rebuilding the dataset:
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051
+```
+
+Compare it with a reconstructed final directory:
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+  --replay-dir ./data/local-build/paper-replay/run_1/final
+```
+
+Export the same trace as Markdown or JSON:
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+  --replay-dir ./data/local-build/paper-replay/run_1/final \
+  --format markdown \
+  --output ./trace.md
+
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+  --format json \
+  --output ./trace.json
+```
+
+Representative submitted IDs for all nine families:
+
+| Family | Scenario ID |
+|---|---|
+| Point disambiguation | `test_point_disambiguation_00003` |
+| Day mean lookup | `test_day_mean_lookup_00003` |
+| Relative 24-hour mean lookup | `test_relative_24h_mean_lookup_00003` |
+| Window mean lookup | `test_window_mean_lookup_00003` |
+| Window pairwise comparison | `test_window_pairwise_compare_00003` |
+| Window rank | `test_window_rank_00003` |
+| Timestamp value lookup | `test_timestamp_value_lookup_00051` |
+| Timestamp nearest lookup | `test_timestamp_nearest_lookup_00051` |
+| Quality gate | `test_quality_gate_00051` |
+
+## Arguments and What They Change
+
+### Exact replay arguments
+
+| Argument | Meaning | Safe to change for paper replay? |
+|---|---|:---:|
+| `--raw-dir` | Location of the three raw BTS ZIP files | Yes |
+| `--work-dir` | New output directory | Yes |
+| `--runs` | Number of clean static-to-final repetitions | Yes |
+| `--controller-audit` | Also rerun the frozen exclusion controller | Yes |
+| `--tool-store-db` | Use an existing tool store instead of rebuilding raw telemetry | Yes, but skips raw preprocessing |
+| `--processed-catalog-dir` | Normalized semantic mapping | No; defines the release input |
+| `--selection-contract` | Which 532 candidate identities and splits are retained | No; defines the release sample |
+| `--static-reference` | Expected submitted static files | No; verifier input |
+| `--submitted-dataset-bundle` | Expected submitted final files | No; verifier input |
+| `--submitted-source-bundle` | Submitted source snapshot | No; integrity input |
+
+The replay command requires either `--raw-dir` or `--tool-store-db`, never both. `--work-dir` must be new or empty; the script will not delete an existing nonempty directory.
+
+### Building a different benchmark
+
+`scripts/generate_scenario_benchmark.py` supports:
+
+- repeated `--family FAMILY` to build selected task families;
+- repeated `--heldout-site-id SITE` to choose held-out sites;
+- omitting `--selection-contract` to select a new release rather than reconstruct the paper release.
+
+The family row targets and balancing limits are declared in `src/bts_agentbench/scenario_benchmark.py` as `train_target`, `dev_target`, `test_target`, `balance_key_fn`, and `max_per_balance_key`. Changing those values creates a new benchmark and must not be reported as a replay of the submitted 532 rows.
+
+After selecting a new fixed release, freeze its identities explicitly:
+
+```bash
+python scripts/build_submission_selection_contract.py \
+  --static-dir ./path/to/new-static \
+  --output ./path/to/new-selection.jsonl \
+  --summary ./path/to/new-selection-summary.json
+```
+
+## Dataset Families
+
+| Family | Train | Dev | Test | Total |
+|---|---:|---:|---:|---:|
+| Point disambiguation | 40 | 10 | 10 | 60 |
+| Day mean lookup | 40 | 10 | 10 | 60 |
+| Relative 24-hour mean lookup | 40 | 10 | 10 | 60 |
+| Window mean lookup | 36 | 7 | 10 | 53 |
+| Window pairwise comparison | 40 | 10 | 10 | 60 |
+| Window rank | 40 | 10 | 10 | 60 |
+| Timestamp value lookup | 40 | 10 | 10 | 60 |
+| Timestamp nearest lookup | 40 | 10 | 10 | 60 |
+| Quality gate | 40 | 10 | 9 | 59 |
+| **Total** | **356** | **87** | **89** | **532** |
+
+## Run an Agent
+
+First reconstruct the exact final directory, then set the benchmark and tool-store paths:
+
+```bash
+export BTS_BENCHMARK_DIR="$PWD/data/local-build/paper-replay/run_1/final"
+export BTS_TOOL_STORE_DB="$PWD/data/local-build/paper-replay/tool-store/tool_store.duckdb"
+```
+
+Run one retained runner configuration:
+
+```bash
+export OPENAI_API_KEY=...
+bash runners/gpt55_bts.sh
+
+export OPENROUTER_API_KEY=...
+bash runners/gemini31pro_bts_openrouter.sh
+bash runners/opus47_bts_openrouter.sh
+```
+
+Provider calls are not part of deterministic construction replay. The exact prompts, tool loop, output caps, stopping rules, fixed paid-run traces, and scoring fields are documented in [`MODEL_EVALUATION.md`](MODEL_EVALUATION.md).
+
+## Recorded Reconstruction Evidence
+
+The checked reports contain two independent raw preprocessing executions and three complete static-to-final builds:
+
+- all 11 exported logical tool-store files matched between the two raw builds;
+- all 532 submitted rows were regenerated in every complete episode build;
+- all nine families matched row for row in both recorded replay runs;
+- preflight reported zero coded contract issues;
+- the frozen construction-exclusion controller accomplished 0/532 rows on the exact replay output.
+
+The human-readable family table and representative traces are in [`replay/PAPER_SUBMISSION_REPLAY.md`](replay/PAPER_SUBMISSION_REPLAY.md). Machine-readable records are in [`replay/paper_submission_replay_report.json`](replay/paper_submission_replay_report.json) and [`replay/independent_raw_replays_report.json`](replay/independent_raw_replays_report.json). File hashes are reported there as secondary integrity evidence.
+
+The controller result verifies the predefined construction exclusion rule. It is not presented as an independent model baseline or a general measure of difficulty.
+
+## Repository Map
 
 | Path | Contents |
 |---|---|
-| `artifacts/` | Post-submission maintenance snapshot; not an expected-output input for exact paper replay |
+| `src/bts_agentbench/` | Metadata, raw preprocessing, runtime tools, family builders, contracts, and evaluator |
+| `scripts/replay_paper_submission.py` | One-command exact raw-to-final replay |
+| `scripts/trace_scenario.py` | Human-readable row-level replay trace |
 | `data/source/bts-meta/` | Retained CSV and Brick metadata inputs |
-| `data/source/bts-processed-catalog/` | Checksummed normalized metadata contract used by exact replay |
-| `provenance/submission_static_selection.jsonl` | 532 retained candidate identities and digests |
-| `provenance/submission_repair_profile.json` | Stage/family repair counts and static-lineage invariants |
-| `release/submitted-static-reference/` | Expected submitted static splits |
-| `release/submitted-source-bundle.zip` | Exact source supplementary supplied with the paper |
-| `release/submitted-dataset-bundle.zip` | Exact dataset and model-run supplementary supplied with the paper |
-| `scripts/replay_paper_submission.py` | Raw-to-final exact replay entry point |
-| `provenance/examples/` | Row-level raw/static/final traces |
-| `reports/model-runs/` | Fixed paid-run traces and summaries |
-| `reports/controller/` | Deterministic construction-exclusion witnesses |
-| `human_validation/` | Blind domain-practitioner packet and analysis code |
-| `replay/` | Checked machine-readable and human-readable replay reports |
+| `data/source/bts-processed-catalog/` | Submitted normalized metadata contract |
+| `provenance/submission_static_selection.jsonl` | Fixed 532 retained candidate identities |
+| `provenance/submission_repair_profile.json` | Typed repair counts and lineage invariants |
+| `release/submitted-static-reference/` | Exact submitted static tasks |
+| `release/submitted-dataset-bundle.zip` | Exact 532 final rows and retained model outputs |
+| `release/submitted-source-bundle.zip` | Exact supplementary source snapshot |
+| `examples/REPLAY_TRACE.md` | Complete raw-to-static-to-agentic trace for one test row |
+| `reports/model-runs/` | Fixed GPT, Gemini, and Claude paid-run traces |
+| `replay/controller-witnesses/` | Fresh controller witness for each submitted row |
+| `replay/` | Checked human- and machine-readable reconstruction reports |
 
-The approximately 18 GB raw archives and generated tool store are not committed. The tool store is rebuilt locally from the attributed raw files and retained normalized metadata contract.
+## Detailed Documentation
 
-## Validation Boundaries
+- [`CONSTRUCTION_WALKTHROUGH.md`](CONSTRUCTION_WALKTHROUGH.md): field-level raw-to-static-to-agentic derivation
+- [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md): exact inputs, entry points, outputs, and validation matrix
+- [`DATA_SOURCES.md`](DATA_SOURCES.md): upstream attribution, archive sizes, and checksums
+- [`PORTABILITY_XAI4HEAT.md`](PORTABILITY_XAI4HEAT.md): common telemetry contract and corpus-specific adapter boundary
+- [`MODEL_EVALUATION.md`](MODEL_EVALUATION.md): runner and scorer definitions
 
-Three claims are separate.
+## Scope
 
-1. **Construction replay:** fixed inputs and code reconstruct the submitted static and final JSONL files exactly.
-2. **Fixed-trace scoring:** a retained model trace is scored programmatically against fixed final, evidence, phase, task, and protocol checks.
-3. **Provider generation:** a new API response is not claimed to be deterministic because providers can revise models and infrastructure.
+Construction replay, fixed-trace scoring, and new provider generation are separate claims:
 
-`zero detected issues` means zero findings under the coded contract-preflight checks. It does not assert complete human realism or an error-free corpus.
+1. fixed inputs and code deterministically reconstruct the submitted benchmark;
+2. retained model traces can be rescored against the fixed contracts;
+3. new provider responses may vary as hosted models and infrastructure change.
 
-The deterministic controller is a construction exclusion rule. Its `0/532` result confirms application of that rule; it is not a standalone hardness baseline.
-
-The controller was rerun on the byte-identical Replay 1 output. The checked [audit summary](replay/paper_submission_controller_audit.json), [failure analysis](replay/paper_submission_controller_failure_analysis.json), and 532 [row-level witnesses](replay/controller-witnesses/) are separate from the model evaluation.
-
-## Paper Test Results
-
-| System | Accomplished | Test rows | Percent |
-|---|---:|---:|---:|
-| GPT-5.5 | 79 | 89 | 88.8% |
-| Gemini 3.1 Pro via OpenRouter | 71 | 89 | 79.8% |
-| Claude Opus 4.7 via OpenRouter | 58 | 89 | 65.2% |
-
-The fixed traces, run settings, and scorer decomposition are documented in [MODEL_EVALUATION.md](MODEL_EVALUATION.md). API credentials are not included.
-
-## Submission Snapshot and Maintenance
-
-Exact reconstruction is the primary path. A separate maintenance path makes later tie ordering and two January rank-direction corrections explicit. Maintenance output must not be substituted for the paper snapshot when reproducing paper tables or model traces.
-
-The exact compatibility branch preserves two submitted training contracts whose visible `previous month` wording and executable available-month fallback are not aligned. They do not occur in dev or test. The maintenance path corrects the wording; the submission replay preserves the evaluated artifact.
-
-## Human Validation
-
-`human_validation/` contains a blind two-stage authoring and review protocol. The analyzer rejects incomplete packets and requires at least two practitioners, 18 responses, and two responses per family. Blank templates are not represented as completed validation.
+`zero detected issues` means zero findings under the coded preflight checks. It does not mean that automatic validation establishes complete human realism or detects every possible semantic error.
 
 ## License
 
-Code is released under MIT. Benchmark artifacts, reports, provenance exports, and documentation are released under CC BY 4.0. The upstream BTS archives are not redistributed; their source and license are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
+Code is released under MIT. Benchmark artifacts, reports, provenance exports, and documentation are released under CC BY 4.0. The upstream BTS archives are not redistributed; their source and license are listed in [`DATA_SOURCES.md`](DATA_SOURCES.md).

@@ -16,13 +16,12 @@ jobs:
         run: python -m compileall -q scripts src
       - name: Verify packaged release
         run: python scripts/verify_packaged_release.py
-      - name: Verify secondary maintenance delta audit
-        run: python scripts/build_submission_replay_audit.py --verify-recorded
       - name: Verify fixed model traces
         run: |
           python scripts/audit_model_traces.py
           git diff --exit-code reports/model-runs/trace_audit.json
-      - name: Verify human-validation packet generation
+      - name: Render a submitted scenario trace
         run: |
-          python scripts/build_human_validation_packet.py
-          git diff --exit-code human_validation/packet
+          python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+            --format json \
+            --output /tmp/submitted-trace.json

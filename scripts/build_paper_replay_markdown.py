@@ -118,7 +118,6 @@ def main() -> None:
             }
         )
 
-    family_counts = Counter(row["task_family"] for row in submitted_by_id.values())
     split_counts: defaultdict[str, Counter[str]] = defaultdict(Counter)
     for split in SPLITS:
         for row in submitted[split]:
@@ -129,7 +128,17 @@ def main() -> None:
         "",
         "This report compares the immutable benchmark supplied with the paper against fresh deterministic reconstructions. Model APIs are not called.",
         "",
-        "## Result",
+        "## Plain-Language Result",
+        "",
+        "The reconstruction starts from raw timestamp/value archives and the retained semantic mapping, rebuilds the read-only telemetry database, reruns every family builder, and reconstructs every submitted interaction contract.",
+        "",
+        "- All 532 static tasks were regenerated from telemetry-backed candidates.",
+        "- All 532 final episodes matched the submitted rows as complete JSON objects in Replay 1 and Replay 2.",
+        "- The equality check covers user turns, clarification answers, goal revisions, tool calls, phase golds, final actions, evidence, verifiers, provenance, and serialization.",
+        "- Both replay runs completed with zero coded preflight issues.",
+        "- A full raw-to-static-to-agentic example is shown in [`examples/REPLAY_TRACE.md`](../examples/REPLAY_TRACE.md).",
+        "",
+        "## Integrity Identifiers",
         "",
         f"- Overall replay passed: `{str(bool(report['passed'])).lower()}`",
         f"- Construction runs: `{len(report['runs'])}`",
@@ -232,10 +241,10 @@ def main() -> None:
             "",
             "## Family-Wise Submitted vs Replay",
             "",
-            "`Exact rows` counts complete JSON-object equality, including user turns, calls, phase targets, evidence, verifiers, provenance, and metadata.",
+            "The final action below is shown directly so that replay is visible without interpreting a hash. `Exact rows` counts complete JSON-object equality, including user turns, calls, phase targets, evidence, verifiers, provenance, and metadata.",
             "",
-            "| Family | Submitted train/dev/test | Submitted rows | Replay 1 exact | Replay 2 exact |",
-            "|---|---:|---:|---:|---:|",
+            "| Family | Rows train/dev/test | Representative submitted final | Replay 1 final | Replay 2 final | Exact rows in both replays |",
+            "|---|---:|---|---|---|---:|",
         ]
     )
     for family, label in FAMILY_LABELS.items():
@@ -251,9 +260,18 @@ def main() -> None:
         run1 = f"{exact_counts[0]}/{len(family_ids)}" if exact_counts else "not run"
         run2 = f"{exact_counts[1]}/{len(family_ids)}" if len(exact_counts) > 1 else "not run"
         counts = split_counts[family]
+        representative_id = REPRESENTATIVES[family]
+        submitted_final = json_inline(submitted_by_id[representative_id]["gold_final_answer"])
+        replay_finals = [
+            json_inline(run[representative_id]["gold_final_answer"])
+            for run in replay_by_run
+        ]
+        replay_1_final = replay_finals[0] if replay_finals else "not run"
+        replay_2_final = replay_finals[1] if len(replay_finals) > 1 else "not run"
         lines.append(
             f"| {label} | {counts['train']}/{counts['dev']}/{counts['test']} | "
-            f"{family_counts[family]} | {run1} | {run2} |"
+            f"`{submitted_final}` | `{replay_1_final}` | `{replay_2_final}` | "
+            f"{run1}; {run2} |"
         )
 
     if controller is not None:
@@ -294,26 +312,40 @@ def main() -> None:
         tool_path = " -> ".join(
             call["tool_name"] for call in submitted_row["canonical_tool_calls"]
         )
+        submitted_phases = submitted_row.get("phase_gold_final_answers", [])
+        replay_rows = [run[scenario_id] for run in replay_by_run]
+        replay_finals = [row["gold_final_answer"] for row in replay_rows]
+        phase_gold_equal = all(
+            row.get("phase_gold_final_answers", []) == submitted_phases
+            for row in replay_rows
+        )
+        tool_trace_equal = all(
+            row.get("canonical_tool_calls", [])
+            == submitted_row.get("canonical_tool_calls", [])
+            for row in replay_rows
+        )
+        complete_row_equal = all(row == submitted_row for row in replay_rows)
         digests = [canonical_digest(submitted_row)] + [
-            canonical_digest(run[scenario_id]) for run in replay_by_run
+            canonical_digest(row) for row in replay_rows
         ]
         lines.extend(
             [
                 f"### {label}",
                 "",
                 f"- Scenario: `{scenario_id}`",
-                f"- Retained static identity: `{record['selection_identity_sha256']}`",
-                f"- Tool path: `{tool_path}`",
-                f"- Phase count: `{len(submitted_row.get('phase_gold_final_answers', []))}`",
-                f"- Final gold: `{json_inline(submitted_row['gold_final_answer'])}`",
-                f"- Submitted row digest: `{digests[0]}`",
+                f"- Submitted final gold: `{json_inline(submitted_row['gold_final_answer'])}`",
             ]
         )
-        for index, digest in enumerate(digests[1:], start=1):
-            lines.append(f"- Replay {index} row digest: `{digest}`")
+        for index, final_gold in enumerate(replay_finals, start=1):
+            lines.append(f"- Replay {index} final gold: `{json_inline(final_gold)}`")
         lines.extend(
             [
-                f"- All available digests equal: `{'yes' if len(set(digests)) == 1 else 'no'}`",
+                f"- Gold tool path in submitted and replayed rows: `{tool_path}`",
+                f"- Phase gold trace identical: `{'yes' if phase_gold_equal else 'no'}` ({len(submitted_phases)} phases)",
+                f"- Gold tool trace identical: `{'yes' if tool_trace_equal else 'no'}`",
+                f"- Complete submitted/replay row equality: `{'yes' if complete_row_equal else 'no'}`",
+                f"- Secondary integrity digest shared by all copies: `{digests[0] if len(set(digests)) == 1 else 'MISMATCH'}`",
+                f"- Retained static identity: `{record['selection_identity_sha256']}`",
                 "",
                 "Initial request:",
                 "",

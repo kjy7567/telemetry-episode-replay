@@ -2,6 +2,14 @@
 
 This document specifies the deterministic construction claim made by this artifact. The claim covers benchmark construction from checksummed BTS telemetry and metadata to the 532 JSONL episodes used in the paper submission. It does not claim that a provider API will reproduce the same model text.
 
+To see the complete process as one readable trace before reading the implementation details, run:
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051
+```
+
+The checked output with raw lineage, gold calls, interaction turns, phase golds, final action, and replay equality is also available in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
+
 ## 1. Inputs
 
 The exact reconstruction consumes four kinds of fixed input.
@@ -92,7 +100,7 @@ The submitted benchmark is an immutable sample, not a request to resample a new 
 
 Exact paper reconstruction therefore separates two deterministic operations:
 
-1. recompute all eligible candidate facts from raw telemetry and metadata;
+1. recompute each family builder's deterministic candidate pool and associated telemetry facts;
 2. retain the candidate identities frozen in `submission_static_selection.jsonl`.
 
 Each retained identity contains the family, site, canonical calls, gold answer, and evidence streams plus a SHA-256 digest. During replay, every family builder regenerates candidates from the fresh tool store. The replay fails unless every frozen identity matches exactly one regenerated candidate. It does not copy a submitted final episode or model response.

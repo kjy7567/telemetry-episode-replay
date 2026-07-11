@@ -6,13 +6,20 @@ import json
 import zipfile
 from pathlib import Path
 
-from build_submission_replay_audit import verify_recorded_audit
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ("train", "dev", "test")
-SUBMITTED_DATASET_SHA256 = "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
-SUBMITTED_SOURCE_SHA256 = "9c5502b3718113fee812818e71b47c23ed54ec1f694d37c35ea29686b2c64496"
+MODEL_DIRS = (
+    "gpt-5.5",
+    "gemini-3.1-pro-openrouter",
+    "claude-opus-4.7-openrouter",
+)
+SUBMITTED_DATASET_SHA256 = (
+    "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
+)
+SUBMITTED_SOURCE_SHA256 = (
+    "9c5502b3718113fee812818e71b47c23ed54ec1f694d37c35ea29686b2c64496"
+)
 
 
 def sha256(path: Path) -> str:
@@ -44,6 +51,8 @@ def selection_identity_sha256(identity: dict) -> str:
 
 def verify_manifest_file(record: dict, label: str) -> Path:
     path = REPO_ROOT / record["path"]
+    if not path.exists():
+        raise RuntimeError(f"{label} is missing: {path}")
     if path.stat().st_size != int(record["bytes"]):
         raise RuntimeError(f"{label} byte count mismatch")
     if sha256(path) != record["sha256"]:
@@ -51,283 +60,282 @@ def verify_manifest_file(record: dict, label: str) -> Path:
     return path
 
 
-def main() -> None:
-    manifest_path = REPO_ROOT / "release" / "release_manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    scenario_ids: set[str] = set()
-    for layer in ("static", "final"):
-        for split in SPLITS:
-            record = manifest[layer][split]
-            path = REPO_ROOT / record["path"]
-            rows = load_jsonl(path)
-            if len(rows) != int(record["rows"]):
-                raise RuntimeError(f"row count mismatch: {layer}/{split}")
-            if sha256(path) != record["sha256"]:
-                raise RuntimeError(f"hash mismatch: {layer}/{split}")
-            if layer == "final":
-                for row in rows:
-                    scenario_id = str(row["scenario_id"])
-                    if scenario_id in scenario_ids:
-                        raise RuntimeError(f"duplicate scenario_id: {scenario_id}")
-                    scenario_ids.add(scenario_id)
-                    if row.get("split") != split:
-                        raise RuntimeError(f"split mismatch: {scenario_id}")
+def verify_submitted_bundles(
+    manifest: dict,
+) -> tuple[dict[str, set[str]], str, str]:
+    dataset_record = manifest["submitted_dataset_snapshot"]
+    dataset_path = verify_manifest_file(dataset_record, "submitted dataset snapshot")
+    dataset_hash = sha256(dataset_path)
+    if dataset_hash != SUBMITTED_DATASET_SHA256:
+        raise RuntimeError("submitted dataset snapshot is not the paper snapshot")
 
-    archive_record = manifest["archive"]
-    archive_path = REPO_ROOT / archive_record["path"]
-    if sha256(archive_path) != archive_record["sha256"]:
-        raise RuntimeError("release archive hash mismatch")
-    with zipfile.ZipFile(archive_path) as archive:
-        if archive.testzip() is not None:
-            raise RuntimeError("release archive CRC failure")
-    human_archive_record = manifest["human_validation_archive"]
-    human_archive_path = REPO_ROOT / human_archive_record["path"]
-    if sha256(human_archive_path) != human_archive_record["sha256"]:
-        raise RuntimeError("human-validation archive hash mismatch")
-    with zipfile.ZipFile(human_archive_path) as archive:
-        if archive.testzip() is not None:
-            raise RuntimeError("human-validation archive CRC failure")
-    submitted_record = manifest["submitted_dataset_snapshot"]
-    submitted_path = REPO_ROOT / submitted_record["path"]
-    submitted_hash = sha256(submitted_path)
-    if submitted_hash != submitted_record["sha256"] or submitted_hash != SUBMITTED_DATASET_SHA256:
-        raise RuntimeError("submitted dataset snapshot hash mismatch")
-    submitted_final_ids_by_split: dict[str, set[str]] = {}
-    with zipfile.ZipFile(submitted_path) as archive:
+    final_ids_by_split: dict[str, set[str]] = {}
+    all_ids: set[str] = set()
+    with zipfile.ZipFile(dataset_path) as archive:
         if archive.testzip() is not None:
             raise RuntimeError("submitted dataset snapshot CRC failure")
-        expected = {
-            f"dataset_bundle/bts_agentbench_532/{split}.jsonl" for split in SPLITS
-        }
-        if not expected.issubset(archive.namelist()):
-            raise RuntimeError("submitted dataset snapshot is missing BTS split files")
         for split in SPLITS:
             record = manifest["paper_submission_final"][split]
             payload = archive.read(record["zip_member"])
             rows = load_jsonl_bytes(payload)
-            submitted_final_ids_by_split[split] = {
-                str(row["scenario_id"]) for row in rows
-            }
-            if len(rows) != int(record["rows"]):
-                raise RuntimeError(f"submitted final row count mismatch: {split}")
+            ids = {str(row["scenario_id"]) for row in rows}
+            if len(rows) != int(record["rows"]) or len(ids) != len(rows):
+                raise RuntimeError(f"submitted final row or ID mismatch: {split}")
+            if any(row.get("split") != split for row in rows):
+                raise RuntimeError(f"submitted final split field mismatch: {split}")
             if len(payload) != int(record["bytes"]):
                 raise RuntimeError(f"submitted final byte count mismatch: {split}")
             if hashlib.sha256(payload).hexdigest() != record["sha256"]:
                 raise RuntimeError(f"submitted final hash mismatch: {split}")
+            if all_ids.intersection(ids):
+                raise RuntimeError(f"duplicate submitted final IDs across splits: {split}")
+            all_ids.update(ids)
+            final_ids_by_split[split] = ids
 
-    submitted_source_record = manifest["submitted_source_snapshot"]
-    submitted_source_path = REPO_ROOT / submitted_source_record["path"]
-    submitted_source_hash = sha256(submitted_source_path)
-    if (
-        submitted_source_hash != submitted_source_record["sha256"]
-        or submitted_source_hash != SUBMITTED_SOURCE_SHA256
-    ):
-        raise RuntimeError("submitted source snapshot hash mismatch")
-    with zipfile.ZipFile(submitted_source_path) as archive:
+    source_record = manifest["submitted_source_snapshot"]
+    source_path = verify_manifest_file(source_record, "submitted source snapshot")
+    source_hash = sha256(source_path)
+    if source_hash != SUBMITTED_SOURCE_SHA256:
+        raise RuntimeError("submitted source snapshot is not the paper snapshot")
+    with zipfile.ZipFile(source_path) as archive:
         if archive.testzip() is not None:
             raise RuntimeError("submitted source snapshot CRC failure")
+    return final_ids_by_split, dataset_hash, source_hash
+
+
+def verify_static_and_selection(
+    manifest: dict, final_ids_by_split: dict[str, set[str]]
+) -> int:
+    static_ids: set[str] = set()
+    for split in SPLITS:
+        record = manifest["paper_submission_static"][split]
+        path = REPO_ROOT / record["path"]
+        rows = load_jsonl(path)
+        ids = {str(row["scenario_id"]) for row in rows}
+        if len(rows) != int(record["rows"]) or len(ids) != len(rows):
+            raise RuntimeError(f"submitted static row or ID mismatch: {split}")
+        if ids != final_ids_by_split[split]:
+            raise RuntimeError(f"submitted static/final ID mismatch: {split}")
+        if path.stat().st_size != int(record["bytes"]):
+            raise RuntimeError(f"submitted static byte count mismatch: {split}")
+        if sha256(path) != record["sha256"]:
+            raise RuntimeError(f"submitted static hash mismatch: {split}")
+        static_ids.update(ids)
 
     selection_record = manifest["paper_submission_selection_contract"]
     selection_path = REPO_ROOT / selection_record["path"]
     selection_rows = load_jsonl(selection_path)
     if len(selection_rows) != int(selection_record["rows"]):
-        raise RuntimeError("paper submission selection-contract row count mismatch")
+        raise RuntimeError("selection-contract row count mismatch")
     if sha256(selection_path) != selection_record["sha256"]:
-        raise RuntimeError("paper submission selection-contract hash mismatch")
-    scenario_selection_ids: set[str] = set()
+        raise RuntimeError("selection-contract hash mismatch")
+    selection_ids: set[str] = set()
     identity_hashes: set[str] = set()
     for row in selection_rows:
         scenario_id = str(row["scenario_id"])
         digest = str(row["selection_identity_sha256"])
-        if scenario_id in scenario_selection_ids:
-            raise RuntimeError(f"duplicate selection scenario ID: {scenario_id}")
-        if digest in identity_hashes:
-            raise RuntimeError(f"duplicate selection identity: {digest}")
+        if scenario_id in selection_ids or digest in identity_hashes:
+            raise RuntimeError("duplicate scenario or identity in selection contract")
         if selection_identity_sha256(row["selection_identity"]) != digest:
             raise RuntimeError(f"selection identity digest mismatch: {scenario_id}")
-        scenario_selection_ids.add(scenario_id)
+        selection_ids.add(scenario_id)
         identity_hashes.add(digest)
+    if selection_ids != static_ids:
+        raise RuntimeError("selection contract and submitted static ID sets differ")
+    return len(static_ids)
 
-    submitted_static_ids: set[str] = set()
-    for split in SPLITS:
-        record = manifest["paper_submission_static"][split]
-        path = REPO_ROOT / record["path"]
-        rows = load_jsonl(path)
-        if len(rows) != int(record["rows"]):
-            raise RuntimeError(f"paper submission static row count mismatch: {split}")
-        if path.stat().st_size != int(record["bytes"]):
-            raise RuntimeError(f"paper submission static byte count mismatch: {split}")
-        if sha256(path) != record["sha256"]:
-            raise RuntimeError(f"paper submission static hash mismatch: {split}")
-        submitted_static_ids.update(str(row["scenario_id"]) for row in rows)
-    if submitted_static_ids != scenario_selection_ids:
-        raise RuntimeError("paper submission static and selection-contract ID sets differ")
 
+def verify_catalog_and_repairs(manifest: dict) -> None:
     for name, record in manifest["paper_submission_normalized_catalog"].items():
-        path = REPO_ROOT / record["path"]
-        if path.stat().st_size != int(record["bytes"]):
-            raise RuntimeError(f"paper submission catalog byte count mismatch: {name}")
-        if sha256(path) != record["sha256"]:
-            raise RuntimeError(f"paper submission catalog hash mismatch: {name}")
+        verify_manifest_file(record, f"normalized catalog {name}")
 
-    repair_profile_record = manifest["paper_submission_repair_profile"]
-    repair_profile_path = REPO_ROOT / repair_profile_record["path"]
-    if repair_profile_path.stat().st_size != int(repair_profile_record["bytes"]):
-        raise RuntimeError("paper submission repair-profile byte count mismatch")
-    if sha256(repair_profile_path) != repair_profile_record["sha256"]:
-        raise RuntimeError("paper submission repair-profile hash mismatch")
-    repair_profile = json.loads(repair_profile_path.read_text(encoding="utf-8"))
-    if int(repair_profile["row_count"]) != 532:
-        raise RuntimeError("paper submission repair-profile row count mismatch")
-    if any(
-        int(count) != 532
-        for count in repair_profile["lineage_invariants"].values()
-    ):
-        raise RuntimeError("paper submission repair-profile lineage invariant failed")
+    repair_record = manifest["paper_submission_repair_profile"]
+    repair_path = verify_manifest_file(repair_record, "repair profile")
+    repair = json.loads(repair_path.read_text(encoding="utf-8"))
+    if int(repair["row_count"]) != 532:
+        raise RuntimeError("repair-profile row count mismatch")
+    if any(int(count) != 532 for count in repair["lineage_invariants"].values()):
+        raise RuntimeError("repair-profile lineage invariant failed")
 
-    replay_record = manifest["paper_submission_replay_report"]
-    replay_path = verify_manifest_file(replay_record, "paper submission replay report")
-    replay_report = json.loads(replay_path.read_text(encoding="utf-8"))
-    if not replay_report["passed"] or not replay_report["cross_run_exact_match"]:
-        raise RuntimeError("paper submission replay did not pass")
-    if replay_report["tool_store_build"]["mode"] != "raw_archives_to_fresh_tool_store":
-        raise RuntimeError("paper submission replay was not built from raw archives")
-    if len(replay_report["runs"]) != 2:
-        raise RuntimeError("paper submission replay must contain two construction runs")
+
+def verify_replay_reports(manifest: dict) -> tuple[int, int]:
+    replay_path = verify_manifest_file(
+        manifest["paper_submission_replay_report"], "paper replay report"
+    )
+    replay = json.loads(replay_path.read_text(encoding="utf-8"))
+    if not replay["passed"] or not replay["cross_run_exact_match"]:
+        raise RuntimeError("paper replay report did not pass")
+    if replay["tool_store_build"]["mode"] != "raw_archives_to_fresh_tool_store":
+        raise RuntimeError("paper replay report was not built from raw archives")
+    if len(replay["runs"]) != 2:
+        raise RuntimeError("paper replay report must contain two episode builds")
     if (
-        replay_report["selection_contract_sha256"]
+        replay["selection_contract_sha256"]
         != manifest["paper_submission_selection_contract"]["sha256"]
-    ):
-        raise RuntimeError("paper submission replay selection hash mismatch")
-    if (
-        replay_report["submitted_source_bundle_sha256"]
+        or replay["submitted_source_bundle_sha256"]
         != manifest["submitted_source_snapshot"]["sha256"]
-        or replay_report["submitted_dataset_bundle_sha256"]
+        or replay["submitted_dataset_bundle_sha256"]
         != manifest["submitted_dataset_snapshot"]["sha256"]
     ):
-        raise RuntimeError("paper submission replay bundle hash mismatch")
-    for run in replay_report["runs"]:
+        raise RuntimeError("paper replay fixed-input hash mismatch")
+    for run in replay["runs"]:
         if not run["passed"] or int(run["preflight_issue_count"]) != 0:
-            raise RuntimeError(f"paper submission replay run {run['run']} failed")
+            raise RuntimeError(f"paper replay run failed: {run['run']}")
         for split in SPLITS:
             static = run["static"][split]
             final = run["final"][split]
             if (
                 not static["exact_file_match"]
-                or static["sha256"] != manifest["paper_submission_static"][split]["sha256"]
-                or static["expected_sha256"]
+                or static["sha256"]
                 != manifest["paper_submission_static"][split]["sha256"]
-            ):
-                raise RuntimeError(
-                    f"paper submission static replay mismatch: run {run['run']} {split}"
-                )
-            if (
-                not final["exact_file_match"]
+                or not final["exact_file_match"]
                 or not final["exact_json_object_match"]
-                or final["sha256"] != manifest["paper_submission_final"][split]["sha256"]
-                or final["expected_sha256"]
+                or final["sha256"]
                 != manifest["paper_submission_final"][split]["sha256"]
             ):
                 raise RuntimeError(
-                    f"paper submission final replay mismatch: run {run['run']} {split}"
+                    f"paper replay output mismatch: run {run['run']} {split}"
                 )
 
-    independent_record = manifest["independent_raw_replays_report"]
     independent_path = verify_manifest_file(
-        independent_record, "independent raw replay report"
+        manifest["independent_raw_replays_report"],
+        "independent raw replay report",
     )
     independent = json.loads(independent_path.read_text(encoding="utf-8"))
-    if not all(
-        (
-            independent["passed"],
-            independent["raw_archive_inventory_match"],
-            independent["logical_tool_store_files_exact"],
-            independent["fixed_input_hashes_match"],
-            independent["downstream_split_hashes_match"],
-        )
-    ):
+    required_flags = (
+        "passed",
+        "raw_archive_inventory_match",
+        "logical_tool_store_files_exact",
+        "fixed_input_hashes_match",
+        "downstream_split_hashes_match",
+    )
+    if not all(bool(independent[name]) for name in required_flags):
         raise RuntimeError("independent raw replay comparison failed")
-    if (
-        int(independent["logical_tool_store_file_count"]) != 11
-        or int(independent["total_exact_episode_builds"]) != 3
-    ):
-        raise RuntimeError("independent raw replay coverage mismatch")
+    if int(independent["logical_tool_store_file_count"]) != 11:
+        raise RuntimeError("independent logical-export coverage mismatch")
+    if int(independent["total_exact_episode_builds"]) != 3:
+        raise RuntimeError("independent episode-build coverage mismatch")
     if any(
         not record["exact_file_match"]
         for record in independent["logical_tool_store_files"].values()
     ):
-        raise RuntimeError("independent raw logical export mismatch")
+        raise RuntimeError("independent logical tool-store export mismatch")
+    return len(replay["runs"]), int(independent["total_exact_episode_builds"])
 
-    controller_record = manifest["paper_submission_controller_audit"]
-    controller_path = verify_manifest_file(
-        controller_record, "paper submission controller audit"
+
+def verify_controller(
+    manifest: dict, final_ids_by_split: dict[str, set[str]]
+) -> int:
+    audit_path = verify_manifest_file(
+        manifest["paper_submission_controller_audit"], "controller audit"
     )
-    controller = json.loads(controller_path.read_text(encoding="utf-8"))
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
     if (
-        int(controller["totals"]["scenario_count"]) != 532
-        or int(controller["totals"]["accomplished_count"]) != 0
+        int(audit["totals"]["scenario_count"]) != 532
+        or int(audit["totals"]["accomplished_count"]) != 0
     ):
-        raise RuntimeError("paper submission controller audit mismatch")
-    failure_record = manifest["paper_submission_controller_failure_analysis"]
+        raise RuntimeError("controller audit total mismatch")
+
     failure_path = verify_manifest_file(
-        failure_record, "paper submission controller failure analysis"
+        manifest["paper_submission_controller_failure_analysis"],
+        "controller failure analysis",
     )
-    failure_analysis = json.loads(failure_path.read_text(encoding="utf-8"))
-    if int(failure_analysis["row_count"]) != 532:
-        raise RuntimeError("paper submission controller failure-analysis row mismatch")
-    controller_witness_ids: set[str] = set()
+    failure = json.loads(failure_path.read_text(encoding="utf-8"))
+    if int(failure["row_count"]) != 532:
+        raise RuntimeError("controller failure-analysis row count mismatch")
+
+    witness_count = 0
     for split in SPLITS:
         record = manifest["paper_submission_controller_witnesses"][split]
-        path = verify_manifest_file(record, f"paper submission controller witness {split}")
+        path = verify_manifest_file(record, f"controller witness {split}")
         rows = load_jsonl(path)
-        if len(rows) != int(record["rows"]):
-            raise RuntimeError(f"paper submission controller witness row mismatch: {split}")
-        split_ids = {str(row["scenario_id"]) for row in rows}
-        if split_ids != submitted_final_ids_by_split[split]:
-            raise RuntimeError(f"paper submission controller witness ID mismatch: {split}")
+        ids = {str(row["scenario_id"]) for row in rows}
+        if len(rows) != int(record["rows"]) or ids != final_ids_by_split[split]:
+            raise RuntimeError(f"controller witness coverage mismatch: {split}")
         if any(row.get("label") == "accomplished" for row in rows):
             raise RuntimeError(f"controller accomplished a submitted row: {split}")
-        controller_witness_ids.update(split_ids)
+        witness_count += len(rows)
+    return witness_count
 
-    final_test_ids = {
-        row["scenario_id"] for row in load_jsonl(REPO_ROOT / manifest["final"]["test"]["path"])
-    }
-    for model_dir in (
-        "gpt-5.5",
-        "gemini-3.1-pro-openrouter",
-        "claude-opus-4.7-openrouter",
-    ):
-        trace_ids = {
-            row["scenario_id"]
-            for row in load_jsonl(REPO_ROOT / "reports" / "model-runs" / model_dir / "test.jsonl")
-        }
-        if trace_ids != final_test_ids:
+
+def verify_model_traces(final_test_ids: set[str], submitted_test_sha256: str) -> None:
+    for model_dir in MODEL_DIRS:
+        rows = load_jsonl(
+            REPO_ROOT / "reports" / "model-runs" / model_dir / "test.jsonl"
+        )
+        ids = {str(row["scenario_id"]) for row in rows}
+        if len(rows) != 89 or ids != final_test_ids:
             raise RuntimeError(f"model trace coverage mismatch: {model_dir}")
 
+    audit = json.loads(
+        (REPO_ROOT / "reports" / "model-runs" / "trace_audit.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if audit["submitted_test_sha256"] != submitted_test_sha256:
+        raise RuntimeError("model trace audit submitted-test hash mismatch")
+    if int(audit["submitted_test_rows"]) != 89:
+        raise RuntimeError("model trace audit row count mismatch")
+    if any(
+        not record.get("submitted_contract_binding_verified")
+        for record in audit["models"].values()
+    ):
+        raise RuntimeError("model trace contract binding is not verified")
+
+
+def verify_replay_trace(manifest: dict) -> None:
+    record = manifest["human_readable_replay_trace"]
+    path = verify_manifest_file(record, "human-readable replay trace")
+    text = path.read_text(encoding="utf-8")
+    required_fragments = (
+        f"# Replay Trace: `{record['scenario_id']}`",
+        "## 1. Raw Telemetry Lineage",
+        "Site_Caa/2254.pickle",
+        "## 3. Gold Tool Trace",
+        "## 5. Phase Gold Trace",
+        "## 6. Final Gold",
+        "Complete JSON-object equality: **YES**",
+    )
+    if any(fragment not in text for fragment in required_fragments):
+        raise RuntimeError("human-readable replay trace is incomplete")
+
+
+def main() -> None:
+    manifest = json.loads(
+        (REPO_ROOT / "release" / "release_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if manifest["manifest_version"] != "paper-submission-exact-release-v2":
+        raise RuntimeError("unexpected release manifest version")
+    final_ids_by_split, dataset_hash, source_hash = verify_submitted_bundles(manifest)
+    row_count = verify_static_and_selection(manifest, final_ids_by_split)
+    verify_catalog_and_repairs(manifest)
+    replay_runs, exact_episode_builds = verify_replay_reports(manifest)
+    controller_witness_rows = verify_controller(manifest, final_ids_by_split)
+    verify_model_traces(
+        final_ids_by_split["test"],
+        manifest["paper_submission_final"]["test"]["sha256"],
+    )
+    verify_replay_trace(manifest)
     if int(manifest["contract_preflight_issue_count"]) != 0:
         raise RuntimeError("contract preflight is not zero")
-    submission_replay_audit = verify_recorded_audit(REPO_ROOT)
+
     print(
         json.dumps(
             {
                 "status": "ok",
-                "final_rows": len(scenario_ids),
-                "test_rows": len(final_test_ids),
-                "model_trace_sets_verified": 3,
-                "archive_sha256": archive_record["sha256"],
-                "submitted_snapshot_sha256": submitted_hash,
-                "submitted_source_snapshot_sha256": submitted_source_hash,
-                "paper_submission_selection_rows": len(selection_rows),
-                "paper_submission_catalog_files": len(
-                    manifest["paper_submission_normalized_catalog"]
-                ),
-                "paper_submission_repair_rows": repair_profile["row_count"],
-                "paper_submission_replay_runs": len(replay_report["runs"]),
+                "submitted_rows": row_count,
+                "submitted_test_rows": len(final_ids_by_split["test"]),
+                "model_trace_sets_verified": len(MODEL_DIRS),
+                "submitted_dataset_sha256": dataset_hash,
+                "submitted_source_sha256": source_hash,
+                "paper_replay_runs": replay_runs,
                 "independent_raw_builds": 2,
-                "exact_episode_builds": independent["total_exact_episode_builds"],
-                "controller_witness_rows": len(controller_witness_ids),
-                "controller_accomplished_rows": controller["totals"]["accomplished_count"],
-                "secondary_maintenance_delta_audit": submission_replay_audit,
+                "exact_episode_builds": exact_episode_builds,
+                "human_readable_trace_verified": True,
+                "controller_witness_rows": controller_witness_rows,
+                "controller_accomplished_rows": 0,
             },
             indent=2,
         )
