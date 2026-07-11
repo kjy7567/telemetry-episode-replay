@@ -132,7 +132,7 @@ def render_blind_form(rows: list[dict[str, Any]], group: str) -> str:
                 "",
             ]
         )
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def render_review_form(rows: list[dict[str, Any]], group_by_card: dict[str, str], group: str) -> str:
@@ -163,7 +163,7 @@ def render_review_form(rows: list[dict[str, Any]], group_by_card: dict[str, str]
                 "",
             ]
         )
-    return "\n".join(lines) + "\n"
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def main() -> None:
@@ -250,6 +250,7 @@ def main() -> None:
                 "would_use_in_real_workflow": "",
                 "major_issue_code": "",
                 "notes": "",
+                "consent_to_participate": "",
                 "consent_to_quote": "",
             }
         )
@@ -278,11 +279,12 @@ def main() -> None:
             render_review_form(review_rows, group_by_card, group), encoding="utf-8"
         )
     manifest = {
-        "packet_version": "domain-validation-v1",
+        "packet_version": "domain-validation-v2",
         "selection": "two deterministic cards per family: test first, then a different split/site",
         "card_count": len(selected),
         "family_counts": dict(sorted(family_slots.items())),
         "blind_before_review": True,
+        "affirmative_participation_consent_required": True,
         "response_rows_are_blank": True,
     }
     (args.output_dir / "manifest.json").write_text(

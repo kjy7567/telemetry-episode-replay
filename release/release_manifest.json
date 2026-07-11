@@ -48,8 +48,8 @@
   },
   "human_validation_archive": {
     "path": "release/human-validation-packet.zip",
-    "bytes": 12264,
-    "sha256": "740d7d939878d67b425574c95966f828af76e3441ef2eb5187d3c5f4091e48a8",
+    "bytes": 13552,
+    "sha256": "6f02dafe3ebc84c5a636f7b50f29651f10e842d35d52bf1a0322236669694232",
     "completed_results_included": false
   }
 }

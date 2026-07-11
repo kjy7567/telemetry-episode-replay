@@ -1,5 +1,5 @@
 {
-  "packet_version": "domain-validation-v1",
+  "packet_version": "domain-validation-v2",
   "selection": "two deterministic cards per family: test first, then a different split/site",
   "card_count": 18,
   "family_counts": {
@@ -14,5 +14,6 @@
     "window_rank": 2
   },
   "blind_before_review": true,
+  "affirmative_participation_consent_required": true,
   "response_rows_are_blank": true
 }

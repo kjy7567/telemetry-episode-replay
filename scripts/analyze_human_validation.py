@@ -30,6 +30,7 @@ REQUIRED_FIELDS = (
     "meaning_preserved",
     "would_use_in_real_workflow",
     "major_issue_code",
+    "consent_to_participate",
     "consent_to_quote",
 )
 
@@ -203,6 +204,7 @@ def main() -> None:
             "evidence_followup_realistic": {"yes", "no"},
             "meaning_preserved": {"yes", "partial", "no"},
             "would_use_in_real_workflow": {"yes", "with_edits", "no"},
+            "consent_to_participate": {"yes"},
             "consent_to_quote": {"yes", "no"},
             "major_issue_code": {
                 "none",

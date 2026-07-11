@@ -67,7 +67,13 @@ def main() -> None:
     ]
     deterministic_zip(archive_path, files)
     human_root = REPO_ROOT / "human_validation"
-    human_files = [(human_root / "PROTOCOL.md", "human-validation/PROTOCOL.md")]
+    human_files = [
+        (human_root / "PROTOCOL.md", "human-validation/PROTOCOL.md"),
+        (
+            human_root / "PARTICIPANT_INFORMATION.md",
+            "human-validation/PARTICIPANT_INFORMATION.md",
+        ),
+    ]
     human_files.extend(
         (path, f"human-validation/packet/{path.name}")
         for path in sorted((human_root / "packet").iterdir())

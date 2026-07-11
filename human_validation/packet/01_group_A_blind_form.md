@@ -145,4 +145,3 @@ Realistic goal revision, if any:
 Quality-decision request, if any:
 
 Evidence request, if any:
-

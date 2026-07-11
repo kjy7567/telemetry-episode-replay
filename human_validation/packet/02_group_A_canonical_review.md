@@ -127,4 +127,3 @@ Enter ratings and comments for this card in `03_responses.csv`.
 **Evidence follow-up:** Which streams or points did you base that on?
 
 Enter ratings and comments for this card in `03_responses.csv`.
-
