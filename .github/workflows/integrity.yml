@@ -8,14 +8,16 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Compile source
         run: python -m compileall -q scripts src
       - name: Verify packaged release
         run: python scripts/verify_packaged_release.py
+      - name: Verify submitted-to-replay audit
+        run: python scripts/build_submission_replay_audit.py --verify-recorded
       - name: Verify fixed model traces
         run: |
           python scripts/audit_model_traces.py
