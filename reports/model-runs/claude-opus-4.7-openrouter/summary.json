@@ -1,0 +1,9 @@
+{
+  "model": "claude-opus-4.7-openrouter",
+  "artifact": "bts-canonical-final",
+  "scenario_count": 89,
+  "accomplished": 58,
+  "partially_accomplished": 31,
+  "not_accomplished": 0,
+  "overall_percent": 65.2
+}

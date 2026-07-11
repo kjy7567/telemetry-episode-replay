@@ -1,0 +1,61 @@
+{
+  "report_version": "bts-release-replay-v1",
+  "replay_boundary": "retained static executable task layer -> canonical release",
+  "raw_to_static_note": "Raw-to-static reconstruction additionally requires the BTS archives and tool-store build.",
+  "python": "3.11.11",
+  "packages": {
+    "duckdb": "1.5.0",
+    "numpy": "1.26.4",
+    "openai": "2.30.0",
+    "pandas": "3.0.1",
+    "pyarrow": "23.0.1",
+    "rdflib": "7.6.0",
+    "requests": "2.32.3"
+  },
+  "static_split_hashes": {
+    "train": "9b5249ed7b89331b50bd26376f3f79a99e3fd326617f5da8851a278dd22134d7",
+    "dev": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d",
+    "test": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
+  },
+  "expected_split_hashes": {
+    "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+    "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+    "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+  },
+  "runs": [
+    {
+      "label": "run_a",
+      "final_dir": "data/local-build/replay/run_a/final",
+      "split_hashes": {
+        "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+        "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+        "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+      },
+      "split_counts": {
+        "train": 356,
+        "dev": 87,
+        "test": 89
+      },
+      "preflight_issue_count": 0
+    },
+    {
+      "label": "run_b",
+      "final_dir": "data/local-build/replay/run_b/final",
+      "split_hashes": {
+        "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+        "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+        "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+      },
+      "split_counts": {
+        "train": 356,
+        "dev": 87,
+        "test": 89
+      },
+      "preflight_issue_count": 0
+    }
+  ],
+  "run_a_equals_run_b": true,
+  "run_a_equals_expected_release": true,
+  "controller_audit_recomputed": false,
+  "builds_executed_this_invocation": false
+}

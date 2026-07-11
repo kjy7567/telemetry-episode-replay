@@ -1,0 +1,9 @@
+{
+  "raw_archives_included": false,
+  "tool_store_included": false,
+  "reason": "BTS raw archives are approximately 18GB and the full tool store is approximately 1.7GB; the repository instead includes reconstruction code, metadata, processed catalog files, and the final 532-row release artifacts.",
+  "expected_raw_archive_dir": "data/local-build/raw",
+  "expected_tool_store_dir": "data/local-build/tool_store",
+  "normalized_catalog_duckdb_included": false,
+  "normalized_catalog_note": "The retained Parquet tables are the authoritative frozen catalog inputs; a redundant DuckDB copy is not shipped."
+}

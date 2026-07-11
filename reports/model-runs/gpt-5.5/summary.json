@@ -1,0 +1,9 @@
+{
+  "model": "gpt-5.5",
+  "artifact": "bts-canonical-final",
+  "scenario_count": 89,
+  "accomplished": 79,
+  "partially_accomplished": 10,
+  "not_accomplished": 0,
+  "overall_percent": 88.8
+}

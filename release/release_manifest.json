@@ -1,0 +1,55 @@
+{
+  "manifest_version": "release-integrity-v1",
+  "static": {
+    "train": {
+      "path": "artifacts/bts-static-seed/train.jsonl",
+      "rows": 356,
+      "bytes": 1144863,
+      "sha256": "9b5249ed7b89331b50bd26376f3f79a99e3fd326617f5da8851a278dd22134d7"
+    },
+    "dev": {
+      "path": "artifacts/bts-static-seed/dev.jsonl",
+      "rows": 87,
+      "bytes": 273433,
+      "sha256": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d"
+    },
+    "test": {
+      "path": "artifacts/bts-static-seed/test.jsonl",
+      "rows": 89,
+      "bytes": 271563,
+      "sha256": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
+    }
+  },
+  "final": {
+    "train": {
+      "path": "artifacts/bts-canonical-final/train.jsonl",
+      "rows": 356,
+      "bytes": 26428307,
+      "sha256": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43"
+    },
+    "dev": {
+      "path": "artifacts/bts-canonical-final/dev.jsonl",
+      "rows": 87,
+      "bytes": 6412885,
+      "sha256": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04"
+    },
+    "test": {
+      "path": "artifacts/bts-canonical-final/test.jsonl",
+      "rows": 89,
+      "bytes": 6544531,
+      "sha256": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+    }
+  },
+  "contract_preflight_issue_count": 0,
+  "archive": {
+    "path": "release/bts-canonical-final.zip",
+    "bytes": 2497869,
+    "sha256": "106d284876e6c4ef8f8506a85d522bb28438959965987afeb89d2670730b8b8e"
+  },
+  "human_validation_archive": {
+    "path": "release/human-validation-packet.zip",
+    "bytes": 12264,
+    "sha256": "740d7d939878d67b425574c95966f828af76e3441ef2eb5187d3c5f4091e48a8",
+    "completed_results_included": false
+  }
+}

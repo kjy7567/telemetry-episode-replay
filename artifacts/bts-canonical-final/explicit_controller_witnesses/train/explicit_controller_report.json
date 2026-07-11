@@ -1,0 +1,194 @@
+{
+  "benchmark_dir": "artifacts/bts-canonical-final",
+  "split": "train",
+  "controllers": [
+    "phase_complete_stronger_controller"
+  ],
+  "reports": {
+    "phase_complete_stronger_controller": {
+      "controller": "phase_complete_stronger_controller",
+      "benchmark_dir": "artifacts/bts-canonical-final",
+      "split": "train",
+      "approximated_dsl_classes": [
+        "RS8_stateful_single_stream_revision",
+        "RS9_stateful_pairwise_revision",
+        "RS10_rank_template_solver",
+        "RS11_quality_gate_template_solver",
+        "RS12_timestamp_policy_template",
+        "RS13_short_memory_controller",
+        "RS14_point_target_revision_template",
+        "RS15_phase_complete_contract_controller"
+      ],
+      "scenario_count": 356,
+      "supported_row_count": 356,
+      "label_counts": {
+        "partially_accomplished": 356
+      },
+      "supported_label_counts": {
+        "partially_accomplished": 356
+      },
+      "strict_label_counts": {
+        "partially_accomplished": 356
+      },
+      "mean_process_score": 0.3343,
+      "mean_task_score": 0.3342,
+      "mean_temporal_score": 0.2899,
+      "mean_grounding_score": 0.6383,
+      "by_family": {
+        "day_mean_lookup": {
+          "partially_accomplished": 40
+        },
+        "point_disambiguation": {
+          "partially_accomplished": 40
+        },
+        "quality_gate": {
+          "partially_accomplished": 40
+        },
+        "relative_24h_mean_lookup": {
+          "partially_accomplished": 40
+        },
+        "timestamp_nearest_lookup": {
+          "partially_accomplished": 40
+        },
+        "timestamp_value_lookup": {
+          "partially_accomplished": 40
+        },
+        "window_mean_lookup": {
+          "partially_accomplished": 36
+        },
+        "window_pairwise_compare": {
+          "partially_accomplished": 40
+        },
+        "window_rank": {
+          "partially_accomplished": 40
+        }
+      },
+      "contradiction_count": 0,
+      "contradiction_rate": 0.0,
+      "contradiction_by_family": {},
+      "contradiction_scenario_ids": [],
+      "top_issues": [
+        [
+          "call_sequence_mismatch",
+          356
+        ],
+        [
+          "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+          356
+        ],
+        [
+          "temporal_mismatch:lookup_observation:timestamp,mode",
+          277
+        ],
+        [
+          "missing_goal_revision_answer",
+          237
+        ],
+        [
+          "missing_evidence_followup_answer",
+          237
+        ],
+        [
+          "missing_answer_fact:final_answer",
+          237
+        ],
+        [
+          "missing_phase_answer:1",
+          237
+        ],
+        [
+          "missing_phase_answer:2",
+          237
+        ],
+        [
+          "missing_phase_answer:3",
+          237
+        ],
+        [
+          "missing_tool:resolve_point",
+          197
+        ],
+        [
+          "missing_phase_answer:4",
+          197
+        ],
+        [
+          "controller_error:ValueError:unsupported_revision_surface:Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?",
+          120
+        ],
+        [
+          "missing_phase_answer:5",
+          117
+        ],
+        [
+          "missing_required_clarification:time_reference",
+          117
+        ],
+        [
+          "missing_answer_fact:commitment_action",
+          98
+        ],
+        [
+          "phase_5:missing_answer_fact:commitment_action",
+          98
+        ],
+        [
+          "missing_required_clarification:site_id",
+          80
+        ],
+        [
+          "missing_tool:inspect_quality_window",
+          80
+        ],
+        [
+          "temporal_mismatch:rank_window:window_start,window_end,period",
+          80
+        ],
+        [
+          "missing_tool:lookup_observation",
+          80
+        ],
+        [
+          "temporal_mismatch:aggregate_window:window_start,window_end,period",
+          74
+        ],
+        [
+          "phase_3:missing_answer_fact:value",
+          74
+        ],
+        [
+          "phase_4:missing_answer_fact:decision",
+          48
+        ],
+        [
+          "missing_tool:list_points",
+          40
+        ],
+        [
+          "missing_tool:rank_window",
+          40
+        ],
+        [
+          "missing_rationale_followup_answer",
+          40
+        ],
+        [
+          "phase_1:missing_answer_fact:winning_stream",
+          39
+        ],
+        [
+          "phase_1:missing_answer_fact:winning_stream_id",
+          39
+        ],
+        [
+          "phase_2:missing_answer_fact:winning_stream",
+          39
+        ],
+        [
+          "phase_2:missing_answer_fact:winning_stream_id",
+          39
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "track": "bts_e2e_agentic",
+  "e2e_track_version": "bts-e2e-v6-agentic",
+  "source_static_dir": "artifacts/bts-e2e-contract",
+  "splits": {
+    "train": 356,
+    "dev": 87,
+    "test": 89
+  },
+  "split_summaries": {
+    "train": {
+      "count": 356,
+      "interaction_modes": {
+        "clarify_site_then_evidence": 40,
+        "clarify_time_then_evidence": 236,
+        "implicit_nearest_then_evidence": 40,
+        "clarify_site_then_quality_decision_then_rationale_then_evidence": 40
+      },
+      "task_families": {
+        "point_disambiguation": 40,
+        "day_mean_lookup": 40,
+        "relative_24h_mean_lookup": 40,
+        "window_mean_lookup": 36,
+        "window_pairwise_compare": 40,
+        "window_rank": 40,
+        "timestamp_value_lookup": 40,
+        "timestamp_nearest_lookup": 40,
+        "quality_gate": 40
+      },
+      "required_clarification_slots": {
+        "1": 316,
+        "0": 40
+      }
+    },
+    "dev": {
+      "count": 87,
+      "interaction_modes": {
+        "clarify_site_then_evidence": 10,
+        "clarify_time_then_evidence": 57,
+        "implicit_nearest_then_evidence": 10,
+        "clarify_site_then_quality_decision_then_rationale_then_evidence": 10
+      },
+      "task_families": {
+        "point_disambiguation": 10,
+        "day_mean_lookup": 10,
+        "relative_24h_mean_lookup": 10,
+        "window_mean_lookup": 7,
+        "window_pairwise_compare": 10,
+        "window_rank": 10,
+        "timestamp_value_lookup": 10,
+        "timestamp_nearest_lookup": 10,
+        "quality_gate": 10
+      },
+      "required_clarification_slots": {
+        "1": 77,
+        "0": 10
+      }
+    },
+    "test": {
+      "count": 89,
+      "interaction_modes": {
+        "clarify_site_then_evidence": 10,
+        "clarify_time_then_evidence": 60,
+        "implicit_nearest_then_evidence": 10,
+        "clarify_site_then_quality_decision_then_rationale_then_evidence": 9
+      },
+      "task_families": {
+        "point_disambiguation": 10,
+        "day_mean_lookup": 10,
+        "relative_24h_mean_lookup": 10,
+        "window_mean_lookup": 10,
+        "window_pairwise_compare": 10,
+        "window_rank": 10,
+        "timestamp_value_lookup": 10,
+        "timestamp_nearest_lookup": 10,
+        "quality_gate": 9
+      },
+      "required_clarification_slots": {
+        "1": 79,
+        "0": 10
+      }
+    }
+  },
+  "task_families": {
+    "point_disambiguation": 60,
+    "day_mean_lookup": 60,
+    "relative_24h_mean_lookup": 60,
+    "window_mean_lookup": 53,
+    "window_pairwise_compare": 60,
+    "window_rank": 60,
+    "timestamp_value_lookup": 60,
+    "timestamp_nearest_lookup": 60,
+    "quality_gate": 59
+  },
+  "interaction_modes": {
+    "clarify_site_then_evidence": 60,
+    "clarify_time_then_evidence": 353,
+    "implicit_nearest_then_evidence": 60,
+    "clarify_site_then_quality_decision_then_rationale_then_evidence": 59
+  },
+  "family_interaction_modes": {
+    "point_disambiguation": {
+      "clarify_site_then_evidence": 60
+    },
+    "day_mean_lookup": {
+      "clarify_time_then_evidence": 60
+    },
+    "relative_24h_mean_lookup": {
+      "clarify_time_then_evidence": 60
+    },
+    "window_mean_lookup": {
+      "clarify_time_then_evidence": 53
+    },
+    "window_pairwise_compare": {
+      "clarify_time_then_evidence": 60
+    },
+    "window_rank": {
+      "clarify_time_then_evidence": 60
+    },
+    "timestamp_value_lookup": {
+      "clarify_time_then_evidence": 60
+    },
+    "timestamp_nearest_lookup": {
+      "implicit_nearest_then_evidence": 60
+    },
+    "quality_gate": {
+      "clarify_site_then_quality_decision_then_rationale_then_evidence": 59
+    }
+  },
+  "deterministic_user_simulator": true,
+  "followup_prompt_policy": {
+    "single_stream": "Which stream or point did you base that on?",
+    "multi_stream": "Which streams or points did you base that on?"
+  },
+  "clarify_policy_version": "deterministic-recoverable-slot-v2",
+  "clarify_policy_rule": "Mask exactly one recoverable slot from the initial user request, require one clarification question before acting, and provide the slot value through a deterministic user reply derived from the original public task or benchmark state. Do not mask a time reference when the benchmark family already evaluates nearest-fallback temporal resolution from an explicit anchor.",
+  "clarify_training_rows": 472,
+  "clarify_scope": "recoverable-slot masking with temporal fallback disentanglement",
+  "agentic_changes": {
+    "noncanonical_operator_handoff_query_field": true,
+    "all_point_disambiguation_requires_site_clarification": true,
+    "time_clarification_requires_anchor_missing_eligibility": true,
+    "nearest_fallback_tasks_do_not_require_time_clarification": true,
+    "quality_gate_requires_site_clarification_and_rationale": true,
+    "multi_slot_clarification_enabled": true
+  },
+  "clarification_capability_count": 472,
+  "multi_slot_clarification_count": 0,
+  "quality_abstention_capability_count": 15,
+  "clarify_plus_quality_mode_count": 59,
+  "avg_evidence_stream_count": 1.2256,
+  "row_level_generation_history": {
+    "enabled": true,
+    "history_version": "generation-history-v1",
+    "stages": [
+      "seed_static_executable_task",
+      "deterministic_e2e_contract_generation",
+      "agentic_operator_surface_generation"
+    ]
+  }
+}

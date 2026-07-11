@@ -1,0 +1,9 @@
+{
+  "model": "gemini-3.1-pro-openrouter",
+  "artifact": "bts-canonical-final",
+  "scenario_count": 89,
+  "accomplished": 71,
+  "partially_accomplished": 18,
+  "not_accomplished": 0,
+  "overall_percent": 79.8
+}

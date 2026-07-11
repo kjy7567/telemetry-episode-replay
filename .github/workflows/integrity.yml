@@ -1,0 +1,26 @@
+name: artifact-integrity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile source
+        run: python -m compileall -q scripts src
+      - name: Verify packaged release
+        run: python scripts/verify_packaged_release.py
+      - name: Verify fixed model traces
+        run: |
+          python scripts/audit_model_traces.py
+          git diff --exit-code reports/model-runs/trace_audit.json
+      - name: Verify human-validation packet generation
+        run: |
+          python scripts/build_human_validation_packet.py
+          git diff --exit-code human_validation/packet

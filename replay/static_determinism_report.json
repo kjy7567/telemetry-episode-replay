@@ -1,0 +1,41 @@
+{
+  "report_version": "static-determinism-v1",
+  "input": "materialized BTS tool store plus checksum-verified raw archives",
+  "runs": 2,
+  "python_hash_seeds": [
+    "1",
+    "987654"
+  ],
+  "run_a_equals_run_b": true,
+  "splits": {
+    "train": {
+      "rows": 356,
+      "sha256": "9b5249ed7b89331b50bd26376f3f79a99e3fd326617f5da8851a278dd22134d7"
+    },
+    "dev": {
+      "rows": 87,
+      "sha256": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d"
+    },
+    "test": {
+      "rows": 89,
+      "sha256": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
+    }
+  },
+  "maintenance_change": {
+    "reason": "explicit stream-ID tie-break for equal-gap pairwise candidates",
+    "changed_split": "train",
+    "changed_row_count": 8,
+    "changed_scenario_ids": [
+      "train_window_pairwise_compare_00045",
+      "train_window_pairwise_compare_00047",
+      "train_window_pairwise_compare_00048",
+      "train_window_pairwise_compare_00049",
+      "train_window_pairwise_compare_00054",
+      "train_window_pairwise_compare_00055",
+      "train_window_pairwise_compare_00056",
+      "train_window_pairwise_compare_00057"
+    ],
+    "dev_matches_evaluated_release": true,
+    "test_matches_evaluated_release": true
+  }
+}

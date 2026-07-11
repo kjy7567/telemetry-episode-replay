@@ -1,0 +1,2127 @@
+{
+  "trace_version": "scenario-provenance-v1",
+  "scenario_id": "test_timestamp_value_lookup_00051",
+  "raw_sources": [
+    {
+      "site_id": "BTS_C",
+      "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+      "point_class": "Air_Differential_Pressure_Sensor",
+      "equipment_label": "BTS_C Zone 005",
+      "location_label": "nan",
+      "raw_archive": "Site_Caa.zip",
+      "raw_member_name": "Site_Caa/2254.pickle",
+      "raw_n_points": "194563.0",
+      "raw_first_timestamp": "2020-05-22T00:17:44.162000+00:00",
+      "raw_last_timestamp": "2024-01-18T10:11:25.003000+00:00",
+      "scenario_ids": "test_quality_gate_00051;test_quality_gate_00052;test_quality_gate_00053;test_quality_gate_00054;test_quality_gate_00055;test_quality_gate_00056;test_quality_gate_00057;test_quality_gate_00058;test_timestamp_nearest_lookup_00051;test_timestamp_value_lookup_00051"
+    }
+  ],
+  "static_task": {
+    "scenario_id": "test_timestamp_value_lookup_00051",
+    "split": "test",
+    "site_id": "BTS_C",
+    "task_family": "timestamp_value_lookup",
+    "query": "At 07:03 UTC on February 3, 2022, what reading did the air differential pressure reading attached to Zone 005 report in BTS_C?",
+    "canonical_tool_calls": [
+      {
+        "call_id": "c1",
+        "tool_name": "resolve_point",
+        "arguments": {
+          "site_id": "BTS_C",
+          "point_class": "Air_Differential_Pressure_Sensor",
+          "equipment_label": "BTS_C Zone 005"
+        }
+      },
+      {
+        "call_id": "c2",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "stream_id": "$c1.stream_id",
+          "timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "mode": "exact"
+        }
+      }
+    ],
+    "acceptable_tool_call_sets": [
+      [
+        {
+          "call_id": "c1",
+          "tool_name": "resolve_point",
+          "arguments": {
+            "site_id": "BTS_C",
+            "point_class": "Air_Differential_Pressure_Sensor",
+            "equipment_label": "BTS_C Zone 005"
+          }
+        },
+        {
+          "call_id": "c2",
+          "tool_name": "lookup_observation",
+          "arguments": {
+            "stream_id": "$c1.stream_id",
+            "timestamp": "2022-02-03T07:03:23.640000+00:00",
+            "mode": "exact"
+          }
+        }
+      ],
+      [
+        {
+          "call_id": "c1",
+          "tool_name": "resolve_point",
+          "arguments": {
+            "site_id": "BTS_C",
+            "point_class": "Air_Differential_Pressure_Sensor",
+            "equipment_label": "BTS_C Zone 005"
+          }
+        },
+        {
+          "call_id": "c2",
+          "tool_name": "lookup_observation",
+          "arguments": {
+            "stream_id": "$c1.stream_id",
+            "timestamp": "2022-02-03T07:03:23.640000+00:00",
+            "mode": "nearest"
+          }
+        }
+      ]
+    ],
+    "gold_final_answer": {
+      "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+      "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+      "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+      "value": 12.9457,
+      "exact_match_found": true
+    },
+    "evidence": {
+      "stream_ids": [
+        "c24589e8_a1f3_4529_b409_5a56761c9d20"
+      ]
+    },
+    "task_accomplish_verifier": {
+      "verifier_name": "task_accomplish_v1",
+      "label_space": [
+        "accomplished",
+        "partially_accomplished",
+        "not_accomplished"
+      ],
+      "final_answer_checks": {
+        "required_fields": [
+          "stream_id",
+          "observed_timestamp",
+          "value",
+          "exact_match_found"
+        ],
+        "numeric_tolerance": {
+          "value": 0.001
+        },
+        "categorical_exact_match": [
+          "stream_id",
+          "observed_timestamp",
+          "exact_match_found"
+        ]
+      },
+      "process_checks": {
+        "required_tools": [
+          "resolve_point",
+          "lookup_observation"
+        ],
+        "allow_additional_tools": true
+      },
+      "evidence_checks": {
+        "required_stream_ids": [
+          "c24589e8_a1f3_4529_b409_5a56761c9d20"
+        ]
+      }
+    }
+  },
+  "final_episode": {
+    "scenario_id": "test_timestamp_value_lookup_00051",
+    "backing_static_scenario_id": "test_timestamp_value_lookup_00051",
+    "interaction_mode": "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence",
+    "initial_user_message": "Operator handoff: \"What was the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
+    "required_clarification_slots": [
+      "time_reference"
+    ],
+    "clarification_answers": {
+      "time_reference": "I mean 07:03:23.64 UTC on February 3, 2022."
+    },
+    "goal_revision_turns": [
+      "Now keep the same signal and site, but if I only know it was around 07:03 UTC on February 3, 2022, give me the nearest available reading.",
+      "For the week beginning January 31, 2022, would you answer or abstain based on data quality?",
+      "Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?"
+    ],
+    "phase_examples": [
+      {
+        "task_family": "timestamp_value_lookup",
+        "gold_final_answer": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "value": 12.9457,
+          "exact_match_found": true
+        },
+        "task_accomplish_verifier": {
+          "final_answer_checks": {
+            "required_fields": [
+              "observed_timestamp",
+              "value"
+            ],
+            "numeric_tolerance": {},
+            "categorical_exact_match": []
+          }
+        }
+      },
+      {
+        "task_family": "timestamp_value_lookup",
+        "gold_final_answer": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "requested_timestamp": "2022-02-03T07:03:00+00:00",
+          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "value": 12.9457,
+          "exact_match_found": false,
+          "fallback_reason": "nearest_available_observation",
+          "offset_seconds": 23.64
+        },
+        "task_accomplish_verifier": {
+          "final_answer_checks": {
+            "required_fields": [
+              "observed_timestamp",
+              "value"
+            ],
+            "numeric_tolerance": {},
+            "categorical_exact_match": []
+          }
+        }
+      },
+      {
+        "task_family": "quality_gate",
+        "gold_final_answer": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "decision": "answer",
+          "reason": "healthy",
+          "observed_fraction": 1.0,
+          "gap_ratio": 1.0563,
+          "window_start": "2022-01-31T00:00:00+00:00",
+          "window_end": "2022-02-07T00:00:00+00:00",
+          "period": "week"
+        },
+        "task_accomplish_verifier": {
+          "final_answer_checks": {
+            "required_fields": [
+              "decision",
+              "observed_fraction",
+              "gap_ratio"
+            ],
+            "numeric_tolerance": {},
+            "categorical_exact_match": []
+          }
+        }
+      },
+      {
+        "task_family": "timestamp_reportability_decision",
+        "gold_final_answer": {
+          "commitment_action": "answer",
+          "reason": "nearest_but_acceptable"
+        },
+        "task_accomplish_verifier": {
+          "final_answer_checks": {
+            "required_fields": [
+              "commitment_action"
+            ],
+            "numeric_tolerance": {},
+            "categorical_exact_match": []
+          }
+        }
+      }
+    ],
+    "phase_gold_final_answers": [
+      {
+        "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+        "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+        "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+        "value": 12.9457,
+        "exact_match_found": true
+      },
+      {
+        "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+        "requested_timestamp": "2022-02-03T07:03:00+00:00",
+        "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+        "value": 12.9457,
+        "exact_match_found": false,
+        "fallback_reason": "nearest_available_observation",
+        "offset_seconds": 23.64
+      },
+      {
+        "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+        "decision": "answer",
+        "reason": "healthy",
+        "observed_fraction": 1.0,
+        "gap_ratio": 1.0563,
+        "window_start": "2022-01-31T00:00:00+00:00",
+        "window_end": "2022-02-07T00:00:00+00:00",
+        "period": "week"
+      },
+      {
+        "commitment_action": "answer",
+        "reason": "nearest_but_acceptable"
+      }
+    ],
+    "gold_final_answer": {
+      "commitment_action": "answer",
+      "reason": "nearest_but_acceptable"
+    },
+    "evidence": {
+      "stream_ids": [
+        "c24589e8_a1f3_4529_b409_5a56761c9d20"
+      ]
+    },
+    "release_filter": {
+      "main_release_eligible": true,
+      "main_release_reasons": [
+        "timestamp_policy_template_hardness"
+      ]
+    }
+  },
+  "generation_history": [
+    {
+      "stage": "seed_static_executable_task",
+      "stage_type": "seed",
+      "builder": "scenario_benchmark",
+      "status": "observed",
+      "details": {
+        "source_static_scenario_id": "test_timestamp_value_lookup_00051",
+        "task_family": "timestamp_value_lookup",
+        "query": "At 07:03 UTC on February 3, 2022, what reading did the air differential pressure reading attached to Zone 005 report in BTS_C?",
+        "query_surface_version": "operator-robust-v1",
+        "canonical_tool_names": [
+          "resolve_point",
+          "lookup_observation"
+        ],
+        "canonical_tool_count": 2
+      }
+    },
+    {
+      "stage": "deterministic_e2e_contract_generation",
+      "stage_type": "contract",
+      "builder": "build_bts_e2e",
+      "status": "generated",
+      "details": {
+        "e2e_track_version": "bts-e2e-v5",
+        "interaction_mode": "direct_then_evidence",
+        "required_clarification_slots": [],
+        "goal_revision_turn_count": 0,
+        "post_answer_user_turn_count": 1,
+        "interaction_milestones": [
+          "deliver_operator_answer",
+          "provide_stream_evidence"
+        ],
+        "followup_prompt": "Which stream or point did you base that on?"
+      }
+    },
+    {
+      "stage": "agentic_operator_surface_generation",
+      "stage_type": "surface",
+      "builder": "build_bts_e2e_agentic",
+      "status": "generated",
+      "details": {
+        "agentic_track_version": "bts-e2e-v6-agentic",
+        "agentic_surface_version": "operator-handoff-v1",
+        "source_e2e_scenario_id": "test_timestamp_value_lookup_00051",
+        "interaction_mode": "clarify_time_then_evidence",
+        "initial_user_message": "Operator handoff: \"What reading did the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "required_clarification_slots": [
+          "time_reference"
+        ],
+        "goal_revision_turn_count": 0,
+        "post_answer_user_turn_count": 1
+      }
+    },
+    {
+      "step_index": 3,
+      "stage": "canonical_seed_entry",
+      "stage_type": "audit",
+      "builder": "build_canonical_agentic_final",
+      "status": "observed",
+      "details": {
+        "source_agentic_scenario_id": "test_timestamp_value_lookup_00051",
+        "source_static_scenario_id": "test_timestamp_value_lookup_00051",
+        "source_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": false,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "source_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 4,
+      "stage": "timestamp_policy_surface_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "modified",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": false,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 5,
+      "stage": "timestamp_nearest_contract_humanization",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 6,
+      "stage": "timestamp_value_revision_contract_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "modified",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_evidence",
+          "phase_count": 1,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 0,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 2,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "RESOLVE_SINGLE_STREAM"
+          ],
+          "satisfiable_solver_classes": [
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS11_quality_gate_template_solver",
+            "RS13_short_memory_controller"
+          ],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS4_no_followup_commitment",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 7,
+      "stage": "goal_revision_contract_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 8,
+      "stage": "point_target_revision_contract_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 9,
+      "stage": "goal_revision_clarification_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "modified",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_policy_timestamp_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 10,
+      "stage": "canonical_surface_normalization",
+      "stage_type": "surface",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 11,
+      "stage": "controller_proxy_audit_round_1",
+      "stage_type": "audit",
+      "builder": "build_canonical_agentic_final",
+      "status": "observed",
+      "details": {
+        "contract_before_controller_repair": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "dsl_audit_before_controller_repair": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "controller_proxy_audit": {
+          "controller": "composite_explicit_controller_proxy",
+          "audit_mode": "capability_bound_proxy",
+          "controller_cluster": "single_stream_stateful_revision",
+          "goal_revision_turn_count": 1,
+          "label": "accomplished",
+          "strict_label": "accomplished",
+          "contradicts_declared_dsl": false,
+          "contradicted_dsl_classes": [],
+          "interaction_issues": [],
+          "verification": {
+            "process_score": 1.0,
+            "task_score": 1.0,
+            "temporal_score": 1.0,
+            "grounding_score": 1.0,
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "step_index": 12,
+      "stage": "controller_proxy_repair_round_1",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "before_explicit_controller_audit": {
+          "controller": "composite_explicit_controller_proxy",
+          "audit_mode": "capability_bound_proxy",
+          "controller_cluster": "single_stream_stateful_revision",
+          "goal_revision_turn_count": 1,
+          "label": "accomplished",
+          "strict_label": "accomplished",
+          "contradicts_declared_dsl": false,
+          "contradicted_dsl_classes": [],
+          "interaction_issues": [],
+          "verification": {
+            "process_score": 1.0,
+            "task_score": 1.0,
+            "temporal_score": 1.0,
+            "grounding_score": 1.0,
+            "issues": []
+          }
+        },
+        "after_explicit_controller_audit": {
+          "controller": "composite_explicit_controller_proxy",
+          "audit_mode": "capability_bound_proxy",
+          "controller_cluster": "single_stream_stateful_revision",
+          "goal_revision_turn_count": 1,
+          "label": "accomplished",
+          "strict_label": "accomplished",
+          "contradicts_declared_dsl": false,
+          "contradicted_dsl_classes": [],
+          "interaction_issues": [],
+          "verification": {
+            "process_score": 1.0,
+            "task_score": 1.0,
+            "temporal_score": 1.0,
+            "grounding_score": 1.0,
+            "issues": []
+          }
+        }
+      }
+    },
+    {
+      "step_index": 13,
+      "stage": "multi_axis_composition_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "modified",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 2,
+          "phase_task_families": [
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 1,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "fallback_reason",
+            "observed_timestamp",
+            "offset_seconds",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 3,
+          "phase_task_families": [
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 2,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "preferred_reference",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 14,
+      "stage": "reporting_commitment_composition_repair",
+      "stage_type": "repair",
+      "builder": "build_canonical_agentic_final",
+      "status": "modified",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 3,
+          "phase_task_families": [
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 2,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "exact_match_found",
+            "observed_timestamp",
+            "preferred_reference",
+            "requested_timestamp",
+            "stream_id",
+            "value"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 4,
+          "phase_task_families": [
+            "reporting_commitment",
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 3,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "commitment_action",
+            "reason"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 15,
+      "stage": "canonical_surface_normalization_after_controller_repair",
+      "stage_type": "surface",
+      "builder": "build_canonical_agentic_final",
+      "status": "noop",
+      "details": {
+        "before_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 4,
+          "phase_task_families": [
+            "reporting_commitment",
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 3,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "commitment_action",
+            "reason"
+          ]
+        },
+        "after_contract": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 4,
+          "phase_task_families": [
+            "reporting_commitment",
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 3,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "commitment_action",
+            "reason"
+          ]
+        },
+        "before_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        },
+        "after_dsl_audit": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 16,
+      "stage": "canonical_pre_hardness_contract_ready",
+      "stage_type": "audit",
+      "builder": "build_canonical_agentic_final",
+      "status": "generated",
+      "details": {
+        "final_contract_before_global_audit": {
+          "scenario_id": "test_timestamp_value_lookup_00051",
+          "task_family": "timestamp_value_lookup",
+          "interaction_mode": "clarify_time_then_goal_revision_then_evidence",
+          "phase_count": 4,
+          "phase_task_families": [
+            "reporting_commitment",
+            "timestamp_preference",
+            "timestamp_value_lookup"
+          ],
+          "required_clarification_slots": [
+            "time_reference"
+          ],
+          "goal_revision_turn_count": 3,
+          "post_answer_user_turn_count": 1,
+          "canonical_tool_names": [
+            "resolve_point",
+            "lookup_observation",
+            "lookup_observation",
+            "lookup_observation"
+          ],
+          "canonical_tool_count": 4,
+          "policy_choice_contract": true,
+          "quality_decision": null,
+          "gold_keys": [
+            "commitment_action",
+            "reason"
+          ]
+        },
+        "dsl_audit_before_global_hardness": {
+          "required_atoms": [
+            "ANSWER_EVIDENCE",
+            "ANSWER_FINAL",
+            "ANSWER_INITIAL",
+            "ASK_TIME",
+            "PROBE_EXACT",
+            "PROBE_NEAREST",
+            "RESOLVE_SINGLE_STREAM",
+            "REVISE_SAME_CONTEXT",
+            "REVISE_SAME_CONTEXT_MULTI"
+          ],
+          "satisfiable_solver_classes": [],
+          "blocked_solver_classes": [
+            "RS0_public_single_pass",
+            "RS1_public_slot_template",
+            "RS2_exact_timestamp_only",
+            "RS3_no_abstain_branch",
+            "RS4_no_followup_commitment",
+            "RS5_no_state_carryover",
+            "RS6_no_goal_revision",
+            "RS7_no_quality_decision",
+            "RS8_stateful_single_stream_revision",
+            "RS9_stateful_pairwise_revision",
+            "RS10_rank_template_solver",
+            "RS11_quality_gate_template_solver",
+            "RS12_timestamp_policy_template",
+            "RS13_short_memory_controller",
+            "RS14_point_target_revision_template"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 17,
+      "stage": "declared_solver_hardness_audit",
+      "stage_type": "audit",
+      "builder": "build_canonical_agentic_final",
+      "status": "generated",
+      "details": {
+        "required_atoms": [
+          "ANSWER_EVIDENCE",
+          "ANSWER_FINAL",
+          "ANSWER_INITIAL",
+          "ASK_TIME",
+          "PROBE_EXACT",
+          "PROBE_NEAREST",
+          "RESOLVE_SINGLE_STREAM",
+          "REVISE_SAME_CONTEXT",
+          "REVISE_SAME_CONTEXT_MULTI"
+        ],
+        "blocked_solver_classes": [
+          "RS0_public_single_pass",
+          "RS10_rank_template_solver",
+          "RS11_quality_gate_template_solver",
+          "RS12_timestamp_policy_template",
+          "RS13_short_memory_controller",
+          "RS14_point_target_revision_template",
+          "RS1_public_slot_template",
+          "RS2_exact_timestamp_only",
+          "RS3_no_abstain_branch",
+          "RS4_no_followup_commitment",
+          "RS5_no_state_carryover",
+          "RS6_no_goal_revision",
+          "RS7_no_quality_decision",
+          "RS8_stateful_single_stream_revision",
+          "RS9_stateful_pairwise_revision"
+        ],
+        "certificate_count": 15,
+        "public_view_signature_hash": "pv_88e6704a378b",
+        "release_filter": {
+          "main_release_eligible": true,
+          "main_release_reasons": [
+            "timestamp_policy_template_hardness"
+          ]
+        }
+      }
+    },
+    {
+      "step_index": 18,
+      "stage": "canonical_row_acceptance",
+      "stage_type": "acceptance",
+      "builder": "build_canonical_agentic_final",
+      "status": "accepted",
+      "details": {
+        "interaction_primitives": [
+          "operator_handoff_surface",
+          "clarify_time",
+          "timestamp_policy_choice",
+          "goal_revision",
+          "state_carryover",
+          "evidence_followup"
+        ],
+        "interaction_necessity": {
+          "clarification_necessity": true,
+          "policy_branch_necessity": true,
+          "aggregate_reasoning_necessity": false,
+          "group_reasoning_necessity": false,
+          "target_resolution_necessity": true,
+          "quality_decision_necessity": false,
+          "timestamp_policy_necessity": true,
+          "state_carryover_necessity": true,
+          "goal_revision_necessity": true,
+          "evidence_gated_commitment": true,
+          "rationale_gated_commitment": false,
+          "accepted_as_agentic": true,
+          "accepted_as_agentic_basis": [
+            "policy_branch_necessity",
+            "target_resolution_necessity",
+            "timestamp_policy_necessity",
+            "state_carryover_necessity",
+            "goal_revision_necessity"
+          ]
+        },
+        "main_release_eligible": true,
+        "main_release_reasons": [
+          "timestamp_policy_template_hardness"
+        ]
+      }
+    },
+    {
+      "step_index": 19,
+      "stage": "final_family_semantics_repair",
+      "stage_type": "repair",
+      "builder": "build_bts_canonical_final",
+      "status": "applied",
+      "details": {
+        "artifact_version": "bts-canonical-final",
+        "lifting_version": "bts-agentic-final"
+      }
+    }
+  ]
+}

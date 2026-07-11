@@ -1,0 +1,83 @@
+{
+  "day_mean_lookup": {
+    "accomplished": 7,
+    "total": 10,
+    "percent": 70.0,
+    "label_counts": {
+      "accomplished": 7,
+      "partially_accomplished": 3
+    }
+  },
+  "point_disambiguation": {
+    "accomplished": 6,
+    "total": 10,
+    "percent": 60.0,
+    "label_counts": {
+      "partially_accomplished": 4,
+      "accomplished": 6
+    }
+  },
+  "quality_gate": {
+    "accomplished": 8,
+    "total": 9,
+    "percent": 88.9,
+    "label_counts": {
+      "accomplished": 8,
+      "partially_accomplished": 1
+    }
+  },
+  "relative_24h_mean_lookup": {
+    "accomplished": 9,
+    "total": 10,
+    "percent": 90.0,
+    "label_counts": {
+      "accomplished": 9,
+      "partially_accomplished": 1
+    }
+  },
+  "timestamp_nearest_lookup": {
+    "accomplished": 7,
+    "total": 10,
+    "percent": 70.0,
+    "label_counts": {
+      "accomplished": 7,
+      "partially_accomplished": 3
+    }
+  },
+  "timestamp_value_lookup": {
+    "accomplished": 5,
+    "total": 10,
+    "percent": 50.0,
+    "label_counts": {
+      "accomplished": 5,
+      "partially_accomplished": 5
+    }
+  },
+  "window_mean_lookup": {
+    "accomplished": 7,
+    "total": 10,
+    "percent": 70.0,
+    "label_counts": {
+      "accomplished": 7,
+      "partially_accomplished": 3
+    }
+  },
+  "window_pairwise_compare": {
+    "accomplished": 5,
+    "total": 10,
+    "percent": 50.0,
+    "label_counts": {
+      "accomplished": 5,
+      "partially_accomplished": 5
+    }
+  },
+  "window_rank": {
+    "accomplished": 4,
+    "total": 10,
+    "percent": 40.0,
+    "label_counts": {
+      "partially_accomplished": 6,
+      "accomplished": 4
+    }
+  }
+}

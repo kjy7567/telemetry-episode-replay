@@ -1,0 +1,141 @@
+{
+  "report_version": "fixed-trace-audit-v1",
+  "models": {
+    "gpt-5.5": {
+      "rows": 89,
+      "labels": {
+        "accomplished": 79,
+        "partially_accomplished": 10
+      },
+      "protocol_success": 86,
+      "task_success": 80,
+      "accomplished_definition_verified": true,
+      "by_family": {
+        "day_mean_lookup": {
+          "accomplished": 10
+        },
+        "point_disambiguation": {
+          "accomplished": 8,
+          "partially_accomplished": 2
+        },
+        "quality_gate": {
+          "accomplished": 9
+        },
+        "relative_24h_mean_lookup": {
+          "accomplished": 10
+        },
+        "timestamp_nearest_lookup": {
+          "accomplished": 10
+        },
+        "timestamp_value_lookup": {
+          "accomplished": 9,
+          "partially_accomplished": 1
+        },
+        "window_mean_lookup": {
+          "accomplished": 9,
+          "partially_accomplished": 1
+        },
+        "window_pairwise_compare": {
+          "accomplished": 6,
+          "partially_accomplished": 4
+        },
+        "window_rank": {
+          "accomplished": 8,
+          "partially_accomplished": 2
+        }
+      }
+    },
+    "gemini-3.1-pro-openrouter": {
+      "rows": 89,
+      "labels": {
+        "accomplished": 71,
+        "partially_accomplished": 18
+      },
+      "protocol_success": 81,
+      "task_success": 72,
+      "accomplished_definition_verified": true,
+      "by_family": {
+        "day_mean_lookup": {
+          "accomplished": 8,
+          "partially_accomplished": 2
+        },
+        "point_disambiguation": {
+          "accomplished": 5,
+          "partially_accomplished": 5
+        },
+        "quality_gate": {
+          "accomplished": 9
+        },
+        "relative_24h_mean_lookup": {
+          "accomplished": 9,
+          "partially_accomplished": 1
+        },
+        "timestamp_nearest_lookup": {
+          "accomplished": 10
+        },
+        "timestamp_value_lookup": {
+          "accomplished": 10
+        },
+        "window_mean_lookup": {
+          "accomplished": 10
+        },
+        "window_pairwise_compare": {
+          "accomplished": 5,
+          "partially_accomplished": 5
+        },
+        "window_rank": {
+          "accomplished": 5,
+          "partially_accomplished": 5
+        }
+      }
+    },
+    "claude-opus-4.7-openrouter": {
+      "rows": 89,
+      "labels": {
+        "accomplished": 58,
+        "partially_accomplished": 31
+      },
+      "protocol_success": 81,
+      "task_success": 62,
+      "accomplished_definition_verified": true,
+      "by_family": {
+        "day_mean_lookup": {
+          "accomplished": 7,
+          "partially_accomplished": 3
+        },
+        "point_disambiguation": {
+          "accomplished": 6,
+          "partially_accomplished": 4
+        },
+        "quality_gate": {
+          "accomplished": 8,
+          "partially_accomplished": 1
+        },
+        "relative_24h_mean_lookup": {
+          "accomplished": 9,
+          "partially_accomplished": 1
+        },
+        "timestamp_nearest_lookup": {
+          "accomplished": 7,
+          "partially_accomplished": 3
+        },
+        "timestamp_value_lookup": {
+          "accomplished": 5,
+          "partially_accomplished": 5
+        },
+        "window_mean_lookup": {
+          "accomplished": 7,
+          "partially_accomplished": 3
+        },
+        "window_pairwise_compare": {
+          "accomplished": 5,
+          "partially_accomplished": 5
+        },
+        "window_rank": {
+          "accomplished": 4,
+          "partially_accomplished": 6
+        }
+      }
+    }
+  }
+}

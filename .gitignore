@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+data/local-build/*
+!data/local-build/.gitkeep
+data/_meta_replay_*/

@@ -1,0 +1,16 @@
+{
+  "sites": [
+    "BTS_A",
+    "BTS_B",
+    "BTS_C"
+  ],
+  "stream_count": 19665,
+  "entity_count": 22997,
+  "relation_count": 26749,
+  "streams_per_site": {
+    "BTS_A": 8374,
+    "BTS_B": 851,
+    "BTS_C": 10440
+  },
+  "graph_parse_issues": []
+}

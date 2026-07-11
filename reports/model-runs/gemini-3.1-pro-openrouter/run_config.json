@@ -1,0 +1,18 @@
+{
+  "configuration_source": "retained runner and trace",
+  "model": "google/gemini-3.1-pro-preview",
+  "endpoint": "https://openrouter.ai/api/v1",
+  "provider_mode": "gemini",
+  "base_max_turns": 12,
+  "row_minimum_turn_budget_enabled": true,
+  "requested_max_completion_tokens": 512,
+  "effective_max_completion_tokens": 1536,
+  "reasoning_effort": "medium",
+  "verbosity_sent": false,
+  "temperature_argument": 0.0,
+  "seed_sent": false,
+  "parallel_tool_calls": false,
+  "timeout_seconds": 180,
+  "retained_traces": 89,
+  "runs_per_row": 1
+}

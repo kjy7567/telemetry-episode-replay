@@ -1,0 +1,18 @@
+{
+  "configuration_source": "retained runner and trace",
+  "model": "gpt-5.5",
+  "endpoint": "OpenAI direct",
+  "provider_mode": "openai",
+  "base_max_turns": 12,
+  "row_minimum_turn_budget_enabled": true,
+  "requested_max_completion_tokens": 512,
+  "effective_max_completion_tokens": 512,
+  "reasoning_effort": "medium",
+  "verbosity": "low",
+  "temperature_argument": 0.0,
+  "seed_argument": 0,
+  "parallel_tool_calls": false,
+  "timeout_seconds": 180,
+  "retained_traces": 89,
+  "runs_per_row": 1
+}

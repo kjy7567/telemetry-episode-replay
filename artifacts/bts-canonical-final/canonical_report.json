@@ -1,0 +1,178 @@
+{
+  "artifact_version": "bts-canonical-final",
+  "lifting_version": "bts-agentic-final",
+  "split_summaries": {
+    "train": {
+      "count": 356,
+      "interaction_modes": {
+        "clarify_site_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 40,
+        "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 196,
+        "clarify_time_then_quality_decision_then_goal_revision_then_evidence": 40,
+        "direct_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 40,
+        "clarify_site_then_quality_decision_then_goal_revision_then_rationale_then_evidence": 40
+      },
+      "task_families": {
+        "point_disambiguation": 40,
+        "day_mean_lookup": 40,
+        "relative_24h_mean_lookup": 40,
+        "window_mean_lookup": 36,
+        "window_pairwise_compare": 40,
+        "window_rank": 40,
+        "timestamp_value_lookup": 40,
+        "timestamp_nearest_lookup": 40,
+        "quality_gate": 40
+      },
+      "required_clarification_slot_cardinality": {
+        "1": 316,
+        "0": 40
+      },
+      "canonical_tool_call_lengths": {
+        "5": 80,
+        "6": 116,
+        "8": 40,
+        "4": 80,
+        "3": 40
+      },
+      "post_answer_user_turn_lengths": {
+        "1": 316,
+        "2": 40
+      },
+      "goal_revision_turn_lengths": {
+        "4": 236,
+        "3": 80,
+        "2": 40
+      },
+      "phase_count_histogram": {
+        "5": 236,
+        "4": 80,
+        "3": 40
+      },
+      "phase_patterns": {
+        "point_disambiguation -> point_disambiguation -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 40,
+        "day_mean_lookup -> day_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 40,
+        "relative_24h_mean_lookup -> relative_24h_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 40,
+        "window_mean_lookup -> window_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 36,
+        "window_pairwise_compare -> window_pairwise_compare -> timestamp_nearest_lookup -> quality_preference -> reporting_commitment": 40,
+        "window_rank -> window_rank -> rank_stability_assessment -> quality_gate -> reporting_commitment": 40,
+        "timestamp_value_lookup -> timestamp_value_lookup -> quality_gate -> timestamp_reportability_decision": 40,
+        "timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 40,
+        "quality_gate -> quality_gate -> quality_trend_assessment -> reporting_commitment": 40
+      }
+    },
+    "dev": {
+      "count": 87,
+      "interaction_modes": {
+        "clarify_site_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 10,
+        "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 47,
+        "clarify_time_then_quality_decision_then_goal_revision_then_evidence": 10,
+        "direct_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 10,
+        "clarify_site_then_quality_decision_then_goal_revision_then_rationale_then_evidence": 10
+      },
+      "task_families": {
+        "point_disambiguation": 10,
+        "day_mean_lookup": 10,
+        "relative_24h_mean_lookup": 10,
+        "window_mean_lookup": 7,
+        "window_pairwise_compare": 10,
+        "window_rank": 10,
+        "timestamp_value_lookup": 10,
+        "timestamp_nearest_lookup": 10,
+        "quality_gate": 10
+      },
+      "required_clarification_slot_cardinality": {
+        "1": 77,
+        "0": 10
+      },
+      "canonical_tool_call_lengths": {
+        "5": 20,
+        "6": 27,
+        "8": 10,
+        "4": 20,
+        "3": 10
+      },
+      "post_answer_user_turn_lengths": {
+        "1": 77,
+        "2": 10
+      },
+      "goal_revision_turn_lengths": {
+        "4": 57,
+        "3": 20,
+        "2": 10
+      },
+      "phase_count_histogram": {
+        "5": 57,
+        "4": 20,
+        "3": 10
+      },
+      "phase_patterns": {
+        "point_disambiguation -> point_disambiguation -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "day_mean_lookup -> day_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 10,
+        "relative_24h_mean_lookup -> relative_24h_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 10,
+        "window_mean_lookup -> window_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 7,
+        "window_pairwise_compare -> window_pairwise_compare -> timestamp_nearest_lookup -> quality_preference -> reporting_commitment": 10,
+        "window_rank -> window_rank -> rank_stability_assessment -> quality_gate -> reporting_commitment": 10,
+        "timestamp_value_lookup -> timestamp_value_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "quality_gate -> quality_gate -> quality_trend_assessment -> reporting_commitment": 10
+      }
+    },
+    "test": {
+      "count": 89,
+      "interaction_modes": {
+        "clarify_site_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 10,
+        "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 50,
+        "clarify_time_then_quality_decision_then_goal_revision_then_evidence": 10,
+        "direct_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": 10,
+        "clarify_site_then_quality_decision_then_goal_revision_then_rationale_then_evidence": 9
+      },
+      "task_families": {
+        "point_disambiguation": 10,
+        "day_mean_lookup": 10,
+        "relative_24h_mean_lookup": 10,
+        "window_mean_lookup": 10,
+        "window_pairwise_compare": 10,
+        "window_rank": 10,
+        "timestamp_value_lookup": 10,
+        "timestamp_nearest_lookup": 10,
+        "quality_gate": 9
+      },
+      "required_clarification_slot_cardinality": {
+        "1": 79,
+        "0": 10
+      },
+      "canonical_tool_call_lengths": {
+        "5": 20,
+        "6": 30,
+        "8": 10,
+        "4": 20,
+        "3": 9
+      },
+      "post_answer_user_turn_lengths": {
+        "1": 80,
+        "2": 9
+      },
+      "goal_revision_turn_lengths": {
+        "4": 60,
+        "3": 19,
+        "2": 10
+      },
+      "phase_count_histogram": {
+        "5": 60,
+        "4": 19,
+        "3": 10
+      },
+      "phase_patterns": {
+        "point_disambiguation -> point_disambiguation -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "day_mean_lookup -> day_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 10,
+        "relative_24h_mean_lookup -> relative_24h_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> reporting_commitment": 10,
+        "window_mean_lookup -> window_mean_lookup -> timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "window_pairwise_compare -> window_pairwise_compare -> timestamp_nearest_lookup -> quality_preference -> reporting_commitment": 10,
+        "window_rank -> window_rank -> rank_stability_assessment -> quality_gate -> reporting_commitment": 10,
+        "timestamp_value_lookup -> timestamp_value_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "timestamp_nearest_lookup -> quality_gate -> timestamp_reportability_decision": 10,
+        "quality_gate -> quality_gate -> quality_trend_assessment -> reporting_commitment": 9
+      }
+    }
+  },
+  "seed_artifact_dir": "artifacts/bts-canonical-seed"
+}
