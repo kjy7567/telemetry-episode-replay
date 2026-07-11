@@ -11,6 +11,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ("train", "dev", "test")
 FIXED_ZIP_TIME = (2026, 1, 1, 0, 0, 0)
+SUBMITTED_DATASET_SHA256 = "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
 
 
 def sha256(path: Path) -> str:
@@ -54,6 +55,9 @@ def main() -> None:
     release_dir = REPO_ROOT / "release"
     archive_path = release_dir / "bts-canonical-final.zip"
     human_archive_path = release_dir / "human-validation-packet.zip"
+    submitted_dataset_path = release_dir / "submitted-dataset-bundle.zip"
+    if sha256(submitted_dataset_path) != SUBMITTED_DATASET_SHA256:
+        raise RuntimeError("submitted dataset snapshot is missing or does not match the frozen submission")
     files = [
         (final_dir / name, f"bts-canonical-final/{name}")
         for name in (
@@ -97,6 +101,11 @@ def main() -> None:
             "bytes": human_archive_path.stat().st_size,
             "sha256": sha256(human_archive_path),
             "completed_results_included": False,
+        },
+        "submitted_dataset_snapshot": {
+            "path": str(submitted_dataset_path.relative_to(REPO_ROOT)),
+            "bytes": submitted_dataset_path.stat().st_size,
+            "sha256": sha256(submitted_dataset_path),
         },
     }
     (release_dir / "release_manifest.json").write_text(

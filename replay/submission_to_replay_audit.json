@@ -1,0 +1,860 @@
+{
+  "report_version": "submitted-to-replay-audit-v1",
+  "definitions": {
+    "submitted_snapshot": "the exact dataset.zip supplied with the paper",
+    "current_snapshot": "the reproducibility-maintenance release",
+    "semantic_projection_excludes": [
+      "agentic_lifting",
+      "generation_history",
+      "metadata"
+    ],
+    "semantic_projection_includes": "all user turns, canonical and acceptable tool paths, phase golds, final gold, evidence, task verifier, interaction verifier, split, and release filter"
+  },
+  "submitted_dataset_archive": {
+    "sha256": "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76",
+    "bytes": 4540069
+  },
+  "scenario_id_sets_equal": true,
+  "row_count": 532,
+  "full_object_equal_count": 0,
+  "provenance_only_changed_count": 522,
+  "semantic_equal_count": 522,
+  "semantic_changed_count": 10,
+  "semantic_changed_ids": [
+    "train_window_pairwise_compare_00045",
+    "train_window_pairwise_compare_00047",
+    "train_window_pairwise_compare_00048",
+    "train_window_pairwise_compare_00049",
+    "train_window_pairwise_compare_00054",
+    "train_window_pairwise_compare_00055",
+    "train_window_pairwise_compare_00056",
+    "train_window_pairwise_compare_00057",
+    "train_window_rank_00011",
+    "train_window_rank_00050"
+  ],
+  "split_hashes": {
+    "submitted": {
+      "train": "9e5afdf45fafcd28c408d131216950800717a891b2e530eae15c645db7720a65",
+      "dev": "4082a8625ede78bb7528bf544fc8e896bff9dfa929d5f999dad5b64a557339d6",
+      "test": "a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867"
+    },
+    "current": {
+      "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+      "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+      "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+    },
+    "run_a": {
+      "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+      "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+      "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+    },
+    "run_b": {
+      "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+      "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+      "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+    }
+  },
+  "replay_exact_by_split": {
+    "train": true,
+    "dev": true,
+    "test": true
+  },
+  "family_reports": [
+    {
+      "family": "point_disambiguation",
+      "display_name": "Point disambiguation",
+      "candidate_count": 4263,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 60,
+      "row_count": 60,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "3088fb3c8cb1ffaa5db8cb57a997073b47f071196b2f67a98a05463b2a31f22e",
+        "current_semantic": "3088fb3c8cb1ffaa5db8cb57a997073b47f071196b2f67a98a05463b2a31f22e",
+        "run_a_semantic": "3088fb3c8cb1ffaa5db8cb57a997073b47f071196b2f67a98a05463b2a31f22e",
+        "run_b_semantic": "3088fb3c8cb1ffaa5db8cb57a997073b47f071196b2f67a98a05463b2a31f22e",
+        "current_full": "3f0aa4729d492d79e2daa5b507169cad14e4ea26e18b1b07e23601b30d64a763",
+        "run_a_full": "3f0aa4729d492d79e2daa5b507169cad14e4ea26e18b1b07e23601b30d64a763",
+        "run_b_full": "3f0aa4729d492d79e2daa5b507169cad14e4ea26e18b1b07e23601b30d64a763"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 8,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 5,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 6,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_point_disambiguation_00003",
+        "initial_user_message": "Operator handoff: \"Which stream should I use for the electrical energy sensor on Electrical Meter 042?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "long_gap"
+        },
+        "tool_path": [
+          "resolve_point",
+          "resolve_point",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "4d874dd63ed211449aee0bf9c6cd983b18805b9d7ec2dfebb353d16e9e497fbc",
+          "current": "4d874dd63ed211449aee0bf9c6cd983b18805b9d7ec2dfebb353d16e9e497fbc",
+          "run_a": "4d874dd63ed211449aee0bf9c6cd983b18805b9d7ec2dfebb353d16e9e497fbc",
+          "run_b": "4d874dd63ed211449aee0bf9c6cd983b18805b9d7ec2dfebb353d16e9e497fbc"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "day_mean_lookup",
+      "display_name": "Day mean lookup",
+      "candidate_count": 2193431,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 60,
+      "row_count": 60,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "9344d10416ccddd3eab740ac49428c9c74d5cd792e5714d27098bc002f8da4ff",
+        "current_semantic": "9344d10416ccddd3eab740ac49428c9c74d5cd792e5714d27098bc002f8da4ff",
+        "run_a_semantic": "9344d10416ccddd3eab740ac49428c9c74d5cd792e5714d27098bc002f8da4ff",
+        "run_b_semantic": "9344d10416ccddd3eab740ac49428c9c74d5cd792e5714d27098bc002f8da4ff",
+        "current_full": "7ad3ce5d38e08829a13a7bde2e420b8d29c03e46814a01be850d0eb2650f1b49",
+        "run_a_full": "7ad3ce5d38e08829a13a7bde2e420b8d29c03e46814a01be850d0eb2650f1b49",
+        "run_b_full": "7ad3ce5d38e08829a13a7bde2e420b8d29c03e46814a01be850d0eb2650f1b49"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 8,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 7,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_day_mean_lookup_00003",
+        "initial_user_message": "Operator handoff: \"For BTS_C, what was the average electrical power reading on Supply Fan 035?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "low_coverage"
+        },
+        "tool_path": [
+          "resolve_point",
+          "aggregate_window",
+          "aggregate_window",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "9a6b2a521de7ff64392782623eb37f5b365915817953bb01a7cc4b9b30521a54",
+          "current": "9a6b2a521de7ff64392782623eb37f5b365915817953bb01a7cc4b9b30521a54",
+          "run_a": "9a6b2a521de7ff64392782623eb37f5b365915817953bb01a7cc4b9b30521a54",
+          "run_b": "9a6b2a521de7ff64392782623eb37f5b365915817953bb01a7cc4b9b30521a54"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "relative_24h_mean_lookup",
+      "display_name": "Relative 24h mean lookup",
+      "candidate_count": 2193431,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 60,
+      "row_count": 60,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "cb8315960c97aa9961bb85d45e50bfa88483650e001d67a5dde2bc881569d9b3",
+        "current_semantic": "cb8315960c97aa9961bb85d45e50bfa88483650e001d67a5dde2bc881569d9b3",
+        "run_a_semantic": "cb8315960c97aa9961bb85d45e50bfa88483650e001d67a5dde2bc881569d9b3",
+        "run_b_semantic": "cb8315960c97aa9961bb85d45e50bfa88483650e001d67a5dde2bc881569d9b3",
+        "current_full": "d17d878d9f79af0d6e0108b97bc7fc4c1d0398376c66c895f8a176ea07f1b19d",
+        "run_a_full": "d17d878d9f79af0d6e0108b97bc7fc4c1d0398376c66c895f8a176ea07f1b19d",
+        "run_b_full": "d17d878d9f79af0d6e0108b97bc7fc4c1d0398376c66c895f8a176ea07f1b19d"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 9,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 9,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_relative_24h_mean_lookup_00003",
+        "initial_user_message": "Operator handoff: \"What was the average over the previous 24 hours for the electrical power reading on Supply Fan 035 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "answer",
+          "reason": "nearest_but_acceptable"
+        },
+        "tool_path": [
+          "resolve_point",
+          "aggregate_window",
+          "aggregate_window",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "6e2a21cc328c7a9c7f957f4ad84b2835dbb2a9461cbfd2f4275ebc7e43ab5be6",
+          "current": "6e2a21cc328c7a9c7f957f4ad84b2835dbb2a9461cbfd2f4275ebc7e43ab5be6",
+          "run_a": "6e2a21cc328c7a9c7f957f4ad84b2835dbb2a9461cbfd2f4275ebc7e43ab5be6",
+          "run_b": "6e2a21cc328c7a9c7f957f4ad84b2835dbb2a9461cbfd2f4275ebc7e43ab5be6"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "window_mean_lookup",
+      "display_name": "Window mean lookup",
+      "candidate_count": 315929,
+      "submitted_split_counts": {
+        "train": 36,
+        "dev": 7,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 36,
+        "dev": 7,
+        "test": 10
+      },
+      "semantic_unchanged_count": 53,
+      "row_count": 53,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "5eb99f83d90df0dc28e42ac489f31930e256eb1f65d0eaac44096f169d6bc3f5",
+        "current_semantic": "5eb99f83d90df0dc28e42ac489f31930e256eb1f65d0eaac44096f169d6bc3f5",
+        "run_a_semantic": "5eb99f83d90df0dc28e42ac489f31930e256eb1f65d0eaac44096f169d6bc3f5",
+        "run_b_semantic": "5eb99f83d90df0dc28e42ac489f31930e256eb1f65d0eaac44096f169d6bc3f5",
+        "current_full": "7052d8abbd5644dcb5f4bfe9a68a801935b22216738f4db75eac78566fe16252",
+        "run_a_full": "7052d8abbd5644dcb5f4bfe9a68a801935b22216738f4db75eac78566fe16252",
+        "run_b_full": "7052d8abbd5644dcb5f4bfe9a68a801935b22216738f4db75eac78566fe16252"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 53
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 9,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 7,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_window_mean_lookup_00003",
+        "initial_user_message": "Operator handoff: \"For BTS_C, what was the average electrical power measurement on Supply Fan 035?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "marginal_quality"
+        },
+        "tool_path": [
+          "resolve_point",
+          "aggregate_window",
+          "aggregate_window",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "d0f0b5288d08ee86013d2e7cff0f249321c012273ae1194d2316fe072e1729b8",
+          "current": "d0f0b5288d08ee86013d2e7cff0f249321c012273ae1194d2316fe072e1729b8",
+          "run_a": "d0f0b5288d08ee86013d2e7cff0f249321c012273ae1194d2316fe072e1729b8",
+          "run_b": "d0f0b5288d08ee86013d2e7cff0f249321c012273ae1194d2316fe072e1729b8"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "window_pairwise_compare",
+      "display_name": "Window pairwise compare",
+      "candidate_count": 5989083,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 52,
+      "row_count": 60,
+      "semantic_changed_ids": [
+        "train_window_pairwise_compare_00045",
+        "train_window_pairwise_compare_00047",
+        "train_window_pairwise_compare_00048",
+        "train_window_pairwise_compare_00049",
+        "train_window_pairwise_compare_00054",
+        "train_window_pairwise_compare_00055",
+        "train_window_pairwise_compare_00056",
+        "train_window_pairwise_compare_00057"
+      ],
+      "hashes": {
+        "submitted_semantic": "a9564141f9a94dadbf8be957e4f474435d3c37f08fd89d150c8422c327b994d2",
+        "current_semantic": "0cdeacf8c8ced7f561109c10e6fc1755bd0b93f7b85b0a2abf16ccff3e361114",
+        "run_a_semantic": "0cdeacf8c8ced7f561109c10e6fc1755bd0b93f7b85b0a2abf16ccff3e361114",
+        "run_b_semantic": "0cdeacf8c8ced7f561109c10e6fc1755bd0b93f7b85b0a2abf16ccff3e361114",
+        "current_full": "6b2b17dd1c531783ee26255a30b34f5d4a449a3b797ffce1569e496b1e8c8a9d",
+        "run_a_full": "6b2b17dd1c531783ee26255a30b34f5d4a449a3b797ffce1569e496b1e8c8a9d",
+        "run_b_full": "6b2b17dd1c531783ee26255a30b34f5d4a449a3b797ffce1569e496b1e8c8a9d"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 6,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 5,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 5,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_window_pairwise_compare_00003",
+        "initial_user_message": "Operator handoff: \"In BTS_C, which side averaged higher for run time reading: Terminal Unit 001 or Floor 008?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "marginal_quality"
+        },
+        "tool_path": [
+          "resolve_point",
+          "resolve_point",
+          "compare_window",
+          "compare_window",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "0fb8e50f43024d4779796c396ea1aa9fe6710ca91a20e1332f54041781d030fc",
+          "current": "0fb8e50f43024d4779796c396ea1aa9fe6710ca91a20e1332f54041781d030fc",
+          "run_a": "0fb8e50f43024d4779796c396ea1aa9fe6710ca91a20e1332f54041781d030fc",
+          "run_b": "0fb8e50f43024d4779796c396ea1aa9fe6710ca91a20e1332f54041781d030fc"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "window_rank",
+      "display_name": "Window rank",
+      "candidate_count": 1084,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 58,
+      "row_count": 60,
+      "semantic_changed_ids": [
+        "train_window_rank_00011",
+        "train_window_rank_00050"
+      ],
+      "hashes": {
+        "submitted_semantic": "d0c93a5099b7b5a1596599b440a947e1931b4884901c48b3266d9ecc575ebc31",
+        "current_semantic": "198aea7f5d6d2f3600ffd1a98197dbe0d8ae9bcd029b223efd26e9a21e8fbfb5",
+        "run_a_semantic": "198aea7f5d6d2f3600ffd1a98197dbe0d8ae9bcd029b223efd26e9a21e8fbfb5",
+        "run_b_semantic": "198aea7f5d6d2f3600ffd1a98197dbe0d8ae9bcd029b223efd26e9a21e8fbfb5",
+        "current_full": "6a2c89a44980db0368475fcc36674768efdc8fa3e34b9717f2c7d2839bebc496",
+        "run_a_full": "6a2c89a44980db0368475fcc36674768efdc8fa3e34b9717f2c7d2839bebc496",
+        "run_b_full": "6a2c89a44980db0368475fcc36674768efdc8fa3e34b9717f2c7d2839bebc496"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 8,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 5,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 4,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_window_rank_00003",
+        "initial_user_message": "Operator handoff: \"In BTS_C, looking across locations, which stream topped the average position sensor readings?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "answer",
+          "reason": "healthy_quality"
+        },
+        "tool_path": [
+          "list_points",
+          "rank_window",
+          "rank_window",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "df458cd50a5beea7dd1ace129d09a945724911e55198e37a0b84ad64ff8eaf01",
+          "current": "df458cd50a5beea7dd1ace129d09a945724911e55198e37a0b84ad64ff8eaf01",
+          "run_a": "df458cd50a5beea7dd1ace129d09a945724911e55198e37a0b84ad64ff8eaf01",
+          "run_b": "df458cd50a5beea7dd1ace129d09a945724911e55198e37a0b84ad64ff8eaf01"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "timestamp_value_lookup",
+      "display_name": "Timestamp value lookup",
+      "candidate_count": 2123,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 60,
+      "row_count": 60,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "d7ece06725d16bdf445bc299fc83d6f62c407bbf6116e09868140f4250ea110c",
+        "current_semantic": "d7ece06725d16bdf445bc299fc83d6f62c407bbf6116e09868140f4250ea110c",
+        "run_a_semantic": "d7ece06725d16bdf445bc299fc83d6f62c407bbf6116e09868140f4250ea110c",
+        "run_b_semantic": "d7ece06725d16bdf445bc299fc83d6f62c407bbf6116e09868140f4250ea110c",
+        "current_full": "dbc7730802eb6164a7a6e31f7d9bac4a80dd2f3b711fad0c2dd4298f9c1681e4",
+        "run_a_full": "dbc7730802eb6164a7a6e31f7d9bac4a80dd2f3b711fad0c2dd4298f9c1681e4",
+        "run_b_full": "dbc7730802eb6164a7a6e31f7d9bac4a80dd2f3b711fad0c2dd4298f9c1681e4"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 9,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 5,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_timestamp_value_lookup_00051",
+        "initial_user_message": "Operator handoff: \"What was the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "gold_final_answer": {
+          "commitment_action": "answer",
+          "reason": "nearest_but_acceptable"
+        },
+        "tool_path": [
+          "resolve_point",
+          "lookup_observation",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "b5e6fca048c23ea4f855106e2d9c917132c30cddd1c8f27756af0d8e3bdc8153",
+          "current": "b5e6fca048c23ea4f855106e2d9c917132c30cddd1c8f27756af0d8e3bdc8153",
+          "run_a": "b5e6fca048c23ea4f855106e2d9c917132c30cddd1c8f27756af0d8e3bdc8153",
+          "run_b": "b5e6fca048c23ea4f855106e2d9c917132c30cddd1c8f27756af0d8e3bdc8153"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "timestamp_nearest_lookup",
+      "display_name": "Timestamp nearest lookup",
+      "candidate_count": 2123,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 10
+      },
+      "semantic_unchanged_count": 60,
+      "row_count": 60,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "41ff49c8a14ad07ad049b10be040f78f156665e2fbca92780f437086a71930a8",
+        "current_semantic": "41ff49c8a14ad07ad049b10be040f78f156665e2fbca92780f437086a71930a8",
+        "run_a_semantic": "41ff49c8a14ad07ad049b10be040f78f156665e2fbca92780f437086a71930a8",
+        "run_b_semantic": "41ff49c8a14ad07ad049b10be040f78f156665e2fbca92780f437086a71930a8",
+        "current_full": "dff0684c988a90b3c25bd8f69805e29d8a47876317ae0189696e94122d7deb97",
+        "run_a_full": "dff0684c988a90b3c25bd8f69805e29d8a47876317ae0189696e94122d7deb97",
+        "run_b_full": "dff0684c988a90b3c25bd8f69805e29d8a47876317ae0189696e94122d7deb97"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 60
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 10,
+          "total": 10
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 7,
+          "total": 10
+        }
+      },
+      "representative": {
+        "scenario_id": "test_timestamp_nearest_lookup_00051",
+        "initial_user_message": "Ops ticket: \"For BTS_C, what was the air differential pressure reading on Zone 005 at 00:21 UTC on May 22, 2020?\" Use the building telemetry tools and report the logged reading you can justify.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "marginal_quality"
+        },
+        "tool_path": [
+          "resolve_point",
+          "lookup_observation",
+          "lookup_observation",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "43110b10f37226edb19674546d3b8f43c82a7c92411107613a209f251cc44d15",
+          "current": "43110b10f37226edb19674546d3b8f43c82a7c92411107613a209f251cc44d15",
+          "run_a": "43110b10f37226edb19674546d3b8f43c82a7c92411107613a209f251cc44d15",
+          "run_b": "43110b10f37226edb19674546d3b8f43c82a7c92411107613a209f251cc44d15"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    },
+    {
+      "family": "quality_gate",
+      "display_name": "Quality gate",
+      "candidate_count": 315,
+      "submitted_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 9
+      },
+      "current_split_counts": {
+        "train": 40,
+        "dev": 10,
+        "test": 9
+      },
+      "semantic_unchanged_count": 59,
+      "row_count": 59,
+      "semantic_changed_ids": [],
+      "hashes": {
+        "submitted_semantic": "eeea28cdd83ab227dd99bf4ff805919388af72236a88a001b42c06da0f6a17cb",
+        "current_semantic": "eeea28cdd83ab227dd99bf4ff805919388af72236a88a001b42c06da0f6a17cb",
+        "run_a_semantic": "eeea28cdd83ab227dd99bf4ff805919388af72236a88a001b42c06da0f6a17cb",
+        "run_b_semantic": "eeea28cdd83ab227dd99bf4ff805919388af72236a88a001b42c06da0f6a17cb",
+        "current_full": "8349065f9fd94c8beae921ceec7734dd90ea3b09b84e13990d6a52507fb16c60",
+        "run_a_full": "8349065f9fd94c8beae921ceec7734dd90ea3b09b84e13990d6a52507fb16c60",
+        "run_b_full": "8349065f9fd94c8beae921ceec7734dd90ea3b09b84e13990d6a52507fb16c60"
+      },
+      "replay_a_b_current_exact": true,
+      "controller": {
+        "accomplished": 0,
+        "total": 59
+      },
+      "submitted_model_scores": {
+        "GPT-5.5": {
+          "accomplished": 9,
+          "total": 9
+        },
+        "Gemini 3.1 Pro": {
+          "accomplished": 9,
+          "total": 9
+        },
+        "Claude Opus 4.7": {
+          "accomplished": 8,
+          "total": 9
+        }
+      },
+      "representative": {
+        "scenario_id": "test_quality_gate_00051",
+        "initial_user_message": "Data-quality review request: \"Would you trust this signal enough for the weekly trend question about the air differential pressure measurement on Zone 005 for the week beginning May 19, 2020, or would you abstain?\" If the site is missing, ask for it first; then tell me whether you would answer or abstain.",
+        "gold_final_answer": {
+          "commitment_action": "abstain",
+          "reason": "marginal_quality"
+        },
+        "tool_path": [
+          "resolve_point",
+          "inspect_quality_window",
+          "inspect_quality_window"
+        ],
+        "semantic_hashes": {
+          "submitted": "ca123579cd3051a03c37b2d7ce656f1d1559dfca822f130cc69a0d6a317608b0",
+          "current": "ca123579cd3051a03c37b2d7ce656f1d1559dfca822f130cc69a0d6a317608b0",
+          "run_a": "ca123579cd3051a03c37b2d7ce656f1d1559dfca822f130cc69a0d6a317608b0",
+          "run_b": "ca123579cd3051a03c37b2d7ce656f1d1559dfca822f130cc69a0d6a317608b0"
+        },
+        "semantic_equal_across_all_snapshots": true
+      }
+    }
+  ],
+  "maintenance_deltas": {
+    "pairwise": [
+      {
+        "scenario_id": "train_window_pairwise_compare_00045",
+        "submitted_points": [
+          "BTS_B Cooling Valve 010",
+          "BTS_B Heating Valve 001"
+        ],
+        "current_points": [
+          "BTS_B Heating Valve 016",
+          "BTS_B Cooling Valve 010"
+        ],
+        "submitted_query": "Operator handoff: \"In BTS_B, which position reading averaged higher: Cooling Valve 010 or Heating Valve 001?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which side averaged higher for position measurement: Heating Valve 016 or Cooling Valve 010?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00047",
+        "submitted_points": [
+          "BTS_B Cooling Valve 010",
+          "BTS_B Heating Valve 005"
+        ],
+        "current_points": [
+          "BTS_B Heating Valve 007",
+          "BTS_B Cooling Valve 010"
+        ],
+        "submitted_query": "Operator handoff: \"For BTS_B, which had the higher average position reading: Cooling Valve 010 or Heating Valve 005?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which position measurement averaged higher: Heating Valve 007 or Cooling Valve 010?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00048",
+        "submitted_points": [
+          "BTS_B Cooling Valve 005",
+          "BTS_B Cooling Valve 001"
+        ],
+        "current_points": [
+          "BTS_B Heating Valve 007",
+          "BTS_B Cooling Valve 005"
+        ],
+        "submitted_query": "Operator handoff: \"In BTS_B, which position reading averaged higher: Cooling Valve 005 or Cooling Valve 001?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which position measurement averaged higher: Heating Valve 007 or Cooling Valve 005?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00049",
+        "submitted_points": [
+          "BTS_B Cooling Valve 010",
+          "BTS_B Cooling Valve 017"
+        ],
+        "current_points": [
+          "BTS_B Cooling Valve 010",
+          "BTS_B Cooling Valve 006"
+        ],
+        "submitted_query": "Operator handoff: \"In BTS_B, which side averaged higher for position reading: Cooling Valve 010 or Cooling Valve 017?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which position reading averaged higher: Cooling Valve 010 or Cooling Valve 006?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00054",
+        "submitted_points": [
+          "BTS_B Cooling Valve 010",
+          "BTS_B Heating Valve 014"
+        ],
+        "current_points": [
+          "BTS_B Cooling Valve 004",
+          "BTS_B Heating Valve 014"
+        ],
+        "submitted_query": "Operator handoff: \"For BTS_B, which had the higher average position measurement: Cooling Valve 010 or Heating Valve 014?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which side averaged higher for position measurement: Cooling Valve 004 or Heating Valve 014?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00055",
+        "submitted_points": [
+          "BTS_B Cooling Valve 005",
+          "BTS_B Heating Valve 014"
+        ],
+        "current_points": [
+          "BTS_B Cooling Valve 004",
+          "BTS_B Heating Valve 002"
+        ],
+        "submitted_query": "Operator handoff: \"In BTS_B, which side averaged higher for position reading: Cooling Valve 005 or Heating Valve 014?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"For BTS_B, which had the higher average position measurement: Cooling Valve 004 or Heating Valve 002?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00056",
+        "submitted_points": [
+          "BTS_B Heating Valve 002",
+          "BTS_B Cooling Valve 001"
+        ],
+        "current_points": [
+          "BTS_B Cooling Valve 009",
+          "BTS_B Heating Valve 002"
+        ],
+        "submitted_query": "Operator handoff: \"For BTS_B, which had the higher average position measurement: Heating Valve 002 or Cooling Valve 001?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"For BTS_B, which had the higher average position measurement: Cooling Valve 009 or Heating Valve 002?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      },
+      {
+        "scenario_id": "train_window_pairwise_compare_00057",
+        "submitted_points": [
+          "BTS_B Heating Valve 014",
+          "BTS_B Cooling Valve 016"
+        ],
+        "current_points": [
+          "BTS_B Heating Valve 007",
+          "BTS_B Heating Valve 014"
+        ],
+        "submitted_query": "Operator handoff: \"In BTS_B, which position reading averaged higher: Heating Valve 014 or Cooling Valve 016?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "current_query": "Operator handoff: \"In BTS_B, which side averaged higher for position measurement: Heating Valve 007 or Heating Valve 014?\" Use the building tools and ask me for any missing site or time detail before querying.",
+        "reason": "complete deterministic tie-break for equal-gap candidates"
+      }
+    ],
+    "rank": [
+      {
+        "scenario_id": "train_window_rank_00011",
+        "submitted_revision": "Now keep the same candidate group and site, but rank the previous month.",
+        "current_revision": "Now keep the same candidate group and site, but rank the next month.",
+        "submitted_rank_windows": [
+          [
+            "2021-01-01 00:00:00+00:00",
+            "2021-02-01 00:00:00+00:00"
+          ],
+          [
+            "2021-02-01T00:00:00+00:00",
+            "2021-03-04T00:00:00+00:00"
+          ]
+        ],
+        "current_rank_windows": [
+          [
+            "2021-01-01T00:00:00+00:00",
+            "2021-02-01T00:00:00+00:00"
+          ],
+          [
+            "2021-02-01T00:00:00+00:00",
+            "2021-03-04T00:00:00+00:00"
+          ]
+        ],
+        "reason": "align adjacent-month wording with the executable next-month window"
+      },
+      {
+        "scenario_id": "train_window_rank_00050",
+        "submitted_revision": "Now keep the same candidate group and site, but rank the previous month.",
+        "current_revision": "Now keep the same candidate group and site, but rank the next month.",
+        "submitted_rank_windows": [
+          [
+            "2021-01-01 00:00:00+00:00",
+            "2021-02-01 00:00:00+00:00"
+          ],
+          [
+            "2021-02-01T00:00:00+00:00",
+            "2021-03-04T00:00:00+00:00"
+          ]
+        ],
+        "current_rank_windows": [
+          [
+            "2021-01-01T00:00:00+00:00",
+            "2021-02-01T00:00:00+00:00"
+          ],
+          [
+            "2021-02-01T00:00:00+00:00",
+            "2021-03-04T00:00:00+00:00"
+          ]
+        ],
+        "reason": "align adjacent-month wording with the executable next-month window"
+      }
+    ]
+  }
+}

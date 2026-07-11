@@ -24,7 +24,7 @@ Three boundaries must not be conflated.
 
 The normalized catalog used by the released build is retained under `data/source/bts-processed-catalog/`. The metadata compiler is also included and now applies an explicit ordering policy for RDF triples and multi-edge candidates. Recompiling metadata is useful for auditing or adapting the recipe, while exact release reconstruction uses the frozen catalog as its input contract.
 
-Recorded verification reports are retained under `replay/`: `raw_to_static_rebuild_report.json` records an independent rebuild from the three checksummed raw archives, and `replay_report.json` records two clean static-to-release builds driven by the tool store produced in that raw rebuild. The recorded raw rebuild matched all three retained static split hashes; both downstream release builds reported zero preflight issues and matched one another and all three retained release split hashes.
+Recorded verification reports are retained under `replay/`: `raw_to_static_rebuild_report.json` records an independent rebuild from the three checksummed raw archives, and `replay_report.json` records two clean static-to-release builds driven by the tool store produced in that raw rebuild. The recorded raw rebuild matched all three retained static split hashes; both downstream release builds reported zero preflight issues and matched one another and all three retained release split hashes. `SUBMISSION_TO_REPLAY.md` separately compares the exact supplementary dataset supplied with the paper against the replayable maintenance release, family by family.
 
 See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for every stage, input, output, and command.
 Upstream file IDs, licensing, sizes, and checksums are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
@@ -43,6 +43,8 @@ Upstream file IDs, licensing, sizes, and checksums are listed in [DATA_SOURCES.m
 | `reports/controller/` | construction-time deterministic audit traces |
 | `reports/model-runs/` | fixed paid-run traces and summaries |
 | `human_validation/` | blind domain-practitioner protocol and response tools |
+| `replay/` | raw-build, A/B replay, and submitted-snapshot comparison reports |
+| `release/submitted-dataset-bundle.zip` | exact checksummed dataset bundle supplied with the paper |
 
 The approximately 18 GB raw ZIP archives and approximately 1.7 GB materialized tool store are not committed. The download script records the upstream archive URLs, and the tool store is reconstructed locally.
 
@@ -77,6 +79,16 @@ python scripts/replay_release.py \
 ```
 
 The replay rejects a build report whose sibling tool-store path does not match the supplied database or whose static hashes did not match the retained static tasks.
+
+## Submitted Snapshot Comparison
+
+The exact submitted `dataset.zip` is retained as `release/submitted-dataset-bundle.zip`. After a clean A/B replay, regenerate the family-wise comparison:
+
+```bash
+make submission-audit
+```
+
+The resulting `replay/SUBMISSION_TO_REPLAY.md` reports submitted and replayed split hashes, family counts, candidate spaces, representative contracts, fixed model results, controller results, and every evaluator-facing maintenance delta. It distinguishes provenance-label changes from changes to user turns, tool paths, gold targets, evidence, and verifiers.
 
 For a tool-store-free integrity check of the packaged artifacts and all three model-trace ID sets:
 

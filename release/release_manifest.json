@@ -51,5 +51,10 @@
     "bytes": 13552,
     "sha256": "6f02dafe3ebc84c5a636f7b50f29651f10e842d35d52bf1a0322236669694232",
     "completed_results_included": false
+  },
+  "submitted_dataset_snapshot": {
+    "path": "release/submitted-dataset-bundle.zip",
+    "bytes": 4540069,
+    "sha256": "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
   }
 }

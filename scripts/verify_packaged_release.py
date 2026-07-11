@@ -6,9 +6,12 @@ import json
 import zipfile
 from pathlib import Path
 
+from build_submission_replay_audit import verify_recorded_audit
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ("train", "dev", "test")
+SUBMITTED_DATASET_SHA256 = "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
 
 
 def sha256(path: Path) -> str:
@@ -60,6 +63,19 @@ def main() -> None:
     with zipfile.ZipFile(human_archive_path) as archive:
         if archive.testzip() is not None:
             raise RuntimeError("human-validation archive CRC failure")
+    submitted_record = manifest["submitted_dataset_snapshot"]
+    submitted_path = REPO_ROOT / submitted_record["path"]
+    submitted_hash = sha256(submitted_path)
+    if submitted_hash != submitted_record["sha256"] or submitted_hash != SUBMITTED_DATASET_SHA256:
+        raise RuntimeError("submitted dataset snapshot hash mismatch")
+    with zipfile.ZipFile(submitted_path) as archive:
+        if archive.testzip() is not None:
+            raise RuntimeError("submitted dataset snapshot CRC failure")
+        expected = {
+            f"dataset_bundle/bts_agentbench_532/{split}.jsonl" for split in SPLITS
+        }
+        if not expected.issubset(archive.namelist()):
+            raise RuntimeError("submitted dataset snapshot is missing BTS split files")
 
     final_test_ids = {
         row["scenario_id"] for row in load_jsonl(REPO_ROOT / manifest["final"]["test"]["path"])
@@ -78,6 +94,7 @@ def main() -> None:
 
     if int(manifest["contract_preflight_issue_count"]) != 0:
         raise RuntimeError("contract preflight is not zero")
+    submission_replay_audit = verify_recorded_audit(REPO_ROOT)
     print(
         json.dumps(
             {
@@ -86,6 +103,8 @@ def main() -> None:
                 "test_rows": len(final_test_ids),
                 "model_trace_sets_verified": 3,
                 "archive_sha256": archive_record["sha256"],
+                "submitted_snapshot_sha256": submitted_hash,
+                "submission_replay_audit": submission_replay_audit,
             },
             indent=2,
         )
