@@ -1,111 +1,258 @@
 # Reproducibility and Audit Guide
 
-## Stage Map
+## Claim Scope
 
-| Stage | Required input | Entry point | Primary output |
-|---|---|---|---|
-| Metadata normalization | BTS CSV and Brick files | `scripts/build_catalog.py` | catalog Parquet files |
-| Telemetry preprocessing | three raw ZIPs + frozen catalog | `scripts/preprocess_tool_store.py` | `tool_store.duckdb` and aggregate tables |
-| Static task construction | tool store + raw ZIP access | `scripts/generate_scenario_benchmark.py` | `train/dev/test.jsonl` static tasks |
-| Interaction contract | static tasks | `scripts/build_bts_e2e.py` | clarification and follow-up contracts |
-| Operator surface | interaction contracts | `scripts/build_bts_e2e_agentic.py` | operator-facing episodes |
-| Canonicalization | static tasks + operator episodes + tools | `scripts/build_canonical_agentic_final.py` | phase-structured seed |
-| Typed repair and audit | canonical seed + tools | `scripts/build_bts_canonical_final.py` | released final episodes |
-| Two-run replay | retained static tasks + tools | `scripts/replay_release.py` | exact A/B hash report |
+The reproducibility claim covers deterministic benchmark construction:
 
-`scripts/rebuild_from_raw.py` orchestrates the complete path. `scripts/replay_release.py` isolates the paper's fixed-contract replay boundary and executes it twice.
-
-The checked reports in `replay/raw_to_static_rebuild_report.json` and `replay/replay_report.json` record the two boundaries and their tested composition. The former was produced by rebuilding the tool store and 532 static tasks from the three checksummed raw archives; all retained static split hashes matched. That newly materialized tool store then drove two clean static-to-release builds. A and B matched each other and the retained release for every split, with zero preflight issues in both runs. The replay report verifies that the database path is the tool-store sibling of the supplied raw-build report before recording this provenance.
-
-## Inputs
-
-### Raw telemetry
-
-`scripts/download_raw_archives.sh` downloads the three upstream files under their expected names:
-
-- `Site_Aaa.zip`
-- `Site_Baa.zip`
-- `Site_Caa.zip`
-
-Each archive contains per-stream pickle payloads with a stream token, timestamp array, and value array. The downloader resumes partial transfers and runs `ZipFile.testzip()` before accepting a file.
-
-### Metadata
-
-`data/source/bts-meta/` contains the site CSV metadata and Brick graphs. The release also retains their normalized catalog under `data/source/bts-processed-catalog/`. Exact reconstruction uses this frozen catalog so point/equipment/location aliases are part of the construction contract rather than inferred again.
-
-The current metadata compiler sorts RDF triples, graph edges, and relation rows. Its purpose is deterministic adaptation to a new input corpus. Because the originally retained catalog is a frozen release input, compiler maintenance does not silently alter the released task population.
-
-## Raw to Static
-
-Telemetry preprocessing performs these deterministic operations:
-
-1. join normalized stream metadata to raw ZIP members by normalized stream UUID;
-2. parse timestamps as UTC and values as `float64`;
-3. compute point count, median positive sampling step, longest gap, observed fraction, NaN/zero/constant fractions, and duplicate timestamp fraction;
-4. compute day, Monday-bounded week, calendar-month, and hour-of-week summaries;
-5. write Parquet tables and expose them through read-only DuckDB tools.
-
-Static builders then query the tool store for eligible points and windows. Candidate queries contain explicit `ORDER BY` clauses. `take_by_split` consumes this ordered stream, holds `BTS_C` out as test, assigns every fifth non-test candidate to dev, and stops at fixed family targets. Balance caps prevent one point class/quarter/decision/location combination from filling a split.
-
-| Family | Target train/dev/test | Balance key | Maximum per key train/dev/test |
-|---|---:|---|---:|
-| Point disambiguation | 40/10/10 | point class | 12/4/4 |
-| Day mean | 40/10/10 | point class, quarter | 4/2/2 |
-| Relative 24h mean | 40/10/10 | point class, quarter | 4/2/2 |
-| Window mean | 40/10/10 target; 53 retained | point class, quarter | 4/2/2 |
-| Pairwise compare | 40/10/10 | point class, quarter | 4/2/2 |
-| Window rank | 40/10/10 | point class, location type, quarter | 3/2/2 |
-| Exact timestamp | 40/10/10 | point class, quarter | 4/2/2 |
-| Nearest timestamp | 40/10/10 | point class, quarter | 4/2/2 |
-| Quality gate | 40/10/9 | decision, point class, quarter | 4/2/2 |
-
-Gold answers are direct outputs of the same read-only tools named in `canonical_tool_calls`. Exact timestamp tasks require equality at the requested timestamp. Nearest tasks minimize absolute timestamp distance and record the offset. Ranking uses descending mean and fixed top-k. Ties follow deterministic stream ordering. Quality gates apply the thresholds stored by the runtime to exact requested windows.
-
-## Static to Final Episodes
-
-The lifting stage does not call an LLM. For each static row it deterministically:
-
-1. selects an interaction mode from family and temporal eligibility;
-2. masks only the site or time slots declared by that mode;
-3. attaches fixed simulator answers for missing slots;
-4. adds family-specific goal revision, timestamp policy, quality decision, reporting commitment, and evidence turns;
-5. executes the required tools to materialize phase gold answers;
-6. writes acceptable tool paths and task/protocol verifiers;
-7. applies typed family repairs and records each construction stage in `generation_history`.
-
-Repairs are constrained transformations over typed fields. They may realign a time window, stream reference, phase target, required field, or final commitment when an earlier conversion made those fields inconsistent. The final preflight rechecks the repaired row; repair is not accepted solely because a script completed.
-
-## Exact Replay
-
-With a tool store available:
-
-```bash
-export BTS_TOOL_STORE_DB=/absolute/path/to/tool_store.duckdb
-python scripts/replay_release.py
+```text
+checksummed raw telemetry + retained normalized metadata contract + frozen retained-row identities
+  -> static executable tasks
+  -> multi-turn agent episodes
+  -> phase golds, evidence, verifiers, and final JSONL
 ```
 
-The replay script creates independent `run_a` and `run_b` directories. For each run it reconstructs all intermediate stages from the retained static layer, checks `contract_preflight_report.json`, counts rows, and hashes each split. It exits nonzero unless:
+It excludes repeatability of new provider API generations. Fixed traces are deterministically scorable, but provider models and infrastructure can change.
 
-- both preflights report zero covered issues;
-- A and B hashes match for all splits;
-- A matches the retained release hashes.
+## System Requirements
 
-Use `--controller-audit` to recompute controller witnesses as part of both runs. It is omitted by default because it is an additional exclusion audit, not part of episode semantics.
+- Python `3.11`
+- a filesystem with at least 25 GB free for the three raw archives and generated working files
+- sufficient memory to process per-stream telemetry and construct the canonical artifacts
+- the dependencies pinned in `requirements.lock`
 
-To bind a tool store reconstructed by `scripts/rebuild_from_raw.py` to the replay evidence, also pass its `--tool-store-build-report`. The script verifies the report-to-database path binding and that the rebuilt static split hashes matched the retained static layer.
+Recorded exact replay environment:
+
+| Package | Version |
+|---|---|
+| Python | 3.11.11 |
+| DuckDB | 1.5.0 |
+| NumPy | 1.26.4 |
+| pandas | 3.0.1 |
+| PyArrow | 23.0.1 |
+| RDFLib | 7.6.0 |
+
+Install:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.lock
+pip install -e . --no-deps
+```
+
+## Fixed Inputs
+
+| Input | Expected path or argument | Verification |
+|---|---|---|
+| Raw telemetry | `--raw-dir` containing three named ZIP files | size, ZIP integrity, SHA-256 |
+| CSV and Brick metadata | `data/source/bts-meta/` | retained repository files |
+| Normalized metadata contract | `data/source/bts-processed-catalog/` | per-file SHA-256 |
+| Retained-row contract | `provenance/submission_static_selection.jsonl` | SHA-256 and per-row identity digests |
+| Submitted static reference | `release/submitted-static-reference/` | split byte comparison |
+| Submitted source bundle | `release/submitted-source-bundle.zip` | SHA-256 |
+| Submitted dataset bundle | `release/submitted-dataset-bundle.zip` | SHA-256 and final split byte comparison |
+
+The submitted dataset bundle is a verifier input only. Builders do not read its rows while constructing output.
+
+## Stage Map
+
+| Stage | Entry point | Required input | Primary output |
+|---|---|---|---|
+| Metadata adaptation compiler | `scripts/build_catalog.py` | retained or new CSV/TTL metadata | normalized catalog for a new corpus |
+| Submitted metadata verification | `scripts/replay_paper_submission.py` | retained normalized Parquet files | checksum-verified paper mapping |
+| Raw telemetry preprocessing | `scripts/preprocess_tool_store.py` | raw ZIPs and catalog | read-only tool store and aggregates |
+| Submitted static reconstruction | `scripts/generate_scenario_benchmark.py` | tool store, raw access, selection contract | static `train/dev/test.jsonl` |
+| Interaction contract | `scripts/build_bts_e2e.py` | static tasks | clarification and follow-up contracts |
+| Operator surface | `scripts/build_bts_e2e_agentic.py` | interaction contracts | deterministic operator-facing episodes |
+| Canonical phase construction | `scripts/build_canonical_agentic_final.py` | static tasks, episodes, tool store | phase-structured canonical seed |
+| Typed family repair | `scripts/build_bts_canonical_final.py --submission-compatible` | canonical seed and tool store | exact submitted final episodes |
+| Contract preflight | `scripts/audit_bts_canonical_contract.py` | final episodes and tool store | issue report |
+| Full exact replay | `scripts/replay_paper_submission.py` | all fixed inputs | complete run directories and replay report |
+
+## One-Command Exact Replay
+
+Download the raw archives:
+
+```bash
+./scripts/download_raw_archives.sh ./data/local-build/raw
+```
+
+Run the full path twice:
+
+```bash
+python scripts/replay_paper_submission.py \
+  --raw-dir ./data/local-build/raw \
+  --work-dir ./data/local-build/paper-submission-replay \
+  --runs 2
+```
+
+`--work-dir` must be new or empty. The script never deletes a nonempty user-supplied directory.
+
+The command performs these operations in order:
+
+1. checks all raw, source-bundle, dataset-bundle, and selection-contract hashes;
+2. verifies the retained normalized metadata contract used by the submitted build;
+3. preprocesses the raw ZIP histories into a fresh tool store;
+4. enumerates static candidates and resolves all 532 retained identities;
+5. writes and byte-checks the submitted static splits;
+6. constructs E2E, agentic, canonical-seed, and final stages;
+7. runs contract preflight;
+8. checks every reconstructed final object and raw JSONL byte against the submitted bundle;
+9. repeats steps 4-8 in a second independent run directory;
+10. compares run 1 and run 2 byte for byte.
+
+The process exits nonzero after any mismatch.
+
+### Optional controller audit
+
+```bash
+python scripts/replay_paper_submission.py \
+  --raw-dir ./data/local-build/raw \
+  --work-dir ./data/local-build/paper-submission-replay-with-controller \
+  --runs 2 \
+  --controller-audit
+```
+
+The controller is rerun once against run 1 after both exact builds. Its witnesses are not used to construct gold values.
+
+### Fast replay from an existing tool store
+
+```bash
+python scripts/replay_paper_submission.py \
+  --tool-store-db /absolute/path/to/tool_store.duckdb \
+  --work-dir ./data/local-build/paper-submission-replay-fast \
+  --runs 2
+```
+
+This skips metadata and raw preprocessing only. Candidate enumeration, static generation, every episode stage, preflight, and exact final comparison still run.
+
+## Output Tree
+
+The full command writes:
+
+```text
+WORK_DIR/
+  tool-store/
+    tool_store.duckdb
+    raw_stream_index.parquet
+    quality_metrics.parquet
+    daily_aggregates.parquet
+    weekly_aggregates.parquet
+    monthly_aggregates.parquet
+    hour_of_week_profiles.parquet
+  run_1/
+    static/
+    e2e/
+    agentic/
+    canonical-seed/
+    canonical-seed-core/
+    final/
+  run_2/
+    static/
+    e2e/
+    agentic/
+    canonical-seed/
+    canonical-seed-core/
+    final/
+  submission_replay_report.json
+```
+
+Each stage contains split JSONL files and a manifest. Final also contains `contract_preflight_report.json` and `paper_final_build_report.json`.
+
+## Raw to Static Details
+
+### Metadata normalization boundary
+
+The submitted normalized catalog is retained under `data/source/bts-processed-catalog/` and is an exact-replay input. The historical compiler selected the first target for some points with multiple Brick relationship targets; RDF graph iteration does not preserve that choice across environments. Exact replay therefore checks and uses the retained streams/entities/relations/stream-target Parquet files rather than silently selecting a different semantic mapping.
+
+`bts_agentbench.catalog.build_catalog` is the deterministic adaptation compiler for a new corpus. It sorts source filenames, RDF triples, entity identifiers, relation rows, and candidate targets before writing outputs. Recompiling with that maintained policy is useful for portability experiments, but it is not substituted for the paper's retained mapping.
+
+### Telemetry preprocessing
+
+`bts_agentbench.preprocess.preprocess_raw_archives` indexes raw ZIP members and computes:
+
+- UTC timestamp and numeric value histories;
+- point counts and positive sampling intervals;
+- longest gaps, coverage, duplicate, NaN, zero, and constant fractions;
+- day, week, month, and hour-of-week aggregates.
+
+Read-only runtime methods implement point resolution, list, exact/nearest lookup, aggregation, comparison, ranking, and quality inspection.
+
+### Candidate and gold construction
+
+Each family builder executes explicit DuckDB eligibility queries, constructs canonical tool calls, and derives gold answers from the same tool runtime. Exact and nearest timestamp semantics, inclusive/exclusive windows, ranking order, and quality thresholds are encoded in source rather than delegated to an LLM.
+
+The submitted release is a fixed sample. `submission_static_selection.jsonl` stores a digest over each retained candidate's family, site, canonical calls, gold, and evidence. Replay recomputes candidates and fails on a missing, duplicate, or digest-mismatched identity.
+
+The resulting submitted static hashes are:
+
+| Split | Rows | SHA-256 |
+|---|---:|---|
+| Train | 356 | `65f0384bf97318b628ff9431c8bdbd36a2347fcb0ee4a521169fbf3a22b7d825` |
+| Dev | 87 | `294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d` |
+| Test | 89 | `1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e` |
+
+## Static to Agent Episode Details
+
+Construction is predicate-driven and deterministic:
+
+1. family and time predicates choose an interaction mode;
+2. one recoverable site or time slot is masked when clarification is required;
+3. the deterministic simulator returns the value already present in the static contract;
+4. an operator wrapper renders the initial request;
+5. family-specific goal revisions add temporal, comparison, ranking, or quality obligations;
+6. read-only tools execute to produce phase gold answers;
+7. typed repairs align streams, windows, alternatives, and commitments;
+8. evidence and final/phase/task/protocol verifiers are attached;
+9. every stage is recorded in `generation_history`.
+
+The final submitted hashes are:
+
+| Split | Rows | SHA-256 |
+|---|---:|---|
+| Train | 356 | `9e5afdf45fafcd28c408d131216950800717a891b2e530eae15c645db7720a65` |
+| Dev | 87 | `4082a8625ede78bb7528bf544fc8e896bff9dfa929d5f999dad5b64a557339d6` |
+| Test | 89 | `a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867` |
+
+The full field-level example is in [CONSTRUCTION_WALKTHROUGH.md](CONSTRUCTION_WALKTHROUGH.md).
+
+## Submission Compatibility Boundary
+
+The submitted source ZIP retained component scripts but did not bind every final local setting through one portable entry point. The public `--submission-compatible` mode makes those settings explicit and testable:
+
+- final operator wrapper wording;
+- the existing available-month path for two January training rank rows with no preceding-month data;
+- final rank metadata insertion order required for byte-identical JSONL.
+
+These settings reproduce the immutable paper files. The ordinary maintenance mode separately corrects the visible month direction in the two affected training rows and uses complete SQL tie ordering. Maintenance files are not used to reproduce paper scores.
+
+## Validation Matrix
+
+| Check | Verifies | Does not verify |
+|---|---|---|
+| Input checksum | Exact raw and supplementary files | Upstream collection validity |
+| Selection identity | Retained candidates exist uniquely after recomputation | Representativeness of the retained sample |
+| Static byte hash | Exact submitted static rows and order | Human realism |
+| Contract preflight | Coded schema, alignment, gold, evidence, verifier, and tool-argument rules | All possible semantic errors |
+| Final object equality | Every JSON value equals the submitted row | Provider response repeatability |
+| Final byte hash | Key order, rows, values, and serialization equal submitted JSONL | Model quality |
+| Cross-run comparison | Run 1 and run 2 construction outputs are identical | Cross-version API behavior |
+| Controller audit | Fixed exclusion controller accomplishes zero retained rows | Independent benchmark hardness |
 
 ## Trace One Scenario
 
+After creating a tool store:
+
 ```bash
 python scripts/export_release_stream_lineage.py \
-  --tool-store-db "$BTS_TOOL_STORE_DB"
+  --tool-store-db /absolute/path/to/tool_store.duckdb
 
 python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
   --output provenance/examples/test_timestamp_value_lookup_00051.json
 ```
 
-The resulting JSON exposes the raw ZIP/member, static task, canonical calls, acceptable alternatives, final episode, phase targets, evidence, verifier, and complete generation history for the same `scenario_id`.
+The trace contains source ZIP/member records, static calls and gold, final user turns, phase targets, evidence, verifier fields, and generation history for one `scenario_id`.
 
-## Model Traces
+## Model Evaluation Boundary
 
-The runner code and fixed output traces are retained under `scripts/` and `reports/model-runs/`. Provider sampling, infrastructure, and model revisions can change an API response, so rerunning a provider is not part of the deterministic construction claim. Given a fixed trace, the benchmark evaluator applies the fixed final-answer, evidence, phase, task, and protocol checks programmatically.
+Runner code and submitted model outputs are retained under `runners/` and `reports/model-runs/`. A fixed trace is scored by deterministic checks. A fresh provider call may differ because model aliases, serving infrastructure, and sampling behavior can change. Construction replay never calls GPT, Gemini, or Claude.

@@ -56,5 +56,82 @@
     "path": "release/submitted-dataset-bundle.zip",
     "bytes": 4540069,
     "sha256": "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
+  },
+  "submitted_source_snapshot": {
+    "path": "release/submitted-source-bundle.zip",
+    "bytes": 568927,
+    "sha256": "9c5502b3718113fee812818e71b47c23ed54ec1f694d37c35ea29686b2c64496"
+  },
+  "paper_submission_selection_contract": {
+    "path": "provenance/submission_static_selection.jsonl",
+    "rows": 532,
+    "sha256": "2487dce6bbb01bb0ab4e1d5b388ff40cc509ab26082770c867ed085e96ecddd6"
+  },
+  "paper_submission_normalized_catalog": {
+    "catalog_summary.json": {
+      "path": "data/source/bts-processed-catalog/catalog_summary.json",
+      "bytes": 248,
+      "sha256": "a9ebb46dc7293fc17230d7d26a8f00b847b23136a6cbf29749db2b547cfcb722"
+    },
+    "entities.parquet": {
+      "path": "data/source/bts-processed-catalog/entities.parquet",
+      "bytes": 3151084,
+      "sha256": "fb63ebf4b4cfd63893fa508afacafa1240f2636a9e3a7c0c5725407958613731"
+    },
+    "relations.parquet": {
+      "path": "data/source/bts-processed-catalog/relations.parquet",
+      "bytes": 1770519,
+      "sha256": "4a512fc1bdcc93dbf3e822458eb9193cb576dfadafe45f44d4e7298607d530d3"
+    },
+    "stream_targets.parquet": {
+      "path": "data/source/bts-processed-catalog/stream_targets.parquet",
+      "bytes": 3706992,
+      "sha256": "7785971531d03a9f80e2c9620fc34d7c828f9892adbad962d8820b3c95599994"
+    },
+    "streams.parquet": {
+      "path": "data/source/bts-processed-catalog/streams.parquet",
+      "bytes": 4222572,
+      "sha256": "3e848eb68be296ca39756aeb9ecb6ea5038ab9788df272be898fc27c822e23b7"
+    }
+  },
+  "paper_submission_static": {
+    "train": {
+      "path": "release/submitted-static-reference/train.jsonl",
+      "rows": 356,
+      "bytes": 1144829,
+      "sha256": "65f0384bf97318b628ff9431c8bdbd36a2347fcb0ee4a521169fbf3a22b7d825"
+    },
+    "dev": {
+      "path": "release/submitted-static-reference/dev.jsonl",
+      "rows": 87,
+      "bytes": 273433,
+      "sha256": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d"
+    },
+    "test": {
+      "path": "release/submitted-static-reference/test.jsonl",
+      "rows": 89,
+      "bytes": 271563,
+      "sha256": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
+    }
+  },
+  "paper_submission_final": {
+    "train": {
+      "zip_member": "dataset_bundle/bts_agentbench_532/train.jsonl",
+      "rows": 356,
+      "bytes": 26443936,
+      "sha256": "9e5afdf45fafcd28c408d131216950800717a891b2e530eae15c645db7720a65"
+    },
+    "dev": {
+      "zip_member": "dataset_bundle/bts_agentbench_532/dev.jsonl",
+      "rows": 87,
+      "bytes": 6416800,
+      "sha256": "4082a8625ede78bb7528bf544fc8e896bff9dfa929d5f999dad5b64a557339d6"
+    },
+    "test": {
+      "zip_member": "dataset_bundle/bts_agentbench_532/test.jsonl",
+      "rows": 89,
+      "bytes": 6548536,
+      "sha256": "a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867"
+    }
   }
 }

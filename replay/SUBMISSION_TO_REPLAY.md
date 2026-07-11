@@ -1,6 +1,8 @@
-# Submitted Snapshot to Replayed Release Audit
+# Submitted Snapshot to Later Maintenance Delta
 
-This document separates the benchmark supplied with the paper from the later reproducibility-maintenance release. Replay is an artifact-construction result, not a second model evaluation.
+This is a secondary change log between the benchmark supplied with the paper and a later maintenance release. It is not the paper-submission reconstruction report.
+
+For the exact raw-to-static-to-agentic replay of the submitted 532 rows, including byte-identical split hashes and family-wise submitted-versus-replay checks, see `PAPER_SUBMISSION_REPLAY.md` and `../CONSTRUCTION_WALKTHROUGH.md`.
 
 ## Evidence Chain
 

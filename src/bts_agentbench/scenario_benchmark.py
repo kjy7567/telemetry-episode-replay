@@ -9,6 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from collections import defaultdict
 import re
+from typing import Any
 
 import duckdb
 import pandas as pd
@@ -886,7 +887,56 @@ def take_by_split(
     heldout_site_ids: frozenset[str] | None = None,
     balance_key_fn=None,
     max_per_balance_key: dict[str, int] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
+    if selection_records is not None:
+        expected: dict[str, dict[str, Any]] = {}
+        for record in selection_records:
+            digest = str(record.get("selection_identity_sha256") or "")
+            identity = record.get("selection_identity")
+            if not digest or not isinstance(identity, dict):
+                raise ValueError("selection record must contain an identity and SHA-256 digest")
+            actual_digest = selection_identity_sha256(identity)
+            if actual_digest != digest:
+                raise ValueError(
+                    f"selection identity digest mismatch for {record.get('scenario_id')}: "
+                    f"expected {digest}, computed {actual_digest}"
+                )
+            if digest in expected:
+                raise ValueError(f"duplicate selection identity in contract: {digest}")
+            expected[digest] = record
+
+        matched: dict[str, ScenarioExample] = {}
+        for row in rows:
+            example = builder(row, "train")
+            if example is None:
+                continue
+            digest = selection_identity_sha256(selection_identity_from_example(example))
+            if digest not in expected:
+                continue
+            if digest in matched:
+                raise ValueError(
+                    f"selection identity matched more than one generated candidate: {digest}"
+                )
+            matched[digest] = example
+
+        missing = [
+            record["scenario_id"]
+            for digest, record in expected.items()
+            if digest not in matched
+        ]
+        if missing:
+            raise ValueError(
+                "selection contract candidates were not regenerated: " + ", ".join(missing)
+            )
+
+        selected: list[ScenarioExample] = []
+        for record in selection_records:
+            example = matched[record["selection_identity_sha256"]]
+            example.split = str(record["split"])
+            selected.append(example)
+        return selected
+
     counts = {"train": 0, "dev": 0, "test": 0}
     non_test_seen = 0
     examples: list[ScenarioExample] = []
@@ -919,6 +969,40 @@ def take_by_split(
     return examples
 
 
+def selection_identity_from_example(example: ScenarioExample) -> dict[str, Any]:
+    return sanitize_json(
+        {
+            "task_family": example.task_family,
+            "site_id": example.site_id,
+            "canonical_tool_calls": example.canonical_tool_calls,
+            "gold_final_answer": example.gold_final_answer,
+            "evidence": example.evidence,
+        }
+    )
+
+
+def selection_identity_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    return sanitize_json(
+        {
+            "task_family": payload["task_family"],
+            "site_id": payload["site_id"],
+            "canonical_tool_calls": payload["canonical_tool_calls"],
+            "gold_final_answer": payload["gold_final_answer"],
+            "evidence": payload["evidence"],
+        }
+    )
+
+
+def selection_identity_sha256(identity: dict[str, Any]) -> str:
+    encoded = json.dumps(
+        sanitize_json(identity),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def fetch_rows(con: duckdb.DuckDBPyConnection, query: str) -> list[dict]:
     return con.execute(query).fetchdf().to_dict(orient="records")
 
@@ -926,6 +1010,7 @@ def fetch_rows(con: duckdb.DuckDBPyConnection, query: str) -> list[dict]:
 def gen_point_disambiguation(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with class_counts as (
@@ -1026,12 +1111,14 @@ def gen_point_disambiguation(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"],),
         max_per_balance_key={"train": 12, "dev": 4, "test": 4},
+        selection_records=selection_records,
     )
 
 
 def gen_window_mean_lookup(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with weekly_window_quality as (
@@ -1201,12 +1288,14 @@ def gen_window_mean_lookup(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_day_mean_lookup(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with daily_window_quality as (
@@ -1379,12 +1468,14 @@ def gen_day_mean_lookup(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_relative_24h_mean_lookup(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with daily_window_quality as (
@@ -1558,12 +1649,14 @@ def gen_relative_24h_mean_lookup(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_window_pairwise_compare(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with weekly_window_quality as (
@@ -1814,6 +1907,7 @@ def gen_window_pairwise_compare(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
     for example in examples:
         alt = example.metadata.pop("acceptable_alternative_tool_calls", None)
@@ -1826,6 +1920,7 @@ def gen_window_pairwise_compare(
 def gen_window_rank(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with monthly_window_quality as (
@@ -2056,12 +2151,14 @@ def gen_window_rank(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], row["location_type"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 3, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_timestamp_value_lookup(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with ranked as (
@@ -2204,12 +2301,14 @@ def gen_timestamp_value_lookup(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["requested_timestamp"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_timestamp_nearest_lookup(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with ranked as (
@@ -2399,12 +2498,14 @@ def gen_timestamp_nearest_lookup(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["point_class"], quarter_bucket(row["requested_timestamp"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
 def gen_quality_gate(
     con: duckdb.DuckDBPyConnection,
     heldout_site_ids: frozenset[str] | None = None,
+    selection_records: list[dict[str, Any]] | None = None,
 ) -> list[ScenarioExample]:
     query = """
         with weekly_window_support as (
@@ -2621,6 +2722,7 @@ def gen_quality_gate(
         heldout_site_ids=heldout_site_ids,
         balance_key_fn=lambda row: (row["decision"], row["point_class"], quarter_bucket(row["window_start"])),
         max_per_balance_key={"train": 4, "dev": 2, "test": 2},
+        selection_records=selection_records,
     )
 
 
@@ -2637,13 +2739,57 @@ TASK_FAMILY_BUILDERS = {
 }
 
 
+def load_selection_contract(path: Path) -> dict[str, list[dict[str, Any]]]:
+    records_by_family: defaultdict[str, list[dict[str, Any]]] = defaultdict(list)
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped:
+                continue
+            record = json.loads(stripped)
+            family = str(record.get("task_family") or "")
+            if family not in TASK_FAMILY_BUILDERS:
+                raise ValueError(
+                    f"unknown task family in selection contract at line {line_number}: {family!r}"
+                )
+            split = str(record.get("split") or "")
+            if split not in {"train", "dev", "test"}:
+                raise ValueError(
+                    f"invalid split in selection contract at line {line_number}: {split!r}"
+                )
+            ordinal = int(record.get("family_ordinal") or 0)
+            expected_id = build_scenario_id(split, family, ordinal)
+            if record.get("scenario_id") != expected_id:
+                raise ValueError(
+                    f"scenario ID does not match split/family/ordinal at line {line_number}: "
+                    f"expected {expected_id}, found {record.get('scenario_id')}"
+                )
+            records_by_family[family].append(record)
+
+    for family, records in records_by_family.items():
+        records.sort(key=lambda record: int(record["family_ordinal"]))
+        ordinals = [int(record["family_ordinal"]) for record in records]
+        expected_ordinals = list(range(1, len(records) + 1))
+        if ordinals != expected_ordinals:
+            raise ValueError(
+                f"selection contract ordinals for {family} are not contiguous: {ordinals}"
+            )
+    return dict(records_by_family)
+
+
 def generate_scenario_benchmark(
     tool_store_db: Path,
     out_dir: Path,
     heldout_site_ids: list[str] | tuple[str, ...] | None = None,
     include_families: list[str] | tuple[str, ...] | None = None,
+    selection_contract_path: Path | None = None,
 ) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
+    selection_by_family = (
+        load_selection_contract(selection_contract_path)
+        if selection_contract_path is not None
+        else None
+    )
     con = duckdb.connect(str(tool_store_db), read_only=True)
     try:
         heldout = frozenset(heldout_site_ids or ["BTS_C"])
@@ -2654,10 +2800,28 @@ def generate_scenario_benchmark(
             include = set(include_families)
             family_items = [(name, builder) for name, builder in family_items if name in include]
         for family_name, builder in family_items:
-            examples = builder(con, heldout_site_ids=heldout)
+            selection_records = (
+                selection_by_family.get(family_name, [])
+                if selection_by_family is not None
+                else None
+            )
+            if selection_by_family is not None and not selection_records:
+                raise ValueError(f"selection contract has no records for {family_name}")
+            examples = builder(
+                con,
+                heldout_site_ids=heldout,
+                selection_records=selection_records,
+            )
             family_summary[family_name] = len(examples)
             for index, example in enumerate(examples, start=1):
-                payload = example.as_dict(build_scenario_id(example.split, family_name, index))
+                scenario_id = build_scenario_id(example.split, family_name, index)
+                if selection_records is not None:
+                    expected_id = selection_records[index - 1]["scenario_id"]
+                    if scenario_id != expected_id:
+                        raise ValueError(
+                            f"regenerated scenario ID mismatch: expected {expected_id}, found {scenario_id}"
+                        )
+                payload = example.as_dict(scenario_id)
                 splits[example.split].append(payload)
     finally:
         con.close()
@@ -2673,6 +2837,11 @@ def generate_scenario_benchmark(
         "heldout_site_ids": sorted(heldout),
         "query_surface_version": QUERY_SURFACE_VERSION,
     }
+    if selection_contract_path is not None:
+        manifest["selection_contract"] = str(selection_contract_path)
+        manifest["selection_contract_sha256"] = hashlib.sha256(
+            selection_contract_path.read_bytes()
+        ).hexdigest()
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     (out_dir / "scenario_tool_registry.json").write_text(
         json.dumps(SCENARIO_TOOL_REGISTRY, indent=2, ensure_ascii=False),

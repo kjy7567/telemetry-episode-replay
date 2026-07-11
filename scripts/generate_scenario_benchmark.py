@@ -20,6 +20,11 @@ def main() -> None:
     parser.add_argument("--heldout-site-id", action="append", default=[])
     parser.add_argument("--family", action="append", default=[])
     parser.add_argument(
+        "--selection-contract",
+        type=Path,
+        help="Frozen retained-row contract used to reconstruct a fixed benchmark release.",
+    )
+    parser.add_argument(
         "--raw-dir",
         type=Path,
         help="Directory containing Site_Aaa.zip, Site_Baa.zip, and Site_Caa.zip.",
@@ -34,6 +39,7 @@ def main() -> None:
         args.out_dir,
         heldout_site_ids=args.heldout_site_id or None,
         include_families=args.family or None,
+        selection_contract_path=args.selection_contract,
     )
     print(json.dumps(manifest, indent=2, ensure_ascii=False))
 

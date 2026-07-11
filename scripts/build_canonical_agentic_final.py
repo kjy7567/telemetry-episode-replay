@@ -4117,7 +4117,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_canonical_agentic_final(
+def _build_canonical_agentic_final(
     *,
     static_dir: Path,
     source_dir: Path,
@@ -4276,6 +4276,43 @@ def build_canonical_agentic_final(
     write_json(out_dir / "e2e_audit.json", audit_bts_e2e(out_dir))
     write_core_artifact(out_dir, core_out_dir, augmented_splits, manifest, corpus_name)
     return manifest
+
+
+def build_canonical_agentic_final(
+    *,
+    static_dir: Path,
+    source_dir: Path,
+    tool_store_db: Path,
+    out_dir: Path,
+    core_out_dir: Path,
+    corpus_name: str = "bts",
+    uniform_reference: Path | None = None,
+    use_default_uniform_reference: bool = True,
+    canonical_version: str | None = None,
+    lifting_version: str | None = None,
+) -> dict[str, Any]:
+    global CANONICAL_VERSION, LIFT_VERSION
+
+    previous_canonical_version = CANONICAL_VERSION
+    previous_lifting_version = LIFT_VERSION
+    if canonical_version is not None:
+        CANONICAL_VERSION = canonical_version
+    if lifting_version is not None:
+        LIFT_VERSION = lifting_version
+    try:
+        return _build_canonical_agentic_final(
+            static_dir=static_dir,
+            source_dir=source_dir,
+            tool_store_db=tool_store_db,
+            out_dir=out_dir,
+            core_out_dir=core_out_dir,
+            corpus_name=corpus_name,
+            uniform_reference=uniform_reference,
+            use_default_uniform_reference=use_default_uniform_reference,
+        )
+    finally:
+        CANONICAL_VERSION = previous_canonical_version
+        LIFT_VERSION = previous_lifting_version
 
 
 def main() -> None:

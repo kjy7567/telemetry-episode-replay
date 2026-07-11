@@ -102,6 +102,11 @@ def main() -> None:
         type=Path,
         default=REPO_ROOT / "artifacts" / "bts-canonical-final",
     )
+    parser.add_argument(
+        "--selection-contract",
+        type=Path,
+        help="Frozen retained-row contract for reconstructing an immutable submitted release.",
+    )
     parser.add_argument("--stop-after-static", action="store_true")
     parser.add_argument("--controller-audit", action="store_true")
     args = parser.parse_args()
@@ -132,6 +137,7 @@ def main() -> None:
         tool_store_dir / "tool_store.duckdb",
         static_dir,
         heldout_site_ids=["BTS_C"],
+        selection_contract_path=args.selection_contract,
     )
     static_hashes = split_hashes(static_dir)
     expected_static_hashes = split_hashes(args.expected_static_dir.resolve())

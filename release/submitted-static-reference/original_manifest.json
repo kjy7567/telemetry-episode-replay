@@ -1,0 +1,22 @@
+{
+  "splits": {
+    "train": 356,
+    "dev": 87,
+    "test": 89
+  },
+  "task_families": {
+    "point_disambiguation": 60,
+    "day_mean_lookup": 60,
+    "relative_24h_mean_lookup": 60,
+    "window_mean_lookup": 53,
+    "window_pairwise_compare": 60,
+    "window_rank": 60,
+    "timestamp_value_lookup": 60,
+    "timestamp_nearest_lookup": 60,
+    "quality_gate": 59
+  },
+  "heldout_site_ids": [
+    "BTS_C"
+  ],
+  "query_surface_version": "operator-robust-v1"
+}

@@ -117,7 +117,12 @@ def _set_required_fields(phase: dict[str, Any], fields: list[str]) -> dict[str, 
     return out
 
 
-def _normalize_rank_month_revision(out: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, Any]:
+def _normalize_rank_month_revision(
+    out: dict[str, Any],
+    runtime: ToolStoreRuntime,
+    *,
+    submission_compatibility: bool = False,
+) -> dict[str, Any]:
     phases = clone(out.get("phase_examples", []))
     golds = clone(out.get("phase_gold_final_answers", []))
     turns = list(out.get("goal_revision_turns", []))
@@ -166,9 +171,10 @@ def _normalize_rank_month_revision(out: dict[str, Any], runtime: ToolStoreRuntim
     # Leave those rows on their existing valid revision path; the final rank
     # transform will use that path as a deterministic fallback.
     if not first_rank_gold.get("stream_id") or not second_rank_gold.get("stream_id"):
-        metadata = clone(out.get("metadata", {}))
-        metadata["rank_month_normalization_skipped"] = "empty_adjacent_month"
-        out["metadata"] = metadata
+        if not submission_compatibility:
+            metadata = clone(out.get("metadata", {}))
+            metadata["rank_month_normalization_skipped"] = "empty_adjacent_month"
+            out["metadata"] = metadata
         recompute_turn_budget(out)
         return sync_phase_examples(out)
 
@@ -272,7 +278,12 @@ def _normalize_rank_month_revision(out: dict[str, Any], runtime: ToolStoreRuntim
     return out
 
 
-def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, Any]:
+def transform_row(
+    row: dict[str, Any],
+    runtime: ToolStoreRuntime,
+    *,
+    submission_compatibility: bool = False,
+) -> dict[str, Any]:
     out = clone(row)
     family = str(out.get("task_family", ""))
     if family not in TARGET_FAMILIES:
@@ -304,7 +315,11 @@ def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, A
         out["metadata"] = meta
 
     if family == "window_rank":
-        out = _normalize_rank_month_revision(out, runtime)
+        out = _normalize_rank_month_revision(
+            out,
+            runtime,
+            submission_compatibility=submission_compatibility,
+        )
 
     recompute_turn_budget(out)
     return sync_phase_examples(out)

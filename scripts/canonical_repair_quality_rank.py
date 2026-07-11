@@ -278,7 +278,12 @@ def transform_quality_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dic
     return sync_phase_examples(out)
 
 
-def transform_rank_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, Any]:
+def transform_rank_row(
+    row: dict[str, Any],
+    runtime: ToolStoreRuntime,
+    *,
+    submission_compatibility: bool = False,
+) -> dict[str, Any]:
     out = clone(row)
     canonical = clone(out.get("canonical_tool_calls", []))
     list_call = next((call for call in canonical if call.get("tool_name") == "list_points"), None)
@@ -317,20 +322,37 @@ def transform_rank_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[s
     second_rank_result = runtime.rank_window(second_rank_args)
     second_ranked = list(second_rank_result.get("ranked_streams") or [])
     if not second_ranked:
-        # Fall back to the already materialized adjacent-month revision when
-        # the preferred previous month predates this candidate group's data.
-        second_rank_args = clone(rank_calls[1]["arguments"])
-        second_rank_args["stream_ids"] = list_points_result["stream_ids"]
-        second_rank_result = runtime.rank_window(second_rank_args)
-        second_ranked = list(second_rank_result.get("ranked_streams") or [])
-        if not second_ranked:
-            return out
-        fallback_start = pd.Timestamp(second_rank_result.get("window_start"))
-        if fallback_start.tzinfo is None:
-            fallback_start = fallback_start.tz_localize("UTC")
+        if submission_compatibility:
+            second_rank_args = clone(rank_calls[1]["arguments"])
+            second_rank_args["stream_ids"] = list_points_result["stream_ids"]
+            second_rank_result = runtime.rank_window(second_rank_args)
+            second_ranked = list(second_rank_result.get("ranked_streams") or [])
+            if not second_ranked:
+                return out
+            existing_golds = list(out.get("phase_gold_final_answers") or [])
+            if existing_golds and isinstance(existing_golds[0], dict):
+                existing_first = existing_golds[0]
+                first_rank = {
+                    "stream_id": existing_first.get("stream_id"),
+                    "mean_value": existing_first.get("mean_value"),
+                    "window_start": existing_first.get("window_start"),
+                    "window_end": existing_first.get("window_end"),
+                }
         else:
-            fallback_start = fallback_start.tz_convert("UTC")
-        revision_direction = "next" if fallback_start > first_start else "alternate"
+            # Fall back to the already materialized adjacent-month revision when
+            # the preferred previous month predates this candidate group's data.
+            second_rank_args = clone(rank_calls[1]["arguments"])
+            second_rank_args["stream_ids"] = list_points_result["stream_ids"]
+            second_rank_result = runtime.rank_window(second_rank_args)
+            second_ranked = list(second_rank_result.get("ranked_streams") or [])
+            if not second_ranked:
+                return out
+            fallback_start = pd.Timestamp(second_rank_result.get("window_start"))
+            if fallback_start.tzinfo is None:
+                fallback_start = fallback_start.tz_localize("UTC")
+            else:
+                fallback_start = fallback_start.tz_convert("UTC")
+            revision_direction = "next" if fallback_start > first_start else "alternate"
     second_rank = {
         "stream_id": second_ranked[0].get("stream_id"),
         "mean_value": second_ranked[0].get("mean_value"),

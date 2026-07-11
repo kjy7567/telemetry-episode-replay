@@ -2114,13 +2114,13 @@
     },
     {
       "step_index": 19,
-      "stage": "final_family_semantics_repair",
+      "stage": "paper_final_family_semantics_repair",
       "stage_type": "repair",
-      "builder": "build_bts_canonical_final",
+      "builder": "build_bts_paper_final_canonical",
       "status": "applied",
       "details": {
-        "artifact_version": "bts-canonical-final",
-        "lifting_version": "bts-agentic-final"
+        "artifact_version": "canonical-v16-paper-final",
+        "lifting_version": "dal-v15-paper-final"
       }
     }
   ]

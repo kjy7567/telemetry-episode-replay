@@ -12,6 +12,7 @@ from build_submission_replay_audit import verify_recorded_audit
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ("train", "dev", "test")
 SUBMITTED_DATASET_SHA256 = "70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76"
+SUBMITTED_SOURCE_SHA256 = "9c5502b3718113fee812818e71b47c23ed54ec1f694d37c35ea29686b2c64496"
 
 
 def sha256(path: Path) -> str:
@@ -25,6 +26,20 @@ def sha256(path: Path) -> str:
 def load_jsonl(path: Path) -> list[dict]:
     with path.open(encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def load_jsonl_bytes(payload: bytes) -> list[dict]:
+    return [json.loads(line) for line in payload.splitlines() if line.strip()]
+
+
+def selection_identity_sha256(identity: dict) -> str:
+    payload = json.dumps(
+        identity,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def main() -> None:
@@ -76,6 +91,71 @@ def main() -> None:
         }
         if not expected.issubset(archive.namelist()):
             raise RuntimeError("submitted dataset snapshot is missing BTS split files")
+        for split in SPLITS:
+            record = manifest["paper_submission_final"][split]
+            payload = archive.read(record["zip_member"])
+            rows = load_jsonl_bytes(payload)
+            if len(rows) != int(record["rows"]):
+                raise RuntimeError(f"submitted final row count mismatch: {split}")
+            if len(payload) != int(record["bytes"]):
+                raise RuntimeError(f"submitted final byte count mismatch: {split}")
+            if hashlib.sha256(payload).hexdigest() != record["sha256"]:
+                raise RuntimeError(f"submitted final hash mismatch: {split}")
+
+    submitted_source_record = manifest["submitted_source_snapshot"]
+    submitted_source_path = REPO_ROOT / submitted_source_record["path"]
+    submitted_source_hash = sha256(submitted_source_path)
+    if (
+        submitted_source_hash != submitted_source_record["sha256"]
+        or submitted_source_hash != SUBMITTED_SOURCE_SHA256
+    ):
+        raise RuntimeError("submitted source snapshot hash mismatch")
+    with zipfile.ZipFile(submitted_source_path) as archive:
+        if archive.testzip() is not None:
+            raise RuntimeError("submitted source snapshot CRC failure")
+
+    selection_record = manifest["paper_submission_selection_contract"]
+    selection_path = REPO_ROOT / selection_record["path"]
+    selection_rows = load_jsonl(selection_path)
+    if len(selection_rows) != int(selection_record["rows"]):
+        raise RuntimeError("paper submission selection-contract row count mismatch")
+    if sha256(selection_path) != selection_record["sha256"]:
+        raise RuntimeError("paper submission selection-contract hash mismatch")
+    scenario_selection_ids: set[str] = set()
+    identity_hashes: set[str] = set()
+    for row in selection_rows:
+        scenario_id = str(row["scenario_id"])
+        digest = str(row["selection_identity_sha256"])
+        if scenario_id in scenario_selection_ids:
+            raise RuntimeError(f"duplicate selection scenario ID: {scenario_id}")
+        if digest in identity_hashes:
+            raise RuntimeError(f"duplicate selection identity: {digest}")
+        if selection_identity_sha256(row["selection_identity"]) != digest:
+            raise RuntimeError(f"selection identity digest mismatch: {scenario_id}")
+        scenario_selection_ids.add(scenario_id)
+        identity_hashes.add(digest)
+
+    submitted_static_ids: set[str] = set()
+    for split in SPLITS:
+        record = manifest["paper_submission_static"][split]
+        path = REPO_ROOT / record["path"]
+        rows = load_jsonl(path)
+        if len(rows) != int(record["rows"]):
+            raise RuntimeError(f"paper submission static row count mismatch: {split}")
+        if path.stat().st_size != int(record["bytes"]):
+            raise RuntimeError(f"paper submission static byte count mismatch: {split}")
+        if sha256(path) != record["sha256"]:
+            raise RuntimeError(f"paper submission static hash mismatch: {split}")
+        submitted_static_ids.update(str(row["scenario_id"]) for row in rows)
+    if submitted_static_ids != scenario_selection_ids:
+        raise RuntimeError("paper submission static and selection-contract ID sets differ")
+
+    for name, record in manifest["paper_submission_normalized_catalog"].items():
+        path = REPO_ROOT / record["path"]
+        if path.stat().st_size != int(record["bytes"]):
+            raise RuntimeError(f"paper submission catalog byte count mismatch: {name}")
+        if sha256(path) != record["sha256"]:
+            raise RuntimeError(f"paper submission catalog hash mismatch: {name}")
 
     final_test_ids = {
         row["scenario_id"] for row in load_jsonl(REPO_ROOT / manifest["final"]["test"]["path"])
@@ -104,6 +184,11 @@ def main() -> None:
                 "model_trace_sets_verified": 3,
                 "archive_sha256": archive_record["sha256"],
                 "submitted_snapshot_sha256": submitted_hash,
+                "submitted_source_snapshot_sha256": submitted_source_hash,
+                "paper_submission_selection_rows": len(selection_rows),
+                "paper_submission_catalog_files": len(
+                    manifest["paper_submission_normalized_catalog"]
+                ),
                 "submission_replay_audit": submission_replay_audit,
             },
             indent=2,
