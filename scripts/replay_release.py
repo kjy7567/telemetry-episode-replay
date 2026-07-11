@@ -40,6 +40,30 @@ def package_versions() -> dict[str, str]:
     return versions
 
 
+def load_tool_store_provenance(build_report_path: Path, tool_store_db: Path) -> dict[str, Any]:
+    build_report_path = build_report_path.resolve()
+    if not build_report_path.is_file():
+        raise FileNotFoundError(f"tool-store build report does not exist: {build_report_path}")
+    expected_db = (build_report_path.parent / "tool-store" / "tool_store.duckdb").resolve()
+    if expected_db != tool_store_db:
+        raise ValueError(
+            "tool-store path is not bound to the supplied build report: "
+            f"expected {expected_db}, received {tool_store_db}"
+        )
+    payload = json.loads(build_report_path.read_text(encoding="utf-8"))
+    if payload.get("static_matches_expected") is not True:
+        raise ValueError("tool-store build report does not record an exact retained-static match")
+    return {
+        "build_report_version": payload.get("report_version"),
+        "path_binding_verified": True,
+        "catalog_mode": payload.get("catalog_mode"),
+        "raw_archives": payload.get("raw_archives", []),
+        "rebuilt_static_split_hashes": payload.get("static_split_hashes", {}),
+        "rebuilt_static_matches_expected": True,
+        "public_summary": "replay/raw_to_static_rebuild_report.json",
+    }
+
+
 def run_build(
     *,
     label: str,
@@ -131,6 +155,14 @@ def main() -> None:
     parser.add_argument("--report", type=Path, default=REPO_ROOT / "replay" / "replay_report.json")
     parser.add_argument("--controller-audit", action="store_true")
     parser.add_argument(
+        "--tool-store-build-report",
+        type=Path,
+        help=(
+            "Optional rebuild_from_raw.py report. When supplied, the replay verifies that the tool-store "
+            "path belongs to that build and records checksummed raw-input provenance."
+        ),
+    )
+    parser.add_argument(
         "--reuse-existing",
         action="store_true",
         help="Verify existing work-dir/run_a and run_b outputs without rebuilding them.",
@@ -142,6 +174,14 @@ def main() -> None:
     args.tool_store_db = args.tool_store_db.resolve()
     if not args.tool_store_db.exists():
         parser.error(f"tool store does not exist: {args.tool_store_db}")
+    try:
+        tool_store_provenance = (
+            load_tool_store_provenance(args.tool_store_build_report, args.tool_store_db)
+            if args.tool_store_build_report
+            else {"kind": "external_tool_store", "build_report_supplied": False}
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        parser.error(str(exc))
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
     if args.reuse_existing:
@@ -162,9 +202,10 @@ def main() -> None:
     replay_match = runs[0]["split_hashes"] == runs[1]["split_hashes"]
     expected_match = runs[0]["split_hashes"] == expected_hashes
     report = {
-        "report_version": "bts-release-replay-v1",
+        "report_version": "bts-release-replay-v2",
         "replay_boundary": "retained static executable task layer -> canonical release",
         "raw_to_static_note": "Raw-to-static reconstruction additionally requires the BTS archives and tool-store build.",
+        "tool_store_provenance": tool_store_provenance,
         "python": sys.version.split()[0],
         "packages": package_versions(),
         "static_split_hashes": split_hashes(args.static_dir.resolve()),

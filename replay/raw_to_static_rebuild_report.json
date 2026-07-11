@@ -58,5 +58,20 @@
     "dev": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d",
     "test": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
   },
-  "static_matches_expected": true
+  "static_matches_expected": true,
+  "downstream_release_replay": {
+    "tool_store_from_this_build": true,
+    "clean_release_runs": 2,
+    "preflight_issue_counts": [
+      0,
+      0
+    ],
+    "run_a_equals_run_b": true,
+    "run_a_equals_retained_release": true,
+    "final_split_hashes": {
+      "train": "857a537cd052fa24e9c5e62b09fc0a8d24443517ce47c1cdf576aa3dac65cb43",
+      "dev": "58dda2cb6e09ad6b4d840ae5d412a8f92ae13b5d5b49661990789773543d4f04",
+      "test": "a1a7834c7362d6e164daf4a67809fcaf65b57b552abb2de2bb7d68b438a775a8"
+    }
+  }
 }

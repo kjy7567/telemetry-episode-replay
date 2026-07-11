@@ -15,7 +15,7 @@
 
 `scripts/rebuild_from_raw.py` orchestrates the complete path. `scripts/replay_release.py` isolates the paper's fixed-contract replay boundary and executes it twice.
 
-The checked reports in `replay/raw_to_static_rebuild_report.json` and `replay/replay_report.json` record the two boundaries separately. The former was produced by rebuilding the tool store and 532 static tasks from the three checksummed raw archives; all retained static split hashes matched. The latter records two clean static-to-release builds; A and B matched each other and the retained release for every split, with zero preflight issues in both runs.
+The checked reports in `replay/raw_to_static_rebuild_report.json` and `replay/replay_report.json` record the two boundaries and their tested composition. The former was produced by rebuilding the tool store and 532 static tasks from the three checksummed raw archives; all retained static split hashes matched. That newly materialized tool store then drove two clean static-to-release builds. A and B matched each other and the retained release for every split, with zero preflight issues in both runs. The replay report verifies that the database path is the tool-store sibling of the supplied raw-build report before recording this provenance.
 
 ## Inputs
 
@@ -91,6 +91,8 @@ The replay script creates independent `run_a` and `run_b` directories. For each 
 - A matches the retained release hashes.
 
 Use `--controller-audit` to recompute controller witnesses as part of both runs. It is omitted by default because it is an additional exclusion audit, not part of episode semantics.
+
+To bind a tool store reconstructed by `scripts/rebuild_from_raw.py` to the replay evidence, also pass its `--tool-store-build-report`. The script verifies the report-to-database path binding and that the rebuilt static split hashes matched the retained static layer.
 
 ## Trace One Scenario
 

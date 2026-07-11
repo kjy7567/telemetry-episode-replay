@@ -1,7 +1,36 @@
 {
-  "report_version": "bts-release-replay-v1",
+  "report_version": "bts-release-replay-v2",
   "replay_boundary": "retained static executable task layer -> canonical release",
   "raw_to_static_note": "Raw-to-static reconstruction additionally requires the BTS archives and tool-store build.",
+  "tool_store_provenance": {
+    "build_report_version": "raw-to-final-rebuild-v1",
+    "path_binding_verified": true,
+    "catalog_mode": "frozen_release_catalog",
+    "raw_archives": [
+      {
+        "name": "Site_Aaa.zip",
+        "size_bytes": 8475679488,
+        "sha256": "ffc13b3710c66de505678cf5b48e8c7b3d5be97900653c82f48c2f5dfec7e77f"
+      },
+      {
+        "name": "Site_Baa.zip",
+        "size_bytes": 1513172125,
+        "sha256": "fade67675e97274075e003c27e411eadc50f17c5fe0cb294bd3569388a517ef8"
+      },
+      {
+        "name": "Site_Caa.zip",
+        "size_bytes": 8984334527,
+        "sha256": "fa03a0629fb1da4eb9ef3c430546311470fc9bd8f5e53cfcd76853d535676b5b"
+      }
+    ],
+    "rebuilt_static_split_hashes": {
+      "train": "9b5249ed7b89331b50bd26376f3f79a99e3fd326617f5da8851a278dd22134d7",
+      "dev": "294f394147a27eba052d1421b8cff5814cdeeab8246194670a7b4a5b93c72b8d",
+      "test": "1f561e93dbcd748bc1f94aa00827512869c8e6e220b15b3943f6c8a5af45120e"
+    },
+    "rebuilt_static_matches_expected": true,
+    "public_summary": "replay/raw_to_static_rebuild_report.json"
+  },
   "python": "3.11.11",
   "packages": {
     "duckdb": "1.5.0",

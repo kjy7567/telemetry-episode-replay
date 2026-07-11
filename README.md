@@ -24,7 +24,7 @@ Three boundaries must not be conflated.
 
 The normalized catalog used by the released build is retained under `data/source/bts-processed-catalog/`. The metadata compiler is also included and now applies an explicit ordering policy for RDF triples and multi-edge candidates. Recompiling metadata is useful for auditing or adapting the recipe, while exact release reconstruction uses the frozen catalog as its input contract.
 
-Recorded verification reports are retained under `replay/`: `raw_to_static_rebuild_report.json` records an independent rebuild from the three checksummed raw archives, and `replay_report.json` records two clean static-to-release builds. The recorded raw rebuild matched all three retained static split hashes; the two release builds matched one another and all three retained release split hashes.
+Recorded verification reports are retained under `replay/`: `raw_to_static_rebuild_report.json` records an independent rebuild from the three checksummed raw archives, and `replay_report.json` records two clean static-to-release builds driven by the tool store produced in that raw rebuild. The recorded raw rebuild matched all three retained static split hashes; both downstream release builds reported zero preflight issues and matched one another and all three retained release split hashes.
 
 See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for every stage, input, output, and command.
 Upstream file IDs, licensing, sizes, and checksums are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
@@ -67,6 +67,16 @@ make replay
 ```
 
 The command rebuilds the 532 episodes twice under `data/local-build/replay/`, verifies zero contract-preflight issues, compares both builds byte-for-byte, compares them with the retained release, and writes `replay/replay_report.json`. A mismatch exits nonzero.
+
+When the tool store was produced by `scripts/rebuild_from_raw.py`, bind its build report to the downstream replay:
+
+```bash
+python scripts/replay_release.py \
+  --tool-store-db ./data/local-build/from-raw/tool-store/tool_store.duckdb \
+  --tool-store-build-report ./data/local-build/from-raw/rebuild_report.json
+```
+
+The replay rejects a build report whose sibling tool-store path does not match the supplied database or whose static hashes did not match the retained static tasks.
 
 For a tool-store-free integrity check of the packaged artifacts and all three model-trace ID sets:
 
