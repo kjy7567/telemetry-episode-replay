@@ -1,0 +1,104 @@
+{
+  "report_version": "paper-submission-repair-profile-v1",
+  "row_count": 532,
+  "lineage_invariants": {
+    "backing_static_scenario_id_matches": 532,
+    "source_static_query_matches": 532,
+    "task_family_matches": 532,
+    "site_id_matches": 532
+  },
+  "rows_with_at_least_one_modified_repair": 532,
+  "repair_stage_status_counts": {
+    "controller_proxy_repair_round_1": {
+      "noop": 532
+    },
+    "goal_revision_clarification_repair": {
+      "modified": 60,
+      "noop": 472
+    },
+    "goal_revision_contract_repair": {
+      "modified": 293,
+      "noop": 239
+    },
+    "multi_axis_composition_repair": {
+      "modified": 472,
+      "noop": 60
+    },
+    "paper_final_family_semantics_repair": {
+      "applied": 532
+    },
+    "point_target_revision_contract_repair": {
+      "modified": 60,
+      "noop": 472
+    },
+    "reporting_commitment_composition_repair": {
+      "modified": 532
+    },
+    "timestamp_nearest_contract_humanization": {
+      "modified": 60,
+      "noop": 472
+    },
+    "timestamp_policy_surface_repair": {
+      "modified": 120,
+      "noop": 412
+    },
+    "timestamp_value_revision_contract_repair": {
+      "modified": 60,
+      "noop": 472
+    }
+  },
+  "family_modified_stage_counts": {
+    "day_mean_lookup": {
+      "goal_revision_contract_repair": 60,
+      "multi_axis_composition_repair": 60,
+      "reporting_commitment_composition_repair": 60
+    },
+    "point_disambiguation": {
+      "multi_axis_composition_repair": 60,
+      "point_target_revision_contract_repair": 60,
+      "reporting_commitment_composition_repair": 60
+    },
+    "quality_gate": {
+      "multi_axis_composition_repair": 59,
+      "reporting_commitment_composition_repair": 59
+    },
+    "relative_24h_mean_lookup": {
+      "goal_revision_contract_repair": 60,
+      "multi_axis_composition_repair": 60,
+      "reporting_commitment_composition_repair": 60
+    },
+    "timestamp_nearest_lookup": {
+      "reporting_commitment_composition_repair": 60,
+      "timestamp_nearest_contract_humanization": 60,
+      "timestamp_policy_surface_repair": 60
+    },
+    "timestamp_value_lookup": {
+      "goal_revision_clarification_repair": 60,
+      "multi_axis_composition_repair": 60,
+      "reporting_commitment_composition_repair": 60,
+      "timestamp_policy_surface_repair": 60,
+      "timestamp_value_revision_contract_repair": 60
+    },
+    "window_mean_lookup": {
+      "goal_revision_contract_repair": 53,
+      "multi_axis_composition_repair": 53,
+      "reporting_commitment_composition_repair": 53
+    },
+    "window_pairwise_compare": {
+      "goal_revision_contract_repair": 60,
+      "multi_axis_composition_repair": 60,
+      "reporting_commitment_composition_repair": 60
+    },
+    "window_rank": {
+      "goal_revision_contract_repair": 60,
+      "multi_axis_composition_repair": 60,
+      "reporting_commitment_composition_repair": 60
+    }
+  },
+  "interpretation": {
+    "modified": "The typed stage changed one or more interaction-contract fields.",
+    "noop": "The stage was checked but its predicate did not require a change.",
+    "applied": "The final family semantics stamp was attached after typed checks.",
+    "lineage_scope": "These are coded lineage invariants, not a human semantic-validity judgment."
+  }
+}

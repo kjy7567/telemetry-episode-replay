@@ -3,13 +3,14 @@ set -euo pipefail
 
 : "${OPENROUTER_API_KEY:?Set OPENROUTER_API_KEY}"
 : "${BTS_TOOL_STORE_DB:?Set BTS_TOOL_STORE_DB}"
+: "${BTS_BENCHMARK_DIR:?Set BTS_BENCHMARK_DIR to an exact replay final directory}"
 
 python scripts/run_bts_e2e_openai_eval.py \
   --provider gemini \
   --base-url https://openrouter.ai/api/v1 \
   --api-key-env OPENROUTER_API_KEY \
   --model google/gemini-3.1-pro-preview \
-  --benchmark-dir artifacts/bts-canonical-final \
+  --benchmark-dir "$BTS_BENCHMARK_DIR" \
   --tool-store-db "$BTS_TOOL_STORE_DB" \
   --split test \
   --max-turns 12 \

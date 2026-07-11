@@ -42,6 +42,15 @@ def selection_identity_sha256(identity: dict) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def verify_manifest_file(record: dict, label: str) -> Path:
+    path = REPO_ROOT / record["path"]
+    if path.stat().st_size != int(record["bytes"]):
+        raise RuntimeError(f"{label} byte count mismatch")
+    if sha256(path) != record["sha256"]:
+        raise RuntimeError(f"{label} hash mismatch")
+    return path
+
+
 def main() -> None:
     manifest_path = REPO_ROOT / "release" / "release_manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -83,6 +92,7 @@ def main() -> None:
     submitted_hash = sha256(submitted_path)
     if submitted_hash != submitted_record["sha256"] or submitted_hash != SUBMITTED_DATASET_SHA256:
         raise RuntimeError("submitted dataset snapshot hash mismatch")
+    submitted_final_ids_by_split: dict[str, set[str]] = {}
     with zipfile.ZipFile(submitted_path) as archive:
         if archive.testzip() is not None:
             raise RuntimeError("submitted dataset snapshot CRC failure")
@@ -95,6 +105,9 @@ def main() -> None:
             record = manifest["paper_submission_final"][split]
             payload = archive.read(record["zip_member"])
             rows = load_jsonl_bytes(payload)
+            submitted_final_ids_by_split[split] = {
+                str(row["scenario_id"]) for row in rows
+            }
             if len(rows) != int(record["rows"]):
                 raise RuntimeError(f"submitted final row count mismatch: {split}")
             if len(payload) != int(record["bytes"]):
@@ -157,6 +170,125 @@ def main() -> None:
         if sha256(path) != record["sha256"]:
             raise RuntimeError(f"paper submission catalog hash mismatch: {name}")
 
+    repair_profile_record = manifest["paper_submission_repair_profile"]
+    repair_profile_path = REPO_ROOT / repair_profile_record["path"]
+    if repair_profile_path.stat().st_size != int(repair_profile_record["bytes"]):
+        raise RuntimeError("paper submission repair-profile byte count mismatch")
+    if sha256(repair_profile_path) != repair_profile_record["sha256"]:
+        raise RuntimeError("paper submission repair-profile hash mismatch")
+    repair_profile = json.loads(repair_profile_path.read_text(encoding="utf-8"))
+    if int(repair_profile["row_count"]) != 532:
+        raise RuntimeError("paper submission repair-profile row count mismatch")
+    if any(
+        int(count) != 532
+        for count in repair_profile["lineage_invariants"].values()
+    ):
+        raise RuntimeError("paper submission repair-profile lineage invariant failed")
+
+    replay_record = manifest["paper_submission_replay_report"]
+    replay_path = verify_manifest_file(replay_record, "paper submission replay report")
+    replay_report = json.loads(replay_path.read_text(encoding="utf-8"))
+    if not replay_report["passed"] or not replay_report["cross_run_exact_match"]:
+        raise RuntimeError("paper submission replay did not pass")
+    if replay_report["tool_store_build"]["mode"] != "raw_archives_to_fresh_tool_store":
+        raise RuntimeError("paper submission replay was not built from raw archives")
+    if len(replay_report["runs"]) != 2:
+        raise RuntimeError("paper submission replay must contain two construction runs")
+    if (
+        replay_report["selection_contract_sha256"]
+        != manifest["paper_submission_selection_contract"]["sha256"]
+    ):
+        raise RuntimeError("paper submission replay selection hash mismatch")
+    if (
+        replay_report["submitted_source_bundle_sha256"]
+        != manifest["submitted_source_snapshot"]["sha256"]
+        or replay_report["submitted_dataset_bundle_sha256"]
+        != manifest["submitted_dataset_snapshot"]["sha256"]
+    ):
+        raise RuntimeError("paper submission replay bundle hash mismatch")
+    for run in replay_report["runs"]:
+        if not run["passed"] or int(run["preflight_issue_count"]) != 0:
+            raise RuntimeError(f"paper submission replay run {run['run']} failed")
+        for split in SPLITS:
+            static = run["static"][split]
+            final = run["final"][split]
+            if (
+                not static["exact_file_match"]
+                or static["sha256"] != manifest["paper_submission_static"][split]["sha256"]
+                or static["expected_sha256"]
+                != manifest["paper_submission_static"][split]["sha256"]
+            ):
+                raise RuntimeError(
+                    f"paper submission static replay mismatch: run {run['run']} {split}"
+                )
+            if (
+                not final["exact_file_match"]
+                or not final["exact_json_object_match"]
+                or final["sha256"] != manifest["paper_submission_final"][split]["sha256"]
+                or final["expected_sha256"]
+                != manifest["paper_submission_final"][split]["sha256"]
+            ):
+                raise RuntimeError(
+                    f"paper submission final replay mismatch: run {run['run']} {split}"
+                )
+
+    independent_record = manifest["independent_raw_replays_report"]
+    independent_path = verify_manifest_file(
+        independent_record, "independent raw replay report"
+    )
+    independent = json.loads(independent_path.read_text(encoding="utf-8"))
+    if not all(
+        (
+            independent["passed"],
+            independent["raw_archive_inventory_match"],
+            independent["logical_tool_store_files_exact"],
+            independent["fixed_input_hashes_match"],
+            independent["downstream_split_hashes_match"],
+        )
+    ):
+        raise RuntimeError("independent raw replay comparison failed")
+    if (
+        int(independent["logical_tool_store_file_count"]) != 11
+        or int(independent["total_exact_episode_builds"]) != 3
+    ):
+        raise RuntimeError("independent raw replay coverage mismatch")
+    if any(
+        not record["exact_file_match"]
+        for record in independent["logical_tool_store_files"].values()
+    ):
+        raise RuntimeError("independent raw logical export mismatch")
+
+    controller_record = manifest["paper_submission_controller_audit"]
+    controller_path = verify_manifest_file(
+        controller_record, "paper submission controller audit"
+    )
+    controller = json.loads(controller_path.read_text(encoding="utf-8"))
+    if (
+        int(controller["totals"]["scenario_count"]) != 532
+        or int(controller["totals"]["accomplished_count"]) != 0
+    ):
+        raise RuntimeError("paper submission controller audit mismatch")
+    failure_record = manifest["paper_submission_controller_failure_analysis"]
+    failure_path = verify_manifest_file(
+        failure_record, "paper submission controller failure analysis"
+    )
+    failure_analysis = json.loads(failure_path.read_text(encoding="utf-8"))
+    if int(failure_analysis["row_count"]) != 532:
+        raise RuntimeError("paper submission controller failure-analysis row mismatch")
+    controller_witness_ids: set[str] = set()
+    for split in SPLITS:
+        record = manifest["paper_submission_controller_witnesses"][split]
+        path = verify_manifest_file(record, f"paper submission controller witness {split}")
+        rows = load_jsonl(path)
+        if len(rows) != int(record["rows"]):
+            raise RuntimeError(f"paper submission controller witness row mismatch: {split}")
+        split_ids = {str(row["scenario_id"]) for row in rows}
+        if split_ids != submitted_final_ids_by_split[split]:
+            raise RuntimeError(f"paper submission controller witness ID mismatch: {split}")
+        if any(row.get("label") == "accomplished" for row in rows):
+            raise RuntimeError(f"controller accomplished a submitted row: {split}")
+        controller_witness_ids.update(split_ids)
+
     final_test_ids = {
         row["scenario_id"] for row in load_jsonl(REPO_ROOT / manifest["final"]["test"]["path"])
     }
@@ -189,7 +321,13 @@ def main() -> None:
                 "paper_submission_catalog_files": len(
                     manifest["paper_submission_normalized_catalog"]
                 ),
-                "submission_replay_audit": submission_replay_audit,
+                "paper_submission_repair_rows": repair_profile["row_count"],
+                "paper_submission_replay_runs": len(replay_report["runs"]),
+                "independent_raw_builds": 2,
+                "exact_episode_builds": independent["total_exact_episode_builds"],
+                "controller_witness_rows": len(controller_witness_ids),
+                "controller_accomplished_rows": controller["totals"]["accomplished_count"],
+                "secondary_maintenance_delta_audit": submission_replay_audit,
             },
             indent=2,
         )

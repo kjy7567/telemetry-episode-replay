@@ -18,6 +18,8 @@ Shared settings for the retained runs were:
 
 The study reports single retained runs. Provider-side nondeterminism remains possible despite temperature and seed controls. The fixed traces, rather than a new API rerun, are the inputs to the reported scorer outputs.
 
+The paper scores are attached to the submitted test JSONL SHA-256 `a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867`. `scripts/replay_paper_submission.py` reconstructs that file exactly before any optional new model run.
+
 ## Provider Settings
 
 | System | Endpoint | Provider mode | Requested output cap | Effective output cap |
@@ -30,7 +32,14 @@ The Gemini guard was added after a truncated response: for this model and endpoi
 
 ## Commands
 
-Set `BTS_TOOL_STORE_DB` and the relevant API key, then run one wrapper:
+Set `BTS_TOOL_STORE_DB`, point `BTS_BENCHMARK_DIR` at an exact replay, and set the relevant API key:
+
+```bash
+export BTS_TOOL_STORE_DB=/absolute/path/to/tool_store.duckdb
+export BTS_BENCHMARK_DIR=/absolute/path/to/paper-submission-replay/run_1/final
+```
+
+Then run one wrapper:
 
 ```bash
 bash runners/gpt55_bts.sh

@@ -1,5 +1,7 @@
 {
-  "report_version": "fixed-trace-audit-v1",
+  "report_version": "fixed-trace-audit-v2",
+  "submitted_test_rows": 89,
+  "submitted_test_sha256": "a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867",
   "models": {
     "gpt-5.5": {
       "rows": 89,
@@ -9,6 +11,7 @@
       },
       "protocol_success": 86,
       "task_success": 80,
+      "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
       "by_family": {
         "day_mean_lookup": {
@@ -53,6 +56,7 @@
       },
       "protocol_success": 81,
       "task_success": 72,
+      "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
       "by_family": {
         "day_mean_lookup": {
@@ -97,6 +101,7 @@
       },
       "protocol_success": 81,
       "task_success": 62,
+      "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
       "by_family": {
         "day_mean_lookup": {

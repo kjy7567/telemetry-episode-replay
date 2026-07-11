@@ -50,6 +50,8 @@ equipment_label: BTS_C Zone 005
 5. computes day, Monday-bounded week, calendar-month, and hour-of-week aggregates;
 6. exposes the resulting tables through a read-only DuckDB runtime.
 
+The checked raw build processes 8,345 Site A streams, 730 Site B streams, and 5,347 Site C streams. Fourteen Site B `__MACOSX/._*.pickle` AppleDouble members fail pickle decoding and are recorded in `skipped_members.json`; they are archive metadata, not retained telemetry streams.
+
 The runtime does not synthesize missing observations. `lookup_observation(mode="exact")` requires timestamp equality. `mode="nearest"` minimizes absolute time distance and reports the offset. Window aggregation uses an inclusive start and exclusive end.
 
 ### Concrete raw record
@@ -128,6 +130,17 @@ The checked selection profile in `provenance/submission_static_selection_summary
 
 The same profile records per-family temporal ranges, decision counts, and min/median/max difficulty-proxy values. These statistics expose the submitted sample's concentration and are not presented as evidence of random representativeness.
 
+### Ambiguity, ties, and empty results
+
+- single-point families retain only metadata keys that resolve to one stream;
+- pairwise candidates require a nonzero mean difference, so a tied comparison is not released as having an arbitrary winner;
+- `rank_window` orders by the requested metric and then stream ID, with the declared ascending or descending direction;
+- nearest lookup orders by absolute offset and then observation timestamp, choosing the earlier timestamp for an equal offset;
+- exact lookup reports no exact match instead of substituting a nearby value;
+- empty aggregate/rank candidates are rejected or handled by the declared adjacent-window compatibility branch rather than assigned a fabricated gold.
+
+Acceptable alternative tool paths are generated from explicit equivalences such as `week` versus the same custom interval, swapped left/right resolution followed by the corresponding compare arguments, and exact-then-nearest fallback. They are not authored by a model.
+
 ### Concrete static task
 
 The raw observation above becomes this executable contract:
@@ -204,6 +217,25 @@ Typed repairs are deterministic functions over named fields. Examples include:
 - replacing a provisional final field with a typed reporting commitment.
 
 Every row records the applied stages in `generation_history`. A repair is accepted only if the final contract preflight passes.
+
+### Submitted repair profile
+
+`provenance/submission_repair_profile.json` is computed from the submitted final rows and their retained static sources.
+
+| Typed stage | Modified | No-op | Applied |
+|---|---:|---:|---:|
+| Timestamp policy surface | 120 | 412 | 0 |
+| Nearest contract humanization | 60 | 472 | 0 |
+| Timestamp-value revision contract | 60 | 472 | 0 |
+| Goal-revision contract | 293 | 239 | 0 |
+| Point-target revision contract | 60 | 472 | 0 |
+| Goal-revision clarification | 60 | 472 | 0 |
+| Controller-proxy repair round | 0 | 532 | 0 |
+| Multi-axis composition | 472 | 60 | 0 |
+| Reporting-commitment composition | 532 | 0 | 0 |
+| Final family-semantics stamp | 0 | 0 | 532 |
+
+All 532 final rows preserve the backing static scenario ID, source static query, task family, and site ID under the coded lineage checks. These counts show what the repair program changed and what it left untouched; they do not replace human semantic-validity review.
 
 ## 7. Submission Compatibility and Maintenance
 

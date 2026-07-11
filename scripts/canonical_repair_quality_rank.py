@@ -323,6 +323,8 @@ def transform_rank_row(
     second_ranked = list(second_rank_result.get("ranked_streams") or [])
     if not second_ranked:
         if submission_compatibility:
+            # The submitted snapshot reused its already-materialized adjacent
+            # window while preserving the first phase's original serialization.
             second_rank_args = clone(rank_calls[1]["arguments"])
             second_rank_args["stream_ids"] = list_points_result["stream_ids"]
             second_rank_result = runtime.rank_window(second_rank_args)

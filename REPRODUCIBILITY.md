@@ -77,7 +77,7 @@ Download the raw archives:
 ./scripts/download_raw_archives.sh ./data/local-build/raw
 ```
 
-Run the full path twice:
+Build the raw tool store once and the static-to-final path twice:
 
 ```bash
 python scripts/replay_paper_submission.py \
@@ -103,6 +103,30 @@ The command performs these operations in order:
 
 The process exits nonzero after any mismatch.
 
+The checked repository report also compares this fresh tool store with an earlier independent raw preprocessing execution. All 11 sorted Parquet/JSON logical exports match byte for byte, and exact downstream reconstruction succeeds from both stores. The noncanonical DuckDB container bytes are recorded but excluded from the determinism decision; both containers expose the same exported logical tables and produce the same submitted split hashes.
+
+To repeat the complete raw boundary independently, run the command above in two new work directories and compare them:
+
+```bash
+python scripts/replay_paper_submission.py \
+  --raw-dir ./data/local-build/raw \
+  --work-dir ./data/local-build/raw-replay-a \
+  --runs 1
+
+python scripts/replay_paper_submission.py \
+  --raw-dir ./data/local-build/raw \
+  --work-dir ./data/local-build/raw-replay-b \
+  --runs 1
+
+python scripts/build_independent_replay_report.py \
+  --run-a-tool-store ./data/local-build/raw-replay-a/tool-store \
+  --run-a-raw-report ./data/local-build/raw-replay-a/submission_replay_report.json \
+  --run-a-replay-report ./data/local-build/raw-replay-a/submission_replay_report.json \
+  --run-b-tool-store ./data/local-build/raw-replay-b/tool-store \
+  --run-b-replay-report ./data/local-build/raw-replay-b/submission_replay_report.json \
+  --output ./data/local-build/independent_raw_replays_report.json
+```
+
 ### Optional controller audit
 
 ```bash
@@ -124,7 +148,7 @@ python scripts/replay_paper_submission.py \
   --runs 2
 ```
 
-This skips metadata and raw preprocessing only. Candidate enumeration, static generation, every episode stage, preflight, and exact final comparison still run.
+This skips retained-catalog verification and raw telemetry preprocessing only by accepting an existing tool store. Candidate enumeration, static generation, every episode stage, preflight, and exact final comparison still run.
 
 ## Output Tree
 

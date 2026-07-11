@@ -3,7 +3,7 @@
 This repository reconstructs the 532 BTS benchmark episodes used in the paper submission from checksummed building telemetry and metadata. It contains the construction code, immutable retained-row contract, submitted supplementary bundles, fixed model traces, deterministic audits, and a single raw-to-final replay entry point.
 
 ```text
-three BTS raw ZIPs + retained normalized CSV/Brick catalog
+three BTS raw ZIPs + retained normalized metadata contract
   -> read-only telemetry tool store and aggregates
   -> submitted static candidate identities (356/87/89)
   -> deterministic interaction contracts
@@ -26,6 +26,8 @@ The exact submission replay currently verifies all 532 rows and zero contract-pr
 
 These are raw-file hashes, not only semantic hashes. The replay also records sorted-key canonical JSON hashes and exact object equality.
 
+The checked evidence includes two independent raw telemetry preprocessing executions. Their 11 sorted logical tool-store exports are byte-identical, and the two raw stores support three exact static-to-final reconstructions in total. See [PAPER_SUBMISSION_REPLAY.md](replay/PAPER_SUBMISSION_REPLAY.md), [paper_submission_replay_report.json](replay/paper_submission_replay_report.json), and [independent_raw_replays_report.json](replay/independent_raw_replays_report.json).
+
 ## Run From Raw Telemetry
 
 Install Python 3.11 dependencies:
@@ -43,7 +45,7 @@ Download and checksum the upstream archives:
 ./scripts/download_raw_archives.sh ./data/local-build/raw
 ```
 
-Run two complete reconstruction passes:
+Build a fresh raw tool store, then run two clean episode reconstructions:
 
 ```bash
 python scripts/replay_paper_submission.py \
@@ -67,7 +69,7 @@ python scripts/replay_paper_submission.py \
   --runs 2
 ```
 
-This still regenerates and verifies the submitted static and final splits. It skips only metadata and raw telemetry preprocessing.
+This still regenerates and verifies the submitted static and final splits. It skips only retained-catalog verification and raw telemetry preprocessing by accepting an existing tool store.
 
 ## Construction Details
 
@@ -94,9 +96,11 @@ This contract is necessary because the paper evaluates one fixed sample. It also
 
 | Path | Contents |
 |---|---|
+| `artifacts/` | Post-submission maintenance snapshot; not an expected-output input for exact paper replay |
 | `data/source/bts-meta/` | Retained CSV and Brick metadata inputs |
 | `data/source/bts-processed-catalog/` | Checksummed normalized metadata contract used by exact replay |
 | `provenance/submission_static_selection.jsonl` | 532 retained candidate identities and digests |
+| `provenance/submission_repair_profile.json` | Stage/family repair counts and static-lineage invariants |
 | `release/submitted-static-reference/` | Expected submitted static splits |
 | `release/submitted-source-bundle.zip` | Exact source supplementary supplied with the paper |
 | `release/submitted-dataset-bundle.zip` | Exact dataset and model-run supplementary supplied with the paper |
@@ -120,6 +124,8 @@ Three claims are separate.
 `zero detected issues` means zero findings under the coded contract-preflight checks. It does not assert complete human realism or an error-free corpus.
 
 The deterministic controller is a construction exclusion rule. Its `0/532` result confirms application of that rule; it is not a standalone hardness baseline.
+
+The controller was rerun on the byte-identical Replay 1 output. The checked [audit summary](replay/paper_submission_controller_audit.json), [failure analysis](replay/paper_submission_controller_failure_analysis.json), and 532 [row-level witnesses](replay/controller-witnesses/) are separate from the model evaluation.
 
 ## Paper Test Results
 

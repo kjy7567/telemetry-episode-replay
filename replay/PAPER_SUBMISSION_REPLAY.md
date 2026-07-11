@@ -5,11 +5,50 @@ This report compares the immutable benchmark supplied with the paper against fre
 ## Result
 
 - Overall replay passed: `true`
-- Construction runs: `1`
+- Construction runs: `2`
 - Cross-run byte equality: `true`
 - Selection contract SHA-256: `2487dce6bbb01bb0ab4e1d5b388ff40cc509ab26082770c867ed085e96ecddd6`
 - Submitted source bundle SHA-256: `9c5502b3718113fee812818e71b47c23ed54ec1f694d37c35ea29686b2c64496`
 - Submitted dataset bundle SHA-256: `70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76`
+
+## Verified Raw Boundary
+
+The two episode builds shared one fresh read-only tool store reconstructed from the following checksummed raw telemetry archives and retained normalized metadata contract.
+
+| Raw archive | Bytes | SHA-256 |
+|---|---:|---|
+| `Site_Aaa.zip` | 8,475,679,488 | `ffc13b3710c66de505678cf5b48e8c7b3d5be97900653c82f48c2f5dfec7e77f` |
+| `Site_Baa.zip` | 1,513,172,125 | `fade67675e97274075e003c27e411eadc50f17c5fe0cb294bd3569388a517ef8` |
+| `Site_Caa.zip` | 8,984,334,527 | `fa03a0629fb1da4eb9ef3c430546311470fc9bd8f5e53cfcd76853d535676b5b` |
+
+| Retained catalog file | Bytes | SHA-256 |
+|---|---:|---|
+| `catalog_summary.json` | 248 | `a9ebb46dc7293fc17230d7d26a8f00b847b23136a6cbf29749db2b547cfcb722` |
+| `entities.parquet` | 3,151,084 | `fb63ebf4b4cfd63893fa508afacafa1240f2636a9e3a7c0c5725407958613731` |
+| `relations.parquet` | 1,770,519 | `4a512fc1bdcc93dbf3e822458eb9193cb576dfadafe45f44d4e7298607d530d3` |
+| `stream_targets.parquet` | 3,706,992 | `7785971531d03a9f80e2c9620fc34d7c828f9892adbad962d8820b3c95599994` |
+| `streams.parquet` | 4,222,572 | `3e848eb68be296ca39756aeb9ecb6ea5038ab9788df272be898fc27c822e23b7` |
+
+| Site | Streams processed | Skipped archive members |
+|---|---:|---:|
+| `BTS_A` | 8,345 | 0 |
+| `BTS_B` | 730 | 14 |
+| `BTS_C` | 5,347 | 0 |
+
+The fresh tool store matched `14,422` raw streams to the retained metadata contract. The `14` skipped members are AppleDouble archive metadata rather than retained telemetry streams.
+
+Metadata normalization is not claimed as a cross-environment replay step: the historical submission mapping is retained and checksummed because unordered RDF traversal cannot recover all historical first-target choices for multi-edge relationships.
+
+## Independent Reconstruction Evidence
+
+Two independent raw telemetry preprocessing executions were compared before downstream episode verification.
+
+- Raw archive inventories equal: `true`
+- Byte-identical exported logical tool-store files: `11/11`
+- Exact static-to-final episode builds across both raw stores: `3`
+- Independent replay report SHA-256: `0744d0d0aade92f3f678f303a4a6e0d1a3d5c88a8d1e7a39461b5ce78c7cfefa`
+
+The two DuckDB container files are not byte-identical because their physical storage layout is not a canonical serialization. They are excluded from the determinism decision; the sorted exported tables are byte-identical, and both stores produce the same submitted static and final split hashes.
 
 ## Split Hashes
 
@@ -25,15 +64,31 @@ This report compares the immutable benchmark supplied with the paper against fre
 
 | Family | Submitted train/dev/test | Submitted rows | Replay 1 exact | Replay 2 exact |
 |---|---:|---:|---:|---:|
-| Point disambiguation | 40/10/10 | 60 | 60/60 | not run |
-| Day mean lookup | 40/10/10 | 60 | 60/60 | not run |
-| Relative 24h mean lookup | 40/10/10 | 60 | 60/60 | not run |
-| Window mean lookup | 36/7/10 | 53 | 53/53 | not run |
-| Window pairwise compare | 40/10/10 | 60 | 60/60 | not run |
-| Window rank | 40/10/10 | 60 | 60/60 | not run |
-| Timestamp value lookup | 40/10/10 | 60 | 60/60 | not run |
-| Timestamp nearest lookup | 40/10/10 | 60 | 60/60 | not run |
-| Quality gate | 40/10/9 | 59 | 59/59 | not run |
+| Point disambiguation | 40/10/10 | 60 | 60/60 | 60/60 |
+| Day mean lookup | 40/10/10 | 60 | 60/60 | 60/60 |
+| Relative 24h mean lookup | 40/10/10 | 60 | 60/60 | 60/60 |
+| Window mean lookup | 36/7/10 | 53 | 53/53 | 53/53 |
+| Window pairwise compare | 40/10/10 | 60 | 60/60 | 60/60 |
+| Window rank | 40/10/10 | 60 | 60/60 | 60/60 |
+| Timestamp value lookup | 40/10/10 | 60 | 60/60 | 60/60 |
+| Timestamp nearest lookup | 40/10/10 | 60 | 60/60 | 60/60 |
+| Quality gate | 40/10/9 | 59 | 59/59 | 59/59 |
+
+## Frozen Controller Audit
+
+The frozen construction-exclusion controller was rerun against Replay 1 after its final JSONL files had matched the submitted files byte for byte.
+
+- Scenarios audited: `532`
+- Accomplished: `0`
+- Audit report SHA-256: `d9ea6de7c9db1448dab3702d44217897da1d7e4e2a6a1359aeb4a8022ece41b7`
+
+| Split | Rows | Accomplished |
+|---|---:|---:|
+| Train | 356 | 0 |
+| Dev | 87 | 0 |
+| Test | 89 | 0 |
+
+This confirms that the predefined exclusion rule remains satisfied. It is not reported as an independent estimate of benchmark difficulty or as a model baseline.
 
 ## Representative Family Traces
 
@@ -46,6 +101,7 @@ This report compares the immutable benchmark supplied with the paper against fre
 - Final gold: `{"commitment_action": "abstain", "reason": "long_gap"}`
 - Submitted row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
 - Replay 1 row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
+- Replay 2 row digest: `11ec65d2ae9b4905575b5ef6a01886ed4cdbdcb88e497daf24ce583aaa96798f`
 - All available digests equal: `yes`
 
 Initial request:
@@ -61,6 +117,7 @@ Initial request:
 - Final gold: `{"commitment_action": "abstain", "reason": "low_coverage"}`
 - Submitted row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
 - Replay 1 row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
+- Replay 2 row digest: `8181bdfd554c43a1c7cfaee110bc766e8e98d170a037b69515128b8f0da1d177`
 - All available digests equal: `yes`
 
 Initial request:
@@ -76,6 +133,7 @@ Initial request:
 - Final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
 - Submitted row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
 - Replay 1 row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
+- Replay 2 row digest: `f148444668c085e64940471222f2f154cb31ccb58c37d9ce80ea4fda21722ebc`
 - All available digests equal: `yes`
 
 Initial request:
@@ -91,6 +149,7 @@ Initial request:
 - Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
 - Submitted row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
 - Replay 1 row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
+- Replay 2 row digest: `084786d3802a15319b3621bf89efd40ba0d86d779c077faf52b0b2d2234779df`
 - All available digests equal: `yes`
 
 Initial request:
@@ -106,6 +165,7 @@ Initial request:
 - Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
 - Submitted row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
 - Replay 1 row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
+- Replay 2 row digest: `a336e3b427aad307db61945ec957cbaa39e0805fecda869033da95ae552373cd`
 - All available digests equal: `yes`
 
 Initial request:
@@ -121,6 +181,7 @@ Initial request:
 - Final gold: `{"commitment_action": "answer", "reason": "healthy_quality"}`
 - Submitted row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
 - Replay 1 row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
+- Replay 2 row digest: `8ef3ed32625b1c799e9a62c71df9357290f6179456916ad30c16e1e000bbe807`
 - All available digests equal: `yes`
 
 Initial request:
@@ -136,6 +197,7 @@ Initial request:
 - Final gold: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
 - Submitted row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
 - Replay 1 row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
+- Replay 2 row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
 - All available digests equal: `yes`
 
 Initial request:
@@ -151,6 +213,7 @@ Initial request:
 - Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
 - Submitted row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
 - Replay 1 row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
+- Replay 2 row digest: `8b92689727342a0b14aceb3769d1258aa549548312d919eeb16ae48256fcc3bf`
 - All available digests equal: `yes`
 
 Initial request:
@@ -166,6 +229,7 @@ Initial request:
 - Final gold: `{"commitment_action": "abstain", "reason": "marginal_quality"}`
 - Submitted row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
 - Replay 1 row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
+- Replay 2 row digest: `a870bba49fbc149603fa38589b7aef82363305fdbc1aeab94523f068985eb96c`
 - All available digests equal: `yes`
 
 Initial request:
@@ -176,7 +240,7 @@ Initial request:
 
 Each run re-enumerated family candidates from the supplied tool store, matched all 532 frozen static identities exactly once, rebuilt E2E and operator surfaces, executed telemetry tools for phase targets, applied typed family repairs, and ran contract preflight. The submitted dataset bundle was read only after output generation for comparison.
 
-When the report's tool-store mode is `raw_archives_to_fresh_tool_store`, metadata normalization and raw telemetry preprocessing were also rerun before both episode builds.
+When the report's tool-store mode is `raw_archives_to_fresh_tool_store`, the replay first verifies the retained normalized metadata contract and then reruns raw telemetry preprocessing before both episode builds. Metadata normalization itself is an upstream, checksummed boundary rather than a claimed cross-environment replay step.
 
 ## Compatibility Boundary
 

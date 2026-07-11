@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 from __future__ import annotations
 
+import hashlib
 import json
+import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -22,7 +24,26 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def main() -> None:
     root = REPO_ROOT / "reports" / "model-runs"
-    report: dict[str, Any] = {"report_version": "fixed-trace-audit-v1", "models": {}}
+    submitted_bundle = REPO_ROOT / "release" / "submitted-dataset-bundle.zip"
+    with zipfile.ZipFile(submitted_bundle) as archive:
+        submitted_test_payload = archive.read(
+            "dataset_bundle/bts_agentbench_532/test.jsonl"
+        )
+    submitted_test_rows = [
+        json.loads(line) for line in submitted_test_payload.splitlines() if line
+    ]
+    submitted_test_ids = {
+        str(row["scenario_id"]) for row in submitted_test_rows
+    }
+    submitted_by_id = {
+        str(row["scenario_id"]): row for row in submitted_test_rows
+    }
+    report: dict[str, Any] = {
+        "report_version": "fixed-trace-audit-v2",
+        "submitted_test_rows": len(submitted_test_rows),
+        "submitted_test_sha256": hashlib.sha256(submitted_test_payload).hexdigest(),
+        "models": {},
+    }
     reference_ids: set[str] | None = None
     for model_dir in MODEL_DIRS:
         rows = load_jsonl(root / model_dir / "test.jsonl")
@@ -33,6 +54,28 @@ def main() -> None:
             reference_ids = ids
         elif ids != reference_ids:
             raise RuntimeError(f"trace scenario sets differ for {model_dir}")
+        if ids != submitted_test_ids:
+            raise RuntimeError(f"trace scenario set differs from submitted test split: {model_dir}")
+
+        invalid_contract_bindings: list[str] = []
+        for row in rows:
+            submitted_row = submitted_by_id[str(row["scenario_id"])]
+            user_messages = [
+                message.get("content")
+                for message in row.get("messages", [])
+                if message.get("role") == "user"
+            ]
+            if (
+                row.get("task_family") != submitted_row.get("task_family")
+                or row.get("interaction_mode") != submitted_row.get("interaction_mode")
+                or not user_messages
+                or user_messages[0] != submitted_row.get("initial_user_message")
+            ):
+                invalid_contract_bindings.append(str(row["scenario_id"]))
+        if invalid_contract_bindings:
+            raise RuntimeError(
+                f"trace contract binding mismatch in {model_dir}: {invalid_contract_bindings}"
+            )
 
         invalid_labels = [
             row["scenario_id"]
@@ -52,6 +95,7 @@ def main() -> None:
             "labels": dict(sorted(labels.items())),
             "protocol_success": sum(bool(row["protocol_ok"]) for row in rows),
             "task_success": sum(bool(row["static_verification"]["task_ok"]) for row in rows),
+            "submitted_contract_binding_verified": True,
             "accomplished_definition_verified": True,
             "by_family": {family: dict(sorted(counts.items())) for family, counts in sorted(by_family.items())},
         }

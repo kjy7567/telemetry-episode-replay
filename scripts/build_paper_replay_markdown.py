@@ -45,6 +45,14 @@ def canonical_digest(payload: dict[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def file_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
@@ -72,10 +80,22 @@ def main() -> None:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--dataset-bundle", type=Path, required=True)
     parser.add_argument("--selection-contract", type=Path, required=True)
+    parser.add_argument("--controller-report", type=Path)
+    parser.add_argument("--independent-report", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     report = json.loads(args.report.read_text(encoding="utf-8"))
+    controller = (
+        json.loads(args.controller_report.read_text(encoding="utf-8"))
+        if args.controller_report is not None
+        else None
+    )
+    independent = (
+        json.loads(args.independent_report.read_text(encoding="utf-8"))
+        if args.independent_report is not None
+        else None
+    )
     work_dir = args.report.parent
     submitted = submitted_rows(args.dataset_bundle)
     submitted_by_id = {
@@ -117,12 +137,86 @@ def main() -> None:
         f"- Selection contract SHA-256: `{report['selection_contract_sha256']}`",
         f"- Submitted source bundle SHA-256: `{report['submitted_source_bundle_sha256']}`",
         f"- Submitted dataset bundle SHA-256: `{report['submitted_dataset_bundle_sha256']}`",
-        "",
-        "## Split Hashes",
-        "",
-        "| Split | Static rows | Static submitted/replay SHA-256 | Final rows | Final submitted/replay SHA-256 | Exact |",
-        "|---|---:|---|---:|---|:---:|",
     ]
+    tool_store_build = report["tool_store_build"]
+    if tool_store_build["mode"] == "raw_archives_to_fresh_tool_store":
+        lines.extend(
+            [
+                "",
+                "## Verified Raw Boundary",
+                "",
+                "The two episode builds shared one fresh read-only tool store reconstructed from the following checksummed raw telemetry archives and retained normalized metadata contract.",
+                "",
+                "| Raw archive | Bytes | SHA-256 |",
+                "|---|---:|---|",
+            ]
+        )
+        for record in tool_store_build["raw_archives"]:
+            lines.append(
+                f"| `{record['name']}` | {record['size_bytes']:,} | `{record['sha256']}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "| Retained catalog file | Bytes | SHA-256 |",
+                "|---|---:|---|",
+            ]
+        )
+        for record in tool_store_build["retained_catalog"]:
+            lines.append(
+                f"| `{record['name']}` | {record['size_bytes']:,} | `{record['sha256']}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "| Site | Streams processed | Skipped archive members |",
+                "|---|---:|---:|",
+            ]
+        )
+        for site, record in tool_store_build["preprocess_summary"]["site_stats"].items():
+            lines.append(
+                f"| `{site}` | {record['streams_processed']:,} | {record['skipped_members']:,} |"
+            )
+        coverage = tool_store_build["preprocess_summary"]["raw_coverage"]
+        lines.extend(
+            [
+                "",
+                f"The fresh tool store matched `{coverage['matched_streams']:,}` raw streams to the retained metadata contract. The `{coverage['skipped_members']}` skipped members are AppleDouble archive metadata rather than retained telemetry streams.",
+                "",
+                "Metadata normalization is not claimed as a cross-environment replay step: the historical submission mapping is retained and checksummed because unordered RDF traversal cannot recover all historical first-target choices for multi-edge relationships.",
+            ]
+        )
+
+    if independent is not None:
+        exact_exports = sum(
+            int(record["exact_file_match"])
+            for record in independent["logical_tool_store_files"].values()
+        )
+        lines.extend(
+            [
+                "",
+                "## Independent Reconstruction Evidence",
+                "",
+                "Two independent raw telemetry preprocessing executions were compared before downstream episode verification.",
+                "",
+                f"- Raw archive inventories equal: `{str(bool(independent['raw_archive_inventory_match'])).lower()}`",
+                f"- Byte-identical exported logical tool-store files: `{exact_exports}/{independent['logical_tool_store_file_count']}`",
+                f"- Exact static-to-final episode builds across both raw stores: `{independent['total_exact_episode_builds']}`",
+                f"- Independent replay report SHA-256: `{file_digest(args.independent_report)}`",
+                "",
+                "The two DuckDB container files are not byte-identical because their physical storage layout is not a canonical serialization. They are excluded from the determinism decision; the sorted exported tables are byte-identical, and both stores produce the same submitted static and final split hashes.",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Split Hashes",
+            "",
+            "| Split | Static rows | Static submitted/replay SHA-256 | Final rows | Final submitted/replay SHA-256 | Exact |",
+            "|---|---:|---|---:|---|:---:|",
+        ]
+    )
     first = report["runs"][0]
     for split in SPLITS:
         static = first["static"][split]
@@ -160,6 +254,36 @@ def main() -> None:
         lines.append(
             f"| {label} | {counts['train']}/{counts['dev']}/{counts['test']} | "
             f"{family_counts[family]} | {run1} | {run2} |"
+        )
+
+    if controller is not None:
+        totals = controller["totals"]
+        lines.extend(
+            [
+                "",
+                "## Frozen Controller Audit",
+                "",
+                "The frozen construction-exclusion controller was rerun against Replay 1 after its final JSONL files had matched the submitted files byte for byte.",
+                "",
+                f"- Scenarios audited: `{totals['scenario_count']}`",
+                f"- Accomplished: `{totals['accomplished_count']}`",
+                f"- Audit report SHA-256: `{file_digest(args.controller_report)}`",
+                "",
+                "| Split | Rows | Accomplished |",
+                "|---|---:|---:|",
+            ]
+        )
+        for split in SPLITS:
+            split_report = controller["by_split"][split]
+            accomplished = int(split_report.get("label_counts", {}).get("accomplished", 0))
+            lines.append(
+                f"| {split.title()} | {split_report['scenario_count']} | {accomplished} |"
+            )
+        lines.extend(
+            [
+                "",
+                "This confirms that the predefined exclusion rule remains satisfied. It is not reported as an independent estimate of benchmark difficulty or as a model baseline.",
+            ]
         )
 
     lines.extend(["", "## Representative Family Traces", ""])
@@ -204,7 +328,7 @@ def main() -> None:
             "",
             "Each run re-enumerated family candidates from the supplied tool store, matched all 532 frozen static identities exactly once, rebuilt E2E and operator surfaces, executed telemetry tools for phase targets, applied typed family repairs, and ran contract preflight. The submitted dataset bundle was read only after output generation for comparison.",
             "",
-            "When the report's tool-store mode is `raw_archives_to_fresh_tool_store`, metadata normalization and raw telemetry preprocessing were also rerun before both episode builds.",
+            "When the report's tool-store mode is `raw_archives_to_fresh_tool_store`, the replay first verifies the retained normalized metadata contract and then reruns raw telemetry preprocessing before both episode builds. Metadata normalization itself is an upstream, checksummed boundary rather than a claimed cross-environment replay step.",
             "",
             "## Compatibility Boundary",
             "",
