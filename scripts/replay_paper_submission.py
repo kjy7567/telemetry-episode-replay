@@ -252,9 +252,26 @@ def main() -> None:
         type=Path,
         help="Existing tool store for a faster static-to-final replay.",
     )
-    parser.add_argument("--work-dir", type=Path, required=True)
-    parser.add_argument("--runs", type=int, default=2)
-    parser.add_argument("--controller-audit", action="store_true")
+    parser.add_argument(
+        "--work-dir",
+        type=Path,
+        required=True,
+        help="New or empty directory for the tool store, construction runs, and report.",
+    )
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=2,
+        help=(
+            "Number of clean static-to-final builds over the reconstructed "
+            "tool store (default: 2)."
+        ),
+    )
+    parser.add_argument(
+        "--controller-audit",
+        action="store_true",
+        help="Rerun the frozen construction-exclusion controller on run 1.",
+    )
     parser.add_argument(
         "--processed-catalog-dir",
         type=Path,
@@ -265,21 +282,25 @@ def main() -> None:
         "--selection-contract",
         type=Path,
         default=REPO_ROOT / "provenance" / "submission_static_selection.jsonl",
+        help="Fixed identities and splits of the 532 submitted candidates.",
     )
     parser.add_argument(
         "--static-reference",
         type=Path,
         default=REPO_ROOT / "release" / "submitted-static-reference",
+        help="Expected submitted static rows used only by verification.",
     )
     parser.add_argument(
         "--submitted-dataset-bundle",
         type=Path,
         default=REPO_ROOT / "release" / "submitted-dataset-bundle.zip",
+        help="Expected submitted final rows used only by verification.",
     )
     parser.add_argument(
         "--submitted-source-bundle",
         type=Path,
         default=REPO_ROOT / "release" / "submitted-source-bundle.zip",
+        help="Immutable supplementary source snapshot checked as a fixed input.",
     )
     args = parser.parse_args()
 
@@ -426,6 +447,30 @@ def main() -> None:
         encoding="utf-8",
     )
     print(json.dumps(stored_report, ensure_ascii=False, indent=2))
+    total_rows = sum(
+        int(run_reports[0]["final"][split]["row_count"])
+        for split in SPLITS
+    )
+    preflight_issues = sum(
+        int(run["preflight_issue_count"])
+        for run in run_reports
+    )
+    if controller_report is None:
+        controller_summary = "skipped"
+    else:
+        controller_summary = (
+            f"{int(controller_report['totals']['accomplished_count'])}/"
+            f"{int(controller_report['totals']['scenario_count'])} accomplished"
+        )
+    status = "PASS" if report["passed"] else "FAIL"
+    announce(
+        f"{status}: {sum(bool(run['passed']) for run in run_reports)}/"
+        f"{len(run_reports)} construction runs matched all {total_rows} submitted "
+        "static and final rows; "
+        f"cross-run equality={str(cross_run_exact_match).lower()}; "
+        f"preflight issues={preflight_issues}; controller={controller_summary}"
+    )
+    announce(f"report: {report_path}")
     if not report["passed"]:
         raise SystemExit(1)
 

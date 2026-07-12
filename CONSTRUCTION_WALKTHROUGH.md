@@ -19,9 +19,9 @@ The exact reconstruction consumes four kinds of fixed input.
 | `Site_Aaa.zip`, `Site_Baa.zip`, `Site_Caa.zip` | Per-stream timestamp/value histories | SHA-256 values in `DATA_SOURCES.md` |
 | `data/source/bts-processed-catalog/` | Submitted normalized stream/point/equipment/location mapping | Per-file SHA-256 checks in the replay entry point |
 | `provenance/submission_static_selection.jsonl` | Identities of the 532 candidates retained in the submitted benchmark | SHA-256 `2487dce6bbb01bb0ab4e1d5b388ff40cc509ab26082770c867ed085e96ecddd6` |
-| `release/submitted-dataset-bundle.zip` | Read-only expected output used only after reconstruction | SHA-256 `70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76` |
+| `release/submitted-dataset-bundle.zip` | Read-only expected output used exclusively by the verifier | SHA-256 `70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76` |
 
-The expected output bundle is not read by the builders. `scripts/replay_paper_submission.py` opens it only in the verification step after each reconstructed split has been written.
+The orchestrator loads the expected output bytes before construction, but does not pass them to any builder. Raw preprocessing, candidate generation, and episode construction receive only their declared source inputs; the expected bytes are used by `verify_run` after each reconstructed split has been written.
 
 ## 2. Metadata Resolution Contract
 

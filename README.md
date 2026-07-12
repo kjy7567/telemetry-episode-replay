@@ -13,9 +13,39 @@ raw timestamp/value streams + building metadata
   -> 356 train + 87 dev + 89 test = 532 submitted rows
 ```
 
-## See One Episode Replayed
+**Navigate:** [Start here](#start-here) | [Exact replay from raw](#exact-replay-from-raw) | [Inspect one episode](#inspect-one-submitted-episode) | [Manual construction stages](#run-each-construction-stage-manually) | [Recorded evidence](#recorded-reconstruction-evidence)
+
+## At a Glance
+
+| Item | Submitted artifact |
+|---|---|
+| Benchmark | 532 episodes across 9 task families |
+| Splits | 356 train / 87 dev / 89 test |
+| Raw telemetry | 3 ZIP archives; 14,422 matched streams |
+| Construction | Raw telemetry -> DuckDB/Parquet -> static tasks -> multi-turn episodes |
+| Recorded replay | 2 independent raw preprocesses; 3 exact static-to-final builds |
+| Exactness check | Complete task and episode objects, not only final answers |
+| LLM involvement | None in construction, gold derivation, or replay verification |
+
+## Start Here
+
+Choose the shortest path that answers your question:
+
+| Goal | Raw download | Command |
+|---|:---:|---|
+| Read one complete submitted trace | No | `python scripts/trace_scenario.py test_timestamp_value_lookup_00051` |
+| Verify all packaged release evidence | No | `make verify` |
+| Reconstruct the submitted 532 rows from raw telemetry | Yes, about 19 GB | Follow [Exact Replay From Raw](#exact-replay-from-raw) |
+
+The first two paths use files already committed to this repository and do not call a model API. The third path rebuilds the telemetry database and every benchmark row before comparing them with the submitted release.
+
+## Inspect One Submitted Episode
 
 The example below is generated from the submitted files by `scripts/trace_scenario.py`. The complete trace is in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051
+```
 
 ### 1. Raw telemetry
 
@@ -79,7 +109,14 @@ FINAL ACTION: {"commitment_action": "answer", "reason": "nearest_but_acceptable"
 EVIDENCE:     c24589e8_a1f3_4529_b409_5a56761c9d20
 ```
 
-After reconstruction, the same command compares every field in the submitted and replayed rows and prints:
+After reconstruction, pass the reconstructed final directory explicitly. This compares every field in the submitted and replayed rows:
+
+```bash
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+  --replay-dir ./data/local-build/paper-replay/run_1/final
+```
+
+The final block is:
 
 ```text
 8. REPLAY CHECK
@@ -88,13 +125,14 @@ After reconstruction, the same command compares every field in the submitted and
 
 This is the replayability claim: the pipeline regenerates the task wording, tool plan, interaction turns, phase golds, final action, evidence, verifier fields, and provenance. SHA-256 values are retained only as compact integrity checks.
 
-## Quick Start
+## Installation
 
 ### Requirements
 
-- Python 3.11
-- approximately 25 GB of free disk space
-- the three BTS raw ZIP archives, approximately 19 GB compressed
+- Python 3.11 on a Unix-like shell
+- `curl`, `sha256sum`, `unzip`, and `make`
+- at least 25 GB of free disk space; the raw archives are about 19 GB compressed and the recorded replay work directory is about 1.9 GB
+- internet access for the initial download, or local copies of the three checksummed BTS ZIP archives
 
 Install the pinned environment:
 
@@ -105,7 +143,7 @@ pip install -r requirements.lock
 pip install -e . --no-deps
 ```
 
-### Use the released rows without rebuilding
+## Use the Released Dataset
 
 The submitted bundle contains the 532 BTS rows, the 204-row XAI4HEAT portability artifact, retained model traces, and runner snapshots:
 
@@ -130,7 +168,9 @@ print(rows[0]["scenario_id"])
 print(rows[0]["phase_gold_final_answers"])
 ```
 
-### Rebuild from raw telemetry
+## Exact Replay From Raw
+
+Complete [Installation](#installation) first. No API key is required.
 
 Download the three attributed raw archives and verify them:
 
@@ -148,7 +188,21 @@ python scripts/replay_paper_submission.py \
   --controller-audit
 ```
 
-The command performs the following operations without reading submitted output rows during construction:
+`--work-dir` must be new or empty. The command exits nonzero on an archive checksum mismatch, a missing or duplicate retained candidate, any submitted-row mismatch, a preflight issue, a cross-run difference, or a failed optional controller audit.
+
+A successful two-run command ends with a summary of this form:
+
+```text
+[paper-replay] PASS: 2/2 construction runs matched all 532 submitted static and final rows; cross-run equality=true; preflight issues=0; controller=0/532 accomplished
+```
+
+The complete machine-readable record is written to:
+
+```text
+data/local-build/paper-replay/submission_replay_report.json
+```
+
+The orchestrator loads the submitted bundle as a read-only expected-output oracle, but never passes those rows to preprocessing, candidate generation, or episode construction. Comparisons occur only after each reconstructed split has been written. The command:
 
 1. verifies the raw archives, normalized metadata contract, and retained-row contract;
 2. decodes and indexes every usable telemetry stream;

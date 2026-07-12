@@ -358,7 +358,7 @@ def main() -> None:
         [
             "## What Was Recomputed",
             "",
-            "Each run re-enumerated family candidates from the supplied tool store, matched all 532 frozen static identities exactly once, rebuilt E2E and operator surfaces, executed telemetry tools for phase targets, applied typed family repairs, and ran contract preflight. The submitted dataset bundle was read only after output generation for comparison.",
+            "Each run re-enumerated family candidates from the supplied tool store, matched all 532 frozen static identities exactly once, rebuilt E2E and operator surfaces, executed telemetry tools for phase targets, applied typed family repairs, and ran contract preflight. The orchestrator loaded the submitted bundle as expected output, but did not pass those rows to any builder; comparison occurred only after each reconstructed split had been written.",
             "",
             "When the report's tool-store mode is `raw_archives_to_fresh_tool_store`, the replay first verifies the retained normalized metadata contract and then reruns raw telemetry preprocessing before both episode builds. Metadata normalization itself is an upstream, checksummed boundary rather than a claimed cross-environment replay step.",
             "",
