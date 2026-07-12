@@ -23,5 +23,6 @@ jobs:
       - name: Render a submitted scenario trace
         run: |
           python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+            --model-trace reports/model-runs/gpt-5.5/test.jsonl \
             --format json \
             --output /tmp/submitted-trace.json

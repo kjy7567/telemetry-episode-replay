@@ -33,7 +33,7 @@ Choose the shortest path that answers your question:
 
 | Goal | Raw download | Command |
 |---|:---:|---|
-| Read one complete submitted trace | No | `python scripts/trace_scenario.py test_timestamp_value_lookup_00051` |
+| Read one complete submitted trace and actual model conversation | No | `python scripts/trace_scenario.py test_timestamp_value_lookup_00051 --model-trace reports/model-runs/gpt-5.5/test.jsonl` |
 | Verify all packaged release evidence | No | `make verify` |
 | Reconstruct the submitted 532 rows from raw telemetry | Yes, about 19 GB | Follow [Exact Replay From Raw](#exact-replay-from-raw) |
 
@@ -41,10 +41,11 @@ The first two paths use files already committed to this repository and do not ca
 
 ## Inspect One Submitted Episode
 
-The example below is generated from the submitted files by `scripts/trace_scenario.py`. The complete trace is in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
+The construction fields below are generated from the submitted files by `scripts/trace_scenario.py`; the recorded conversation is loaded from the retained model-run JSONL. The complete trace is in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
 
 ```bash
-python scripts/trace_scenario.py test_timestamp_value_lookup_00051
+python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
+  --model-trace reports/model-runs/gpt-5.5/test.jsonl
 ```
 
 ### 1. Raw telemetry
@@ -77,7 +78,7 @@ Static gold:
 }
 ```
 
-### 3. Agentic interaction
+### 3. Agentic interaction contract
 
 ```text
 USER: Operator handoff: "What was the air differential pressure reading on
@@ -109,17 +110,95 @@ FINAL ACTION: {"commitment_action": "answer", "reason": "nearest_but_acceptable"
 EVIDENCE:     c24589e8_a1f3_4529_b409_5a56761c9d20
 ```
 
+### 5. Actual recorded agent conversation
+
+This is the retained GPT-5.5 paid-run conversation for the same submitted scenario. It is labeled `accomplished` with `protocol_ok=true`. The wording below is the actual user and assistant text; tool messages are shown compactly. The [complete generated trace](examples/REPLAY_TRACE.md) includes the full tool-result JSON and terminal simulator message.
+
+```text
+USER: Operator handoff: "What was the air differential pressure reading on
+      Zone 005 in BTS_C?" Use the building tools and ask me for any missing
+      site or time detail before querying.
+
+ASSISTANT: What exact timestamp should I use for the reading? Please include
+           the UTC offset (and fractional seconds if available).
+
+USER: I mean 07:03:23.64 UTC on February 3, 2022.
+
+ASSISTANT -> resolve_point(
+  site_id=BTS_C,
+  point_class=Air_Differential_Pressure_Sensor,
+  equipment_label=Zone 005
+)
+TOOL -> stream_id=c24589e8_a1f3_4529_b409_5a56761c9d20,
+        point=BTS_C Air Differential Pressure Sensor 001,
+        equipment=BTS_C Zone 005
+
+ASSISTANT -> lookup_observation(
+  stream_id=$e1.stream_id,
+  timestamp=2022-02-03T07:03:23.64Z,
+  mode=exact
+)
+TOOL -> observed_timestamp=2022-02-03T07:03:23.640000+00:00,
+        value=12.9457, exact_match_found=true
+
+ASSISTANT: At 2022-02-03T07:03:23.640000+00:00, the air differential
+           pressure reading on BTS_C Zone 005 was 12.9457.
+
+USER: Now keep the same signal and site, but if I only know it was around
+      07:03 UTC on February 3, 2022, give me the nearest available reading.
+
+ASSISTANT -> lookup_observation(
+  stream_id=$e1.stream_id,
+  timestamp=2022-02-03T07:03:00Z,
+  mode=nearest
+)
+TOOL -> observed_timestamp=2022-02-03T07:03:23.640000+00:00,
+        value=12.9457, exact_match_found=false, offset_seconds=23.64
+
+ASSISTANT: There was no exact logged reading at 2022-02-03T07:03:00+00:00.
+           The nearest available reading was at
+           2022-02-03T07:03:23.640000+00:00 with value 12.9457.
+
+USER: For the week beginning January 31, 2022, would you answer or abstain
+      based on data quality?
+
+ASSISTANT -> inspect_quality_window(
+  stream_id=$e1.stream_id,
+  window_start=2022-01-31T00:00:00Z,
+  window_end=2022-02-07T00:00:00Z,
+  period=week
+)
+TOOL -> observed_fraction=1.0, gap_ratio=1.0563
+
+ASSISTANT: I would answer. For the week of 2022-01-31 to 2022-02-07,
+           observed coverage was 1.0 and gap ratio was 1.0563, which meet
+           the quality thresholds for answering.
+
+USER: Given the public-time reading and the data-quality check, should I
+      report it as-is, abstain, or ask for more time detail before reporting it?
+
+ASSISTANT: Report it as-is, but label it as the nearest available reading—not
+           an exact 07:03:00 reading. Data quality for that week supports
+           answering, so no need to abstain or ask for more time detail.
+
+USER: Which stream or point did you base that on?
+
+ASSISTANT: I used stream_id c24589e8_a1f3_4529_b409_5a56761c9d20:
+           BTS_C Air Differential Pressure Sensor 001 on BTS_C Zone 005.
+```
+
 After reconstruction, pass the reconstructed final directory explicitly. This compares every field in the submitted and replayed rows:
 
 ```bash
 python scripts/trace_scenario.py test_timestamp_value_lookup_00051 \
-  --replay-dir ./data/local-build/paper-replay/run_1/final
+  --replay-dir ./data/local-build/paper-replay/run_1/final \
+  --model-trace reports/model-runs/gpt-5.5/test.jsonl
 ```
 
 The final block is:
 
 ```text
-8. REPLAY CHECK
+9. REPLAY CHECK
    exact match: YES
 ```
 
@@ -546,7 +625,7 @@ The controller result verifies the predefined construction exclusion rule. It is
 | `release/submitted-static-reference/` | Exact submitted static tasks |
 | `release/submitted-dataset-bundle.zip` | Exact 532 final rows and retained model outputs |
 | `release/submitted-source-bundle.zip` | Exact supplementary source snapshot |
-| `examples/REPLAY_TRACE.md` | Complete raw-to-static-to-agentic trace for one test row |
+| `examples/REPLAY_TRACE.md` | Complete raw-to-static-to-agentic trace plus the actual retained agent conversation for one test row |
 | `reports/model-runs/` | Fixed GPT, Gemini, and Claude paid-run traces |
 | `replay/controller-witnesses/` | Fresh controller witness for each submitted row |
 | `replay/` | Checked human- and machine-readable reconstruction reports |

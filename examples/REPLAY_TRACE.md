@@ -102,7 +102,193 @@
 - Action: `{"commitment_action": "answer", "reason": "nearest_but_acceptable"}`
 - Evidence: `{"stream_ids": ["c24589e8_a1f3_4529_b409_5a56761c9d20"]}`
 
-## 7. Deterministic Construction Stages
+## 7. Actual Recorded Agent Conversation
+
+This is the retained operational message sequence from the fixed paid run, not a gold-answer paraphrase. The system prompt remains in the source trace and is omitted here; all user, assistant, tool-call, tool-result, and terminal simulator messages are shown below.
+
+- Model: `gpt-5.5`
+- Label: `accomplished`
+- Strict label: `accomplished`
+- Protocol complete: `true`
+
+**M01 User**
+
+> Operator handoff: "What was the air differential pressure reading on Zone 005 in BTS_C?" Use the building tools and ask me for any missing site or time detail before querying.
+
+**M02 Assistant**
+
+> What exact timestamp should I use for the reading? Please include the UTC offset (and fractional seconds if available).
+
+**M03 User**
+
+> I mean 07:03:23.64 UTC on February 3, 2022.
+
+**M04 Assistant tool call `resolve_point`**
+
+```json
+{
+  "equipment_label": "Zone 005",
+  "location_label": null,
+  "point_class": "Air_Differential_Pressure_Sensor",
+  "site_id": "BTS_C"
+}
+```
+
+**M05 Tool result `resolve_point`**
+
+```json
+{
+  "call_id": "e1",
+  "tool_name": "resolve_point",
+  "output": {
+    "match_count": 1,
+    "matches": [
+      {
+        "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+        "point_class": "Air_Differential_Pressure_Sensor",
+        "equipment_label": "BTS_C Zone 005",
+        "location_label": null,
+        "point_label": "BTS_C Air Differential Pressure Sensor 001"
+      }
+    ],
+    "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+    "resolution_strategy": "normalized_fallback"
+  }
+}
+```
+
+**M06 Assistant tool call `lookup_observation`**
+
+```json
+{
+  "mode": "exact",
+  "stream_id": "$e1.stream_id",
+  "timestamp": "2022-02-03T07:03:23.64Z"
+}
+```
+
+**M07 Tool result `lookup_observation`**
+
+```json
+{
+  "call_id": "e2",
+  "tool_name": "lookup_observation",
+  "output": {
+    "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+    "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+    "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+    "value": 12.9457,
+    "exact_match_found": true
+  }
+}
+```
+
+**M08 Assistant**
+
+> At 2022-02-03T07:03:23.640000+00:00, the air differential pressure reading on BTS_C Zone 005 was 12.9457.
+
+**M09 User**
+
+> Now keep the same signal and site, but if I only know it was around 07:03 UTC on February 3, 2022, give me the nearest available reading.
+
+**M10 Assistant tool call `lookup_observation`**
+
+```json
+{
+  "mode": "nearest",
+  "stream_id": "$e1.stream_id",
+  "timestamp": "2022-02-03T07:03:00Z"
+}
+```
+
+**M11 Tool result `lookup_observation`**
+
+```json
+{
+  "call_id": "e3",
+  "tool_name": "lookup_observation",
+  "output": {
+    "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+    "requested_timestamp": "2022-02-03T07:03:00+00:00",
+    "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+    "value": 12.9457,
+    "exact_match_found": false,
+    "fallback_reason": "nearest_available_observation",
+    "offset_seconds": 23.64
+  }
+}
+```
+
+**M12 Assistant**
+
+> There was no exact logged reading at 2022-02-03T07:03:00+00:00. The nearest available reading was at 2022-02-03T07:03:23.640000+00:00 with value 12.9457.
+
+**M13 User**
+
+> For the week beginning January 31, 2022, would you answer or abstain based on data quality?
+
+**M14 Assistant tool call `inspect_quality_window`**
+
+```json
+{
+  "period": "week",
+  "stream_id": "$e1.stream_id",
+  "window_end": "2022-02-07T00:00:00Z",
+  "window_start": "2022-01-31T00:00:00Z"
+}
+```
+
+**M15 Tool result `inspect_quality_window`**
+
+```json
+{
+  "call_id": "e4",
+  "tool_name": "inspect_quality_window",
+  "output": {
+    "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+    "window_start": "2022-01-31T00:00:00+00:00",
+    "window_end": "2022-02-07T00:00:00+00:00",
+    "period": "week",
+    "observed_fraction": 1.0,
+    "gap_ratio": 1.0563,
+    "duplicate_timestamp_fraction": 0.0,
+    "nan_fraction": 0.0,
+    "quality_reference": {
+      "abstain_observed_fraction_below": 0.5147,
+      "answer_observed_fraction_at_least": 1.0,
+      "answer_gap_ratio_at_most": 2.0178,
+      "abstain_gap_ratio_above": 17.0006
+    }
+  }
+}
+```
+
+**M16 Assistant**
+
+> I would answer. For the week of 2022-01-31 to 2022-02-07, observed coverage was 1.0 and gap ratio was 1.0563, which meet the quality thresholds for answering.
+
+**M17 User**
+
+> Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?
+
+**M18 Assistant**
+
+> Report it as-is, but label it as the nearest available reading—not an exact 07:03:00 reading. Data quality for that week supports answering, so no need to abstain or ask for more time detail.
+
+**M19 User**
+
+> Which stream or point did you base that on?
+
+**M20 Assistant**
+
+> I used stream_id c24589e8_a1f3_4529_b409_5a56761c9d20: BTS_C Air Differential Pressure Sensor 001 on BTS_C Zone 005.
+
+**M21 User**
+
+> Thanks, that's what I needed. ###STOP###
+
+
+## 8. Deterministic Construction Stages
 
 | Step | Stage | Status |
 |---:|---|---|
@@ -127,7 +313,7 @@
 | 19 | `canonical_row_acceptance` | `accepted` |
 | 20 | `paper_final_family_semantics_repair` | `applied` |
 
-## 8. Replay Check
+## 9. Replay Check
 
 - Submitted row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
 - Replayed row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`

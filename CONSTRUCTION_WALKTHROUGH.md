@@ -8,7 +8,7 @@ To see the complete process as one readable trace before reading the implementat
 python scripts/trace_scenario.py test_timestamp_value_lookup_00051
 ```
 
-The checked output with raw lineage, gold calls, interaction turns, phase golds, final action, and replay equality is also available in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md).
+The checked output with raw lineage, gold calls, interaction turns, phase golds, final action, one actual retained agent conversation, and replay equality is also available in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md). The recorded conversation is evaluation evidence and is kept separate from deterministic construction gold.
 
 ## 1. Inputs
 

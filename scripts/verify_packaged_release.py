@@ -294,10 +294,37 @@ def verify_replay_trace(manifest: dict) -> None:
         "## 3. Gold Tool Trace",
         "## 5. Phase Gold Trace",
         "## 6. Final Gold",
+        "## 7. Actual Recorded Agent Conversation",
+        "- Model: `gpt-5.5`",
+        "- Label: `accomplished`",
+        "What exact timestamp should I use for the reading?",
+        "I used stream_id c24589e8_a1f3_4529_b409_5a56761c9d20",
+        "Thanks, that's what I needed. ###STOP###",
         "Complete JSON-object equality: **YES**",
     )
     if any(fragment not in text for fragment in required_fragments):
         raise RuntimeError("human-readable replay trace is incomplete")
+    model_rows = load_jsonl(
+        REPO_ROOT / "reports" / "model-runs" / "gpt-5.5" / "test.jsonl"
+    )
+    model_row = next(
+        row
+        for row in model_rows
+        if row["scenario_id"] == record["scenario_id"]
+    )
+    operational_messages = [
+        message
+        for message in model_row["messages"]
+        if message.get("role") != "system"
+    ]
+    if len(operational_messages) != 21:
+        raise RuntimeError("unexpected recorded-conversation message count")
+    for message in operational_messages:
+        if message.get("role") not in {"user", "assistant"}:
+            continue
+        content = message.get("content")
+        if content and content not in text:
+            raise RuntimeError("recorded conversation text is not preserved")
 
 
 def main() -> None:
