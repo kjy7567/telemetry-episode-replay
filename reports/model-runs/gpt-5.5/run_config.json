@@ -3,6 +3,7 @@
   "model": "gpt-5.5",
   "endpoint": "OpenAI direct",
   "provider_mode": "openai",
+  "prompt_profile": "gpt55-bts",
   "base_max_turns": 12,
   "row_minimum_turn_budget_enabled": true,
   "requested_max_completion_tokens": 512,

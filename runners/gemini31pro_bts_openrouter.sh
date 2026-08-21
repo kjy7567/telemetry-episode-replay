@@ -7,6 +7,7 @@ set -euo pipefail
 
 python scripts/run_bts_e2e_openai_eval.py \
   --provider gemini \
+  --prompt-profile bts-guided \
   --base-url https://openrouter.ai/api/v1 \
   --api-key-env OPENROUTER_API_KEY \
   --model google/gemini-3.1-pro-preview \

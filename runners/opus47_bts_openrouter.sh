@@ -7,6 +7,7 @@ set -euo pipefail
 
 python scripts/run_bts_e2e_openai_eval.py \
   --provider openai \
+  --prompt-profile bts-guided \
   --base-url https://openrouter.ai/api/v1 \
   --api-key-env OPENROUTER_API_KEY \
   --model anthropic/claude-opus-4.7 \

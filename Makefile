@@ -1,4 +1,4 @@
-.PHONY: paper-replay paper-replay-fast trace verify
+.PHONY: paper-replay paper-replay-fast trace verify bundles
 
 paper-replay:
 	@test -n "$(RAW_DIR)" || (echo "Set RAW_DIR" >&2; exit 2)
@@ -20,5 +20,7 @@ trace:
 
 verify:
 	python scripts/verify_packaged_release.py
-	python scripts/audit_model_traces.py
-	git diff --exit-code reports/model-runs/trace_audit.json
+	python scripts/audit_model_traces.py --check
+
+bundles:
+	python scripts/build_public_bundles.py --output-dir "$${OUTPUT_DIR:-dist}"

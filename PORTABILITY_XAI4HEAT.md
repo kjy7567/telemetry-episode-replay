@@ -68,7 +68,7 @@ Point disambiguation, pairwise comparison, rank, and standalone quality-gate fam
 
 ## Released Output
 
-The submitted `dataset.zip` retains 204 XAI4HEAT episodes:
+The released data bundle retains 204 XAI4HEAT episodes:
 
 | Family | Train | Dev | Test | Total |
 |---|---:|---:|---:|---:|
@@ -138,3 +138,11 @@ python scripts/build_xai4heat_final_canonical.py \
 ```
 
 The complete submitted XAI4HEAT rows and retained GPT trace are also preserved inside `release/submitted-dataset-bundle.zip`.
+
+Run the matching retained configuration after construction:
+
+```bash
+export XAI4HEAT_TOOL_STORE_DB="$PWD/data/local-build/xai4heat/tool-store/tool_store.duckdb"
+export XAI4HEAT_BENCHMARK_DIR="$PWD/data/local-build/xai4heat/final"
+bash runners/gpt55_xai4heat.sh
+```

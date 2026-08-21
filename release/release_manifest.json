@@ -131,7 +131,7 @@
   "human_readable_replay_trace": {
     "path": "examples/REPLAY_TRACE.md",
     "scenario_id": "test_timestamp_value_lookup_00051",
-    "bytes": 9906,
-    "sha256": "df44844e0875b96b445c491cca946d55508067e4abf6448cdeb809b7181e1c96"
+    "bytes": 9913,
+    "sha256": "be6e8f47663572596b65bbec09d7ecab63a1b3ba3a6cd669b206576f62c1ee32"
   }
 }

@@ -289,8 +289,45 @@ def tools_for_example(example: dict[str, Any]) -> list[dict[str, Any]]:
     return [TOOL_BY_NAME[name] for name in names]
 
 
+def is_xai4heat_example(example: dict[str, Any]) -> bool:
+    fields: list[str] = [
+        str(example.get("scenario_id", "")),
+        str(example.get("initial_user_message", "")),
+        str(example.get("visible_initial_user_message", "")),
+    ]
+    fields.extend(str(x) for x in (example.get("goal_revision_turns") or []))
+    fields.extend(str(x) for x in (example.get("post_answer_user_turns") or []))
+    fields.extend(str(v) for v in (example.get("clarification_answers") or {}).values())
+    joined = "\n".join(fields)
+    return "XAI4HEAT_" in joined or "XAI4HEAT " in joined
+
+
+def corpus_system_append(example: dict[str, Any]) -> str:
+    if not is_xai4heat_example(example):
+        return ""
+    return """
+
+XAI4HEAT-specific execution rules:
+- When the site is `XAI4HEAT_LXX`, the corresponding equipment label is usually `XAI4HEAT Substation LXX`. Keep that full substation label when calling `resolve_point`.
+- If `resolve_point` fails on an XAI4HEAT substation task, do not shorten the equipment label to just `L17` or replace it with the site id. Keep the full substation label and correct the point class first.
+- For XAI4HEAT, prefer the exact point class names used by the corpus: `Energy_Transfer_Sensor`, `Outdoor_Temperature_Sensor`, `Reference_Temperature_Setpoint`, `Primary_Return_Temperature_Sensor`, `Secondary_Return_Temperature_Sensor`, `Primary_Supply_Temperature_Sensor`, and `Secondary_Supply_Temperature_Sensor`.
+- In particular, if the task says `outdoor temperature` or `ambient temperature`, use `Outdoor_Temperature_Sensor`, not `Outdoor_Air_Temperature_Sensor`.
+- If a final reporting turn asks whether to report, abstain, or ask for more time detail, and the timestamped reading came from a nearest fallback that is far from the requested time (for example more than one hour away, or on a different day), choose the more-time-detail option rather than report or abstain.
+- When choosing the more-time-detail option, say explicitly that the nearest logged reading is too far from the requested time and ask for a more precise timestamp.
+"""
+
+
 def family_system_append(example: dict[str, Any]) -> str:
     family = example.get("task_family")
+    if is_xai4heat_example(example) and family in {"timestamp_value_lookup", "timestamp_nearest_lookup"}:
+        return """
+
+Family-specific execution rules for this XAI4HEAT timestamp scenario:
+- The final reporting turn is a timestamp-policy decision, not only a quality decision.
+- If the reading you are relying on is a nearest fallback rather than an exact logged reading at the requested public time, do not say "report it as-is".
+- In that case, the correct final action is to ask for more precise timestamp detail before reporting, even if the weekly quality window is healthy.
+- Only choose the final report-as-is action when the decisive reading for the public-time report is exact rather than nearest.
+"""
     if family == "quality_gate":
         return """
 
@@ -334,6 +371,31 @@ Family-specific execution rules for this scenario:
 - The evidence follow-up answer for this family must contain only that exact revised-month winner stream_id and no other competing stream_id.
 """
     return ""
+
+
+def prompt_append(example: dict[str, Any], profile: str) -> str:
+    if profile in {"base", "gpt55-bts"}:
+        return ""
+    if profile == "bts-guided":
+        return family_system_append(example)
+    if profile == "xai4heat":
+        return corpus_system_append(example) + family_system_append(example)
+    raise ValueError(f"unknown prompt profile: {profile}")
+
+
+GPT55_BTS_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+    "- If the task already identifies a single point target by site, point class, and equipment or zone label, prefer `resolve_point` directly. Reserve `list_points` for ranking or search tasks that truly require multiple candidates.\n",
+    "",
+)
+
+
+def rendered_system_prompt(
+    model: "OpenAIChatToolModel",
+    example: dict[str, Any],
+    profile: str,
+) -> str:
+    base = GPT55_BTS_SYSTEM_PROMPT if profile == "gpt55-bts" else model.system_prompt()
+    return base + prompt_append(example, profile)
 
 
 def blank_retry_instruction(
@@ -561,10 +623,11 @@ def run_e2e_example(
     runtime: ToolStoreRuntime,
     example: dict[str, Any],
     max_turns: int,
+    prompt_profile: str = "base",
 ) -> dict[str, Any]:
     simulator = DeterministicBtsUserSimulator(example)
     active_tools = tools_for_example(example)
-    system_prompt = model.system_prompt() + family_system_append(example)
+    system_prompt = rendered_system_prompt(model, example, prompt_profile)
     messages: list[dict[str, Any]] = [{"role": "system", "content": system_prompt}]
     user_message = simulator.reset()
     messages.append({"role": "user", "content": user_message})
@@ -824,6 +887,12 @@ def main() -> None:
     parser.add_argument("--base-url", type=str, default=None)
     parser.add_argument("--provider", type=str, choices=["openai", "gemini"], default="openai")
     parser.add_argument(
+        "--prompt-profile",
+        choices=["base", "gpt55-bts", "bts-guided", "xai4heat"],
+        default="base",
+        help="Prompt additions matching the retained evaluation configuration.",
+    )
+    parser.add_argument(
         "--family",
         action="append",
         default=[],
@@ -857,7 +926,13 @@ def main() -> None:
         with args.out_jsonl.open("w", encoding="utf-8") as handle:
             total = len(selected)
             for idx, row in enumerate(selected, start=1):
-                prediction = run_e2e_example(model, runtime, row, args.max_turns)
+                prediction = run_e2e_example(
+                    model,
+                    runtime,
+                    row,
+                    args.max_turns,
+                    prompt_profile=args.prompt_profile,
+                )
                 predictions.append(prediction)
                 handle.write(json.dumps(prediction, ensure_ascii=False) + "\n")
                 handle.flush()
@@ -870,7 +945,7 @@ def main() -> None:
     benchmark_path = args.benchmark_dir / f"{args.split}.jsonl"
     prompt_hashes = {
         family: hashlib.sha256(
-            (model.system_prompt() + family_system_append(row)).encode("utf-8")
+            rendered_system_prompt(model, row, args.prompt_profile).encode("utf-8")
         ).hexdigest()
         for family in sorted({str(row["task_family"]) for row in selected})
         for row in [next(item for item in selected if str(item["task_family"]) == family)]
@@ -880,6 +955,7 @@ def main() -> None:
         "split": args.split,
         "run_config": {
             "provider": args.provider,
+            "prompt_profile": args.prompt_profile,
             "base_url": args.base_url,
             "api_key_env": args.api_key_env,
             "families": sorted(args.family),

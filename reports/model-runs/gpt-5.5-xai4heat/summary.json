@@ -1,0 +1,43 @@
+{
+  "model": "gpt-5.5",
+  "split": "test",
+  "scenario_count": 41,
+  "counts": {
+    "accomplished": 41
+  },
+  "strict_counts": {
+    "accomplished": 41
+  },
+  "mean_process_score": 1.0,
+  "mean_final_score": 1.0,
+  "mean_evidence_score": 1.0,
+  "mean_core_score": 1.0,
+  "mean_reporting_score": 1.0,
+  "mean_grounding_score": 1.0,
+  "mean_temporal_score": 1.0,
+  "mean_phase_score": 1.0,
+  "mean_task_score": 1.0,
+  "protocol_success_count": 41,
+  "task_success_count": 41,
+  "static_strict_success_count": 41,
+  "interaction_issue_counts": {},
+  "usage": {
+    "prompt_tokens": 1078442,
+    "completion_tokens": 29218,
+    "total_tokens": 1107660,
+    "reasoning_tokens": 7380,
+    "mean_total_tokens_per_scenario": 27016.1
+  },
+  "by_mode": {
+    "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": {
+      "count": 34,
+      "accomplished": 34,
+      "strict_accomplished": 34
+    },
+    "direct_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence": {
+      "count": 7,
+      "accomplished": 7,
+      "strict_accomplished": 7
+    }
+  }
+}

@@ -112,7 +112,7 @@ EVIDENCE:     c24589e8_a1f3_4529_b409_5a56761c9d20
 
 ### 5. Actual recorded agent conversation
 
-This is the retained GPT-5.5 paid-run conversation for the same submitted scenario. It is labeled `accomplished` with `protocol_ok=true`. The wording below is the actual user and assistant text; tool messages are shown compactly. The [complete generated trace](examples/REPLAY_TRACE.md) includes the full tool-result JSON and terminal simulator message.
+This is the retained GPT-5.5 conversation for the same submitted scenario. It is labeled `accomplished` with `protocol_ok=true`. The wording below is the actual user and assistant text; tool messages are shown compactly. The [complete generated trace](examples/REPLAY_TRACE.md) includes the full tool-result JSON and terminal simulator message.
 
 ```text
 USER: Operator handoff: "What was the air differential pressure reading on
@@ -428,7 +428,7 @@ python scripts/build_catalog.py \
   --out-dir ./data/local-build/manual/processed-catalog
 ```
 
-The maintained metadata compiler sorts files, RDF triples, entities, relations, and candidate targets. The exact paper replay does not replace the submitted normalized mapping because historical unordered RDF traversal cannot reproduce every old first-target choice.
+The maintained metadata compiler sorts files, RDF triples, entities, relations, and candidate targets. Exact paper replay treats the checksummed normalized mapping as a versioned input contract; `build_catalog.py` remains the entry point for compiling metadata for a new release.
 
 ### Stage 2: tool store to 532 static tasks
 
@@ -595,7 +595,16 @@ bash runners/gemini31pro_bts_openrouter.sh
 bash runners/opus47_bts_openrouter.sh
 ```
 
-Provider calls are not part of deterministic construction replay. The exact prompts, tool loop, output caps, stopping rules, fixed paid-run traces, and scoring fields are documented in [`MODEL_EVALUATION.md`](MODEL_EVALUATION.md).
+For XAI4HEAT, point the runner at its constructed artifact:
+
+```bash
+export XAI4HEAT_BENCHMARK_DIR="$PWD/data/local-build/xai4heat/final"
+export XAI4HEAT_TOOL_STORE_DB="$PWD/data/local-build/xai4heat/tool-store/tool_store.duckdb"
+export OPENAI_API_KEY=...
+bash runners/gpt55_xai4heat.sh
+```
+
+Provider calls are not part of deterministic construction replay. The exact prompt profiles, tool loop, output caps, stopping rules, retained traces, and scoring fields are documented in [`MODEL_EVALUATION.md`](MODEL_EVALUATION.md).
 
 ## Recorded Reconstruction Evidence
 
@@ -626,7 +635,7 @@ The controller result verifies the predefined construction exclusion rule. It is
 | `release/submitted-dataset-bundle.zip` | Exact 532 final rows and retained model outputs |
 | `release/submitted-source-bundle.zip` | Exact supplementary source snapshot |
 | `examples/REPLAY_TRACE.md` | Complete raw-to-static-to-agentic trace plus the actual retained agent conversation for one test row |
-| `reports/model-runs/` | Fixed GPT, Gemini, and Claude paid-run traces |
+| `reports/model-runs/` | Retained GPT, Gemini, and Claude evaluation traces and configurations |
 | `replay/controller-witnesses/` | Fresh controller witness for each submitted row |
 | `replay/` | Checked human- and machine-readable reconstruction reports |
 
@@ -637,6 +646,7 @@ The controller result verifies the predefined construction exclusion rule. It is
 - [`DATA_SOURCES.md`](DATA_SOURCES.md): upstream attribution, archive sizes, and checksums
 - [`PORTABILITY_XAI4HEAT.md`](PORTABILITY_XAI4HEAT.md): common telemetry contract and corpus-specific adapter boundary
 - [`MODEL_EVALUATION.md`](MODEL_EVALUATION.md): runner and scorer definitions
+- [`ARTIFACTS.md`](ARTIFACTS.md): code/data bundle contents and integrity checks
 
 ## Scope
 

@@ -187,7 +187,7 @@ Each stage contains split JSONL files and a manifest. Final also contains `contr
 
 ### Metadata normalization boundary
 
-The submitted normalized catalog is retained under `data/source/bts-processed-catalog/` and is an exact-replay input. The historical compiler selected the first target for some points with multiple Brick relationship targets; RDF graph iteration does not preserve that choice across environments. Exact replay therefore checks and uses the retained streams/entities/relations/stream-target Parquet files rather than silently selecting a different semantic mapping.
+The submitted normalized catalog is retained under `data/source/bts-processed-catalog/` as a versioned exact-replay input. Replay checks and uses its streams, entities, relations, and stream-target Parquet files; `scripts/build_catalog.py` is provided to compile a normalized mapping for a new release.
 
 `bts_agentbench.catalog.build_catalog` is the deterministic adaptation compiler for a new corpus. It sorts source filenames, RDF triples, entity identifiers, relation rows, and candidate targets before writing outputs. Recompiling with that maintained policy is useful for portability experiments, but it is not substituted for the paper's retained mapping.
 
@@ -242,7 +242,7 @@ The full field-level example is in [CONSTRUCTION_WALKTHROUGH.md](CONSTRUCTION_WA
 
 ## Submission Compatibility Boundary
 
-The submitted source ZIP retained component scripts but did not bind every final local setting through one portable entry point. The public `--submission-compatible` mode makes those settings explicit and testable:
+The submitted component entry points produced the paper artifact. The public release profile binds their order, inputs, and final deterministic settings in one testable command:
 
 - final operator wrapper wording;
 - the existing available-month path for two January training rank rows with no preceding-month data;

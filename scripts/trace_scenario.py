@@ -406,7 +406,7 @@ def render_markdown(trace: dict[str, Any]) -> str:
                 "",
                 (
                     "This is the retained operational message sequence from the fixed "
-                    "paid run, not a gold-answer paraphrase. The system prompt remains "
+                    "model execution, not a gold-answer paraphrase. The system prompt remains "
                     "in the source trace and is omitted here; all user, assistant, "
                     "tool-call, tool-result, and terminal simulator messages are shown "
                     "below."

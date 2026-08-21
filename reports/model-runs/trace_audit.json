@@ -1,5 +1,5 @@
 {
-  "report_version": "fixed-trace-audit-v2",
+  "report_version": "fixed-trace-audit-v3",
   "submitted_test_rows": 89,
   "submitted_test_sha256": "a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867",
   "models": {
@@ -13,6 +13,8 @@
       "task_success": 80,
       "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
+      "prompt_profile": "gpt55-bts",
+      "system_prompts_verified": 89,
       "by_family": {
         "day_mean_lookup": {
           "accomplished": 10
@@ -58,6 +60,8 @@
       "task_success": 72,
       "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
+      "prompt_profile": "bts-guided",
+      "system_prompts_verified": 89,
       "by_family": {
         "day_mean_lookup": {
           "accomplished": 8,
@@ -103,6 +107,8 @@
       "task_success": 62,
       "submitted_contract_binding_verified": true,
       "accomplished_definition_verified": true,
+      "prompt_profile": "bts-guided",
+      "system_prompts_verified": 89,
       "by_family": {
         "day_mean_lookup": {
           "accomplished": 7,
@@ -142,5 +148,18 @@
         }
       }
     }
+  },
+  "xai4heat": {
+    "submitted_test_rows": 41,
+    "submitted_test_sha256": "8001cc0bba16a51e25bd1e7ea366cf7350b0f6a7a4914f87e89d1acacd5c3801",
+    "model": "gpt-5.5",
+    "rows": 41,
+    "accomplished": 41,
+    "protocol_success": 41,
+    "task_success": 41,
+    "submitted_contract_binding_verified": true,
+    "accomplished_definition_verified": true,
+    "prompt_profile": "xai4heat",
+    "system_prompts_verified": 41
   }
 }

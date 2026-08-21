@@ -3,6 +3,7 @@
   "model": "google/gemini-3.1-pro-preview",
   "endpoint": "https://openrouter.ai/api/v1",
   "provider_mode": "gemini",
+  "prompt_profile": "bts-guided",
   "base_max_turns": 12,
   "row_minimum_turn_budget_enabled": true,
   "requested_max_completion_tokens": 512,

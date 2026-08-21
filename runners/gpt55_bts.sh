@@ -7,6 +7,7 @@ set -euo pipefail
 
 python scripts/run_bts_e2e_openai_eval.py \
   --provider openai \
+  --prompt-profile gpt55-bts \
   --api-key-env OPENAI_API_KEY \
   --model gpt-5.5 \
   --benchmark-dir "$BTS_BENCHMARK_DIR" \

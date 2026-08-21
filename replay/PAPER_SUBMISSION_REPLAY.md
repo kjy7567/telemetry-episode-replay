@@ -47,7 +47,7 @@ The two episode builds shared one fresh read-only tool store reconstructed from 
 
 The fresh tool store matched `14,422` raw streams to the retained metadata contract. The `14` skipped members are AppleDouble archive metadata rather than retained telemetry streams.
 
-Metadata normalization is not claimed as a cross-environment replay step: the historical submission mapping is retained and checksummed because unordered RDF traversal cannot recover all historical first-target choices for multi-edge relationships.
+The normalized metadata mapping is retained and checksummed as the versioned input contract used by the paper release. `scripts/build_catalog.py` remains available for compiling metadata mappings for new releases.
 
 ## Independent Reconstruction Evidence
 

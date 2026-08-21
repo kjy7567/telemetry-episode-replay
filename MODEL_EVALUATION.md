@@ -2,7 +2,7 @@
 
 ## Shared Harness
 
-All three released systems use `scripts/run_bts_e2e_openai_eval.py`, the same read-only tools, deterministic user simulator, stopping logic, and scorer. The complete system prompt is defined in the runner and is also retained as the first message of every output trace. Gemini receives the additional provider-specific rules visible in the same source and trace.
+All retained configurations use `scripts/run_bts_e2e_openai_eval.py`, the same read-only tools, deterministic user simulator, stopping logic, and scorer. The complete rendered system prompt is retained as the first message of every trace. Explicit prompt profiles reproduce the recorded BTS GPT-5.5 base prompt, the Gemini/Opus family guidance, and the XAI4HEAT corpus guidance.
 
 Shared settings for the retained runs were:
 
@@ -22,13 +22,14 @@ The paper scores are attached to the submitted test JSONL SHA-256 `a792231393425
 
 ## Provider Settings
 
-| System | Endpoint | Provider mode | Requested output cap | Effective output cap |
-|---|---|---|---:|---:|
-| GPT-5.5 | OpenAI direct | `openai` | 512 | 512 |
-| Gemini 3.1 Pro Preview | OpenRouter | `gemini` | 512 in the historical CLI | 1536 by runner guard |
-| Claude Opus 4.7 | OpenRouter | `openai` compatibility | 512 | 512 |
+| Evaluation | Endpoint | Provider mode | Prompt profile | Output cap |
+|---|---|---|---|---:|
+| GPT-5.5 on BTS | OpenAI direct | `openai` | `gpt55-bts` | 512 |
+| Gemini 3.1 Pro Preview on BTS | OpenRouter | `gemini` | `bts-guided` | 1536 |
+| Claude Opus 4.7 on BTS | OpenRouter | `openai` compatibility | `bts-guided` | 512 |
+| GPT-5.5 on XAI4HEAT | OpenAI direct | `openai` | `xai4heat` | 512 |
 
-The Gemini guard was added after a truncated response: for this model and endpoint the runner raises any cap below 1536 to 1536. The public wrapper states the effective value directly.
+The rendered prompt from each profile has been checked against every retained trace: 89/89 for each BTS configuration and 41/41 for XAI4HEAT.
 
 ## Commands
 
@@ -47,7 +48,15 @@ bash runners/gemini31pro_bts_openrouter.sh
 bash runners/opus47_bts_openrouter.sh
 ```
 
-The wrappers select all 89 rows. `--family FAMILY_NAME` can be added to the underlying Python command to reproduce family-local execution. New summaries include model/provider arguments, effective token cap, runner hash, benchmark split hash, and system-prompt hashes.
+For XAI4HEAT:
+
+```bash
+export XAI4HEAT_TOOL_STORE_DB=/absolute/path/to/xai4heat/tool-store/tool_store.duckdb
+export XAI4HEAT_BENCHMARK_DIR=/absolute/path/to/xai4heat/final
+bash runners/gpt55_xai4heat.sh
+```
+
+The BTS wrappers select all 89 test rows; the XAI4HEAT wrapper selects all 41. `--family FAMILY_NAME` can be added to the underlying Python command for family-local execution. New summaries include model/provider arguments, prompt profile, effective token cap, runner hash, benchmark split hash, and system-prompt hashes.
 
 ## Scoring
 

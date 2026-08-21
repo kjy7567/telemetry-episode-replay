@@ -25,7 +25,7 @@ The orchestrator loads the expected output bytes before construction, but does n
 
 ## 2. Metadata Resolution Contract
 
-The paper build normalized the source CSV and Brick graphs into streams, entities, relations, and stream-target tables. Exact replay retains those normalized Parquet files as an input contract because the original graph parser selected the first target for some multi-edge point relationships. That historical first-target choice is not recoverable from unordered RDF graph iteration alone across environments.
+The paper build normalized the source CSV and Brick graphs into streams, entities, relations, and stream-target tables. Exact replay retains those checksummed Parquet files as the versioned metadata input contract. `scripts/build_catalog.py` is the corresponding compiler entry point for creating a normalized mapping for a new release.
 
 The retained catalog is checksummed before raw preprocessing. It contains 19,665 streams, 22,997 entities, and 26,749 relations across `BTS_A`, `BTS_B`, and `BTS_C`.
 
@@ -249,7 +249,7 @@ All 532 final rows preserve the backing static scenario ID, source static query,
 
 The exact paper snapshot and the later maintenance behavior are intentionally separate.
 
-The submitted artifact used three final deterministic settings that were not bound by one executable command in the submitted source bundle: the final operator wrapper wording, preservation of the existing adjacent-month path for two January training rank rows with no preceding-month data, and final rank metadata insertion order. `--submission-compatible` names and freezes those settings so the paper files can be reconstructed byte for byte.
+The public release profile binds the final operator wording, the adjacent-available-month path for two January training rank rows, and deterministic rank metadata ordering. These settings are passed to the same submitted construction stages so the paper files are reconstructed byte for byte.
 
 The two January rows retain the submitted training text even though their executable fallback month is the available following month. They do not occur in dev or test. The ordinary maintenance path states the fallback direction explicitly. Exact replay preserves the paper snapshot; it does not silently replace it with the maintenance correction.
 
