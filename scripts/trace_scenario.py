@@ -6,7 +6,6 @@ import csv
 import hashlib
 import json
 import re
-import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -29,17 +28,6 @@ def load_scenario(directory: Path, scenario_id: str) -> dict[str, Any]:
                 if row.get("scenario_id") == scenario_id:
                     return row
     raise KeyError(f"scenario not found: {scenario_id}")
-
-
-def load_submitted_scenario(bundle: Path, scenario_id: str) -> dict[str, Any]:
-    with zipfile.ZipFile(bundle) as archive:
-        for split in SPLITS:
-            member = f"dataset_bundle/bts_agentbench_532/{split}.jsonl"
-            for line in archive.read(member).splitlines():
-                row = json.loads(line)
-                if row.get("scenario_id") == scenario_id:
-                    return row
-    raise KeyError(f"scenario not found in submitted bundle: {scenario_id}")
 
 
 def load_jsonl_scenario(path: Path, scenario_id: str) -> dict[str, Any]:
@@ -120,7 +108,7 @@ def build_trace(
     replay_check = None
     if replay is not None:
         replay_check = {
-            "submitted_digest": canonical_digest(final),
+            "release_digest": canonical_digest(final),
             "replay_digest": canonical_digest(replay),
             "exact_json_object_match": replay == final,
         }
@@ -143,7 +131,7 @@ def build_trace(
             "static_verification": model_trace.get("static_verification"),
         }
     return {
-        "trace_version": "paper-submission-scenario-trace-v3",
+        "trace_version": "release-scenario-trace",
         "scenario_id": scenario_id,
         "raw_sources": lineage,
         "static_task": {
@@ -303,7 +291,7 @@ def render_text(trace: dict[str, Any]) -> str:
             [
                 "",
                 f"{stage_number + 1}. REPLAY CHECK",
-                f"   submitted row: {replay['submitted_digest']}",
+                f"   release row:   {replay['release_digest']}",
                 f"   replay row:    {replay['replay_digest']}",
                 "   exact match:   "
                 + ("YES" if replay["exact_json_object_match"] else "NO"),
@@ -480,7 +468,7 @@ def render_markdown(trace: dict[str, Any]) -> str:
                 "",
                 f"## {stage_number + 1}. Replay Check",
                 "",
-                f"- Submitted row digest: `{replay['submitted_digest']}`",
+                f"- Release row digest: `{replay['release_digest']}`",
                 f"- Replayed row digest: `{replay['replay_digest']}`",
                 "- Complete JSON-object equality: "
                 + ("**YES**" if replay["exact_json_object_match"] else "**NO**"),
@@ -491,25 +479,25 @@ def render_markdown(trace: dict[str, Any]) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Show one submitted raw-to-static-to-agentic scenario trace."
+        description="Show one public raw-to-static-to-agentic scenario trace."
     )
     parser.add_argument("scenario_id")
     parser.add_argument(
         "--static-dir",
         type=Path,
-        default=REPO_ROOT / "release" / "submitted-static-reference",
-        help="Static task directory. Defaults to the exact paper submission.",
+        default=REPO_ROOT / "artifacts" / "bts-static-tasks",
+        help="Static task directory. Defaults to the public BTS release.",
     )
     parser.add_argument(
-        "--submitted-bundle",
+        "--final-dir",
         type=Path,
-        default=REPO_ROOT / "release" / "submitted-dataset-bundle.zip",
-        help="Bundle containing the exact submitted final episodes.",
+        default=REPO_ROOT / "artifacts" / "bts-agentbench",
+        help="Final episode directory. Defaults to the public BTS release.",
     )
     parser.add_argument(
         "--replay-dir",
         type=Path,
-        help="Optional reconstructed final directory to compare with the submission.",
+        help="Optional reconstructed final directory to compare with the release.",
     )
     parser.add_argument(
         "--model-trace",
@@ -531,7 +519,7 @@ def main() -> None:
     args = parser.parse_args()
 
     static = load_scenario(args.static_dir, args.scenario_id)
-    submitted = load_submitted_scenario(args.submitted_bundle, args.scenario_id)
+    final = load_scenario(args.final_dir, args.scenario_id)
     replay = (
         load_scenario(args.replay_dir, args.scenario_id)
         if args.replay_dir is not None
@@ -542,11 +530,11 @@ def main() -> None:
         if args.model_trace is not None
         else None
     )
-    stream_ids = collect_stream_ids(static, submitted)
+    stream_ids = collect_stream_ids(static, final)
     trace = build_trace(
         scenario_id=args.scenario_id,
         static=static,
-        final=submitted,
+        final=final,
         lineage=raw_lineage(args.stream_lineage, stream_ids),
         replay=replay,
         model_trace=model_trace,

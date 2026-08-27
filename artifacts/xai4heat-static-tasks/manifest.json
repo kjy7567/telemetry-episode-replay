@@ -1,0 +1,33 @@
+{
+  "artifact_type": "executable-static-telemetry-tasks",
+  "corpus": "xai4heat",
+  "heldout_site": "XAI4HEAT_L17",
+  "selection_contract": "deterministic XAI4HEAT adapter and held-out-site split",
+  "splits": {
+    "train": {
+      "path": "train.jsonl",
+      "rows": 132,
+      "bytes": 470227,
+      "sha256": "100bde73c62cf22c8b99dfa9451fe636a8b6de3a40d053ae5786504776d92f09"
+    },
+    "dev": {
+      "path": "dev.jsonl",
+      "rows": 31,
+      "bytes": 110397,
+      "sha256": "b05611d3288c1697b3204cef6cc131b7b8e0cf4b9b566a5eedae0043404ee4f0"
+    },
+    "test": {
+      "path": "test.jsonl",
+      "rows": 41,
+      "bytes": 146092,
+      "sha256": "61f5e6d909ad92ec97245607f5554591105e0839473853949e4508d7297346ce"
+    }
+  },
+  "families": {
+    "day_mean_lookup": 60,
+    "relative_24h_mean_lookup": 60,
+    "timestamp_nearest_lookup": 35,
+    "timestamp_value_lookup": 35,
+    "window_mean_lookup": 14
+  }
+}

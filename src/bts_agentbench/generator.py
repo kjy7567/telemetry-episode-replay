@@ -580,7 +580,7 @@ TASK_GENERATORS: dict[str, Callable[[pd.DataFrame, int], list[Example]]] = {
 
 
 TOOL_REGISTRY = {
-    "version": "compact-v1",
+    "version": "compact-tool-registry",
     "design_target": "small-tool-using-llms",
     "notes": [
         "Short argument keys are used to reduce prompt length.",

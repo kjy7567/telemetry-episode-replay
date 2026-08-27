@@ -1,0 +1,22 @@
+{
+  "source_zip": "dist/source.zip",
+  "source_bytes": 11681804,
+  "dataset_zip": "dist/dataset.zip",
+  "dataset_bytes": 4570689,
+  "dataset_counts": {
+    "telemetry-episode-replay/artifacts/bts-agentbench/train.jsonl": 356,
+    "telemetry-episode-replay/artifacts/bts-agentbench/dev.jsonl": 87,
+    "telemetry-episode-replay/artifacts/bts-agentbench/test.jsonl": 89,
+    "telemetry-episode-replay/artifacts/bts-static-tasks/train.jsonl": 356,
+    "telemetry-episode-replay/artifacts/bts-static-tasks/dev.jsonl": 87,
+    "telemetry-episode-replay/artifacts/bts-static-tasks/test.jsonl": 89,
+    "telemetry-episode-replay/artifacts/xai4heat-agentbench/train.jsonl": 132,
+    "telemetry-episode-replay/artifacts/xai4heat-agentbench/dev.jsonl": 31,
+    "telemetry-episode-replay/artifacts/xai4heat-agentbench/test.jsonl": 41,
+    "telemetry-episode-replay/reports/model-runs/gpt-5.5/test.jsonl": 89,
+    "telemetry-episode-replay/reports/model-runs/gemini-3.1-pro-openrouter/test.jsonl": 89,
+    "telemetry-episode-replay/reports/model-runs/claude-opus-4.7-openrouter/test.jsonl": 89,
+    "telemetry-episode-replay/reports/model-runs/gpt-5.5-xai4heat/test.jsonl": 41
+  },
+  "checksums": "dist/SHA256SUMS"
+}

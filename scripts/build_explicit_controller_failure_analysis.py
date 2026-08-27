@@ -24,7 +24,7 @@ def issue_category(issue: str) -> str:
     if issue.startswith("missing_tool:"):
         return "process_required_tool_missing"
     if issue.startswith("missing_answer_fact:"):
-        return "semantic_final_answer_missing"
+        return "final_answer_content_missing"
     if issue.startswith("missing_evidence:"):
         return "grounding_evidence_missing"
     if issue.startswith("temporal_mismatch:"):
@@ -143,7 +143,7 @@ def analyze_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
         }
 
     return {
-        "report_version": "explicit-controller-failure-analysis-v2",
+        "report_version": "explicit-controller-failure-analysis",
         "row_count": len(rows),
         "controller_reachability": {
             "supported_family_count": supported_family_count,
@@ -162,11 +162,11 @@ def analyze_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "by_split": by_split,
         "by_family": by_family,
         "interpretation": {
-            "summary": "The phase-complete stronger controller either fails to complete the released contract or fails downstream on task semantics, so the observed result should be interpreted as controller insufficiency under the released benchmark contract rather than a universal symbolic impossibility claim.",
+            "summary": "The phase-complete stronger controller either fails to complete the released contract or fails downstream on required task fields, so the observed result should be interpreted as controller insufficiency under the released benchmark contract rather than a universal symbolic impossibility claim.",
             "evidence_focus": [
                 "the stronger controller is capable of protocol-complete multi-phase traces on simpler rows",
                 "remaining failures identify where the released benchmark exceeds this controller's phase-complete capability",
-                "contract-level and semantic downstream failures are separated in the analysis rather than collapsed into a single zero-success claim",
+                "contract-level and downstream target failures are separated in the analysis rather than collapsed into a single zero-success claim",
             ],
         },
     }
@@ -176,10 +176,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--witness-dir", type=Path, required=True)
     parser.add_argument("--out-json", type=Path, required=True)
+    parser.add_argument("--split", action="append", choices=["train", "dev", "test"])
     args = parser.parse_args()
 
     rows: list[dict[str, Any]] = []
-    for split in ("train", "dev", "test"):
+    for split in args.split or ("train", "dev", "test"):
         path = args.witness_dir / split / "phase_complete_stronger_controller.jsonl"
         rows.extend(load_jsonl(path))
 

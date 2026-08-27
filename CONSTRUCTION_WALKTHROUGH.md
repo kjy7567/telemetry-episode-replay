@@ -1,287 +1,213 @@
-# Raw Telemetry to Agent Episode: Exact Construction Walkthrough
+# Construction Walkthrough
 
-This document specifies the deterministic construction claim made by this artifact. The claim covers benchmark construction from checksummed BTS telemetry and metadata to the 532 JSONL episodes used in the paper submission. It does not claim that a provider API will reproduce the same model text.
+This document shows how fixed source records become an executable multi-turn episode without model-generated tasks or labels. The example is the released BTS test row `test_timestamp_value_lookup_00051`.
 
-To see the complete process as one readable trace before reading the implementation details, run:
+## 1. Fixed Source Inputs
 
-```bash
-python scripts/trace_scenario.py test_timestamp_value_lookup_00051
-```
-
-The checked output with raw lineage, gold calls, interaction turns, phase golds, final action, one actual retained agent conversation, and replay equality is also available in [`examples/REPLAY_TRACE.md`](examples/REPLAY_TRACE.md). The recorded conversation is evaluation evidence and is kept separate from deterministic construction gold.
-
-## 1. Inputs
-
-The exact reconstruction consumes four kinds of fixed input.
-
-| Input | Role | Integrity boundary |
-|---|---|---|
-| `Site_Aaa.zip`, `Site_Baa.zip`, `Site_Caa.zip` | Per-stream timestamp/value histories | SHA-256 values in `DATA_SOURCES.md` |
-| `data/source/bts-processed-catalog/` | Submitted normalized stream/point/equipment/location mapping | Per-file SHA-256 checks in the replay entry point |
-| `provenance/submission_static_selection.jsonl` | Identities of the 532 candidates retained in the submitted benchmark | SHA-256 `2487dce6bbb01bb0ab4e1d5b388ff40cc509ab26082770c867ed085e96ecddd6` |
-| `release/submitted-dataset-bundle.zip` | Read-only expected output used exclusively by the verifier | SHA-256 `70ad2e641a2332fe94a5d81e612279ba9f8e90914fa605b083c8441a2ab01f76` |
-
-The orchestrator loads the expected output bytes before construction, but does not pass them to any builder. Raw preprocessing, candidate generation, and episode construction receive only their declared source inputs; the expected bytes are used by `verify_run` after each reconstructed split has been written.
-
-## 2. Metadata Resolution Contract
-
-The paper build normalized the source CSV and Brick graphs into streams, entities, relations, and stream-target tables. Exact replay retains those checksummed Parquet files as the versioned metadata input contract. `scripts/build_catalog.py` is the corresponding compiler entry point for creating a normalized mapping for a new release.
-
-The retained catalog is checksummed before raw preprocessing. It contains 19,665 streams, 22,997 entities, and 26,749 relations across `BTS_A`, `BTS_B`, and `BTS_C`.
-
-`scripts/build_catalog.py` and `bts_agentbench.catalog.build_catalog` remain available for auditing and adapting a new corpus. The current compiler performs these operations without an LLM:
-
-1. reads each `Site_*_metadata.csv` file in sorted filename order;
-2. normalizes column names and stream UUIDs;
-3. parses each Brick TTL graph after sorting RDF triples;
-4. maps streams to point entities, equipment, and locations;
-5. chooses deterministic primary types and relationship targets;
-6. writes normalized Parquet tables and a DuckDB catalog.
-
-The retained paper mapping turns a raw stream UUID into a semantic record such as:
+The raw value is stored in:
 
 ```text
-site_id:         BTS_C
-stream_id:       c24589e8_a1f3_4529_b409_5a56761c9d20
-point_class:     Air_Differential_Pressure_Sensor
-equipment_label: BTS_C Zone 005
+archive:      Site_Caa.zip
+member:       Site_Caa/2254.pickle
+stream_id:    c24589e8_a1f3_4529_b409_5a56761c9d20
+point_class:  Air_Differential_Pressure_Sensor
+equipment:    BTS_C Zone 005
+observations: 194,563
+
+2022-02-03T07:03:23.640000+00:00 -> 12.9457
 ```
 
-## 3. Raw Telemetry Preprocessing
+The CSV/Brick metadata supplies the site, point class, equipment, and location links. The raw archive supplies the timestamp/value history. `scripts/preprocess_tool_store.py` joins them by stream ID and records the archive/member lineage in `tool_ready_points`. No label or value is inferred from text.
 
-`bts_agentbench.preprocess.preprocess_raw_archives` joins the normalized catalog to ZIP members by stream UUID. For each stream it:
+The complete 212-stream release lineage is in `provenance/release_stream_lineage.csv`.
 
-1. decodes timestamps as UTC and values as floating point numbers;
-2. sorts observations by timestamp;
-3. records the source ZIP and member name;
-4. computes count, median positive sampling interval, longest gap, coverage, duplicate, NaN, zero, and constant-value statistics;
-5. computes day, Monday-bounded week, calendar-month, and hour-of-week aggregates;
-6. exposes the resulting tables through a read-only DuckDB runtime.
+## 2. Read-Only Runtime Record
 
-The checked raw build processes 8,345 Site A streams, 730 Site B streams, and 5,347 Site C streams. Fourteen Site B `__MACOSX/._*.pickle` AppleDouble members fail pickle decoding and are recorded in `skipped_members.json`; they are archive metadata, not retained telemetry streams.
-
-The runtime does not synthesize missing observations. `lookup_observation(mode="exact")` requires timestamp equality. `mode="nearest"` minimizes absolute time distance and reports the offset. Window aggregation uses an inclusive start and exclusive end.
-
-### Concrete raw record
-
-The paper test scenario `test_timestamp_value_lookup_00051` is backed by:
+Fresh raw preprocessing makes the stream available to the runtime:
 
 ```text
-archive: Site_Caa.zip
-member:  Site_Caa/2254.pickle
-stream:  c24589e8_a1f3_4529_b409_5a56761c9d20
+resolve_point(
+  site_id=BTS_C,
+  point_class=Air_Differential_Pressure_Sensor,
+  equipment_label=BTS_C Zone 005
+)
+-> c24589e8_a1f3_4529_b409_5a56761c9d20
 ```
 
-The decoded member contains 194,563 observations between `2020-05-22T00:17:44.162Z` and `2024-01-18T10:11:25.003Z`. One retained observation is:
-
-```text
-timestamp = 2022-02-03T07:03:23.640000+00:00
-value     = 12.9457
-```
-
-No language model chooses or rewrites this value.
-
-## 4. Static Candidate Construction
-
-`src/bts_agentbench/scenario_benchmark.py` implements nine family builders. Each builder first enumerates eligible points, timestamps, windows, pairs, or candidate groups from the tool store. It then materializes a static task with:
-
-- an operator query;
-- canonical and acceptable read-only tool paths;
-- a tool-derived gold answer;
-- stream evidence;
-- final-answer, process, and evidence checks;
-- a difficulty proxy and selection metadata.
-
-The candidate population is much larger than the release. The paper records 4,263 point-resolution candidates, 2,193,431 day and relative-window candidates, 315,929 window-mean candidates, 5,989,083 pairwise candidates, 1,084 rank candidates, 2,123 candidates for each timestamp family, and 315 quality candidates before retention controls.
-
-### Why a retained-row contract is required
-
-The submitted benchmark is an immutable sample, not a request to resample a new benchmark on every replay. The original pairwise and rank SQL contained equal-valued candidates whose database order was not a complete release identifier. A later total-order maintenance change selected ten different training rows even though dev and test were unchanged.
-
-Exact paper reconstruction therefore separates two deterministic operations:
-
-1. recompute each family builder's deterministic candidate pool and associated telemetry facts;
-2. retain the candidate identities frozen in `submission_static_selection.jsonl`.
-
-Each retained identity contains the family, site, canonical calls, gold answer, and evidence streams plus a SHA-256 digest. During replay, every family builder regenerates candidates from the fresh tool store. The replay fails unless every frozen identity matches exactly one regenerated candidate. It does not copy a submitted final episode or model response.
-
-The contract fixes 532 family ordinals and split assignments:
-
-| Family | Train | Dev | Test | Total |
-|---|---:|---:|---:|---:|
-| Point disambiguation | 40 | 10 | 10 | 60 |
-| Day mean lookup | 40 | 10 | 10 | 60 |
-| Relative 24h mean lookup | 40 | 10 | 10 | 60 |
-| Window mean lookup | 36 | 7 | 10 | 53 |
-| Window pairwise compare | 40 | 10 | 10 | 60 |
-| Window rank | 40 | 10 | 10 | 60 |
-| Timestamp value lookup | 40 | 10 | 10 | 60 |
-| Timestamp nearest lookup | 40 | 10 | 10 | 60 |
-| Quality gate | 40 | 10 | 9 | 59 |
-| **Total** | **356** | **87** | **89** | **532** |
-
-`BTS_C` is held out for test. The submitted ordinals preserve the original non-test train/dev assignment and family balancing.
-
-The checked selection profile in `provenance/submission_static_selection_summary.json` exposes coverage rather than treating the retained count as sufficient evidence by itself:
-
-| Family | Site rows A/B/C | Unique evidence streams | Point classes | Retained/candidate population |
-|---|---:|---:|---:|---:|
-| Point disambiguation | 16/34/10 | 60 | 7 | 60/4,263 |
-| Day mean lookup | 26/24/10 | 16 | 13 | 60/2,193,431 |
-| Relative 24h mean lookup | 26/24/10 | 16 | 13 | 60/2,193,431 |
-| Window mean lookup | 22/21/10 | 53 | 23 | 53/315,929 |
-| Window pairwise compare | 25/25/10 | 30 | 6 | 60/5,989,083 |
-| Window rank | 24/26/10 | 34 | 5 | 60/1,084 |
-| Timestamp value lookup | 6/44/10 | 60 | 19 | 60/2,123 |
-| Timestamp nearest lookup | 6/44/10 | 60 | 20 | 60/2,123 |
-| Quality gate | 30/20/9 | 20 | 5 | 59/315 |
-
-The same profile records per-family temporal ranges, decision counts, and min/median/max difficulty-proxy values. These statistics expose the submitted sample's concentration and are not presented as evidence of random representativeness.
-
-### Ambiguity, ties, and empty results
-
-- single-point families retain only metadata keys that resolve to one stream;
-- pairwise candidates require a nonzero mean difference, so a tied comparison is not released as having an arbitrary winner;
-- `rank_window` orders by the requested metric and then stream ID, with the declared ascending or descending direction;
-- nearest lookup orders by absolute offset and then observation timestamp, choosing the earlier timestamp for an equal offset;
-- exact lookup reports no exact match instead of substituting a nearby value;
-- empty aggregate/rank candidates are rejected or handled by the declared adjacent-window compatibility branch rather than assigned a fabricated gold.
-
-Acceptable alternative tool paths are generated from explicit equivalences such as `week` versus the same custom interval, swapped left/right resolution followed by the corresponding compare arguments, and exact-then-nearest fallback. They are not authored by a model.
-
-### Concrete static task
-
-The raw observation above becomes this executable contract:
+An exact lookup returns:
 
 ```json
 {
-  "scenario_id": "test_timestamp_value_lookup_00051",
-  "query": "At 07:03 UTC on February 3, 2022, what reading did the air differential pressure reading attached to Zone 005 report in BTS_C?",
-  "canonical_tool_calls": [
-    {
-      "tool_name": "resolve_point",
-      "arguments": {
-        "site_id": "BTS_C",
-        "point_class": "Air_Differential_Pressure_Sensor",
-        "equipment_label": "BTS_C Zone 005"
-      }
-    },
-    {
-      "tool_name": "lookup_observation",
-      "arguments": {
-        "stream_id": "$c1.stream_id",
-        "timestamp": "2022-02-03T07:03:23.640000+00:00",
-        "mode": "exact"
-      }
-    }
-  ],
-  "gold_final_answer": {
-    "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
-    "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
-    "value": 12.9457,
-    "exact_match_found": true
-  }
+  "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+  "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+  "value": 12.9457,
+  "exact_match_found": true
 }
 ```
 
-## 5. Static Task to Interaction Contract
+The runtime also exposes aggregate, comparison, ranking, and quality operations over the same read-only store.
 
-`bts_agentbench.bts_e2e.build_bts_e2e` adds a deterministic interaction contract. Family and temporal predicates choose whether the episode needs site clarification, time clarification, a direct answer, a quality rationale, or an evidence follow-up. The simulator answer is derived from the static row; it is not generated by an LLM.
+## 3. Static Executable Task
 
-For the concrete example, the time anchor is masked from the first turn:
+`generate_scenario_benchmark` first evaluates family eligibility. An exact-timestamp candidate must use an observed timestamp from the interior of a stream history. The builder then creates structured arguments and executes them before rendering the question.
 
 ```text
-Initial user:
-Operator handoff: "What was the air differential pressure reading on Zone 005 in BTS_C?"
-Use the building tools and ask me for any missing site or time detail before querying.
-
-Required clarification slot: time_reference
-Deterministic reply: I mean 07:03:23.64 UTC on February 3, 2022.
+At 07:03 UTC on February 3, 2022, what reading did the air differential
+pressure reading attached to Zone 005 report in BTS_C?
 ```
 
-`scripts/build_bts_e2e_agentic.py` then applies deterministic operator-facing wrappers. This changes presentation, not telemetry facts or gold values.
+Its static contract is:
 
-## 6. Contract to Phase-Structured Episode
+```text
+C1 resolve_point(BTS_C, Air_Differential_Pressure_Sensor, BTS_C Zone 005)
+C2 lookup_observation(C1.stream_id, 2022-02-03T07:03:23.640Z, exact)
 
-`scripts/build_canonical_agentic_final.py` executes the read-only tools and attaches typed interaction phases. Family repair modules then align stream references, windows, policy branches, and reporting commitments.
-
-The example is expanded into four scored phases:
-
-| Phase | User obligation | Recomputed gold |
-|---|---|---|
-| P1 | Answer the clarified exact timestamp request | exact observation `12.9457` at `07:03:23.640` |
-| P2 | Revise to public minute precision | nearest observation `12.9457`, offset `23.64 s` |
-| P3 | Judge week-bounded quality | `answer`, coverage `1.0`, gap ratio `1.0563` |
-| P4 | Make the reporting commitment | `answer`, reason `nearest_but_acceptable` |
-
-The final episode also requires an evidence answer naming stream `c24589e8_a1f3_4529_b409_5a56761c9d20`.
-
-Typed repairs are deterministic functions over named fields. Examples include:
-
-- replacing a stale phase stream with the winner from the preceding comparison;
-- changing an exact timestamp call to an exact-then-nearest acceptable path;
-- aligning a quality window with the period named in the user turn;
-- deriving `answer` or `abstain` from fixed quality thresholds;
-- replacing a provisional final field with a typed reporting commitment.
-
-Every row records the applied stages in `generation_history`. A repair is accepted only if the final contract preflight passes.
-
-### Submitted repair profile
-
-`provenance/submission_repair_profile.json` is computed from the submitted final rows and their retained static sources.
-
-| Typed stage | Modified | No-op | Applied |
-|---|---:|---:|---:|
-| Timestamp policy surface | 120 | 412 | 0 |
-| Nearest contract humanization | 60 | 472 | 0 |
-| Timestamp-value revision contract | 60 | 472 | 0 |
-| Goal-revision contract | 293 | 239 | 0 |
-| Point-target revision contract | 60 | 472 | 0 |
-| Goal-revision clarification | 60 | 472 | 0 |
-| Controller-proxy repair round | 0 | 532 | 0 |
-| Multi-axis composition | 472 | 60 | 0 |
-| Reporting-commitment composition | 532 | 0 | 0 |
-| Final family-semantics stamp | 0 | 0 | 532 |
-
-All 532 final rows preserve the backing static scenario ID, source static query, task family, and site ID under the coded lineage checks. These counts show what the repair program changed and what it left untouched; they do not replace human semantic-validity review.
-
-## 7. Submission Compatibility and Maintenance
-
-The exact paper snapshot and the later maintenance behavior are intentionally separate.
-
-The public release profile binds the final operator wording, the adjacent-available-month path for two January training rank rows, and deterministic rank metadata ordering. These settings are passed to the same submitted construction stages so the paper files are reconstructed byte for byte.
-
-The two January rows retain the submitted training text even though their executable fallback month is the available following month. They do not occur in dev or test. The ordinary maintenance path states the fallback direction explicitly. Exact replay preserves the paper snapshot; it does not silently replace it with the maintenance correction.
-
-## 8. Validation and Audit
-
-The exact replay performs four distinct checks.
-
-1. **Input integrity:** raw archives, retained normalized catalog files, submitted source bundle, submitted dataset bundle, and selection contract must match their SHA-256 values.
-2. **Selection integrity:** every retained static identity must match one and only one freshly generated candidate.
-3. **Contract preflight:** schema, phase/turn alignment, gold structure, evidence references, verifier fields, and executable call arguments are checked. `zero detected issues` applies only to these coded checks.
-4. **Exact output comparison:** reconstructed static and final JSONL files are compared byte for byte with the retained paper artifacts. Canonical sorted-key JSON hashes are also recorded.
-
-The deterministic controller is a separate construction-exclusion audit. Its `0/532` result confirms that the predefined controller exclusion rule remains satisfied. It is not an independent estimate of task difficulty.
-
-## 9. Run the Complete Replay
-
-```bash
-python scripts/replay_paper_submission.py \
-  --raw-dir /absolute/path/to/bts/raw \
-  --work-dir ./data/local-build/paper-submission-replay \
-  --runs 2
+gold value:       12.9457
+gold timestamp:   2022-02-03T07:03:23.640Z
+evidence stream:  c24589e8_a1f3_4529_b409_5a56761c9d20
 ```
 
-The command exits nonzero on any input checksum, candidate identity, static hash, final hash, cross-run, or preflight mismatch. Add `--controller-audit` to rerun the controller once on the first exact reconstruction.
+The candidate's family, site, calls, gold, and evidence are hashed into its selection identity. `provenance/release_static_selection.jsonl` fixes the identity and test split. Replay must regenerate that identity exactly once.
 
-For a faster replay with an already reconstructed tool store:
+## 4. Interaction Contract
 
-```bash
-python scripts/replay_paper_submission.py \
-  --tool-store-db /absolute/path/to/tool_store.duckdb \
-  --work-dir ./data/local-build/paper-submission-replay-fast \
-  --runs 2
+The static task already defines what must be computed. `build_bts_e2e` adds an interaction topology. For this family it first creates a direct answer followed by an evidence request:
+
+```text
+initial request -> exact lookup answer -> evidence follow-up
 ```
 
-Provider model calls are outside this deterministic claim. The fixed submitted traces can be rescored programmatically, but a new provider call may vary with model and infrastructure revisions.
+`build_bts_e2e_agentic` then applies the declared missing-time rule. It can withhold the timestamp because the static task contains one recoverable `time_reference` value. The generated initial request is:
+
+```text
+Operator handoff: "What was the air differential pressure reading on
+Zone 005 in BTS_C?" Use the building tools and ask me for any missing
+site or time detail before querying.
+```
+
+If the agent asks for time, the deterministic simulator reads the stored slot and returns:
+
+```text
+I mean 07:03:23.64 UTC on February 3, 2022.
+```
+
+The simulator does not paraphrase or generate a new value. It exposes a field that the transformation deliberately withheld.
+
+## 5. Programmatic Phase Composition
+
+The final builder evaluates additional family predicates and composes four phases.
+
+### P1: exact source task
+
+The recovered timestamp restores the original static operation:
+
+```text
+lookup_observation(2022-02-03T07:03:23.640Z, exact)
+-> 12.9457 at 07:03:23.640Z
+```
+
+### P2: exact-to-nearest timestamp policy
+
+The next operator turn narrows the public time to `07:03` and asks for the nearest reading. The contract permits an exact probe followed by nearest fallback:
+
+```text
+lookup_observation(2022-02-03T07:03:00Z, exact)
+-> no exact observation
+
+lookup_observation(2022-02-03T07:03:00Z, nearest)
+-> 12.9457 at 07:03:23.640Z; offset 23.64 seconds
+```
+
+This phase is not filled from the earlier answer. It is executed against the runtime with the revised timestamp and mode.
+
+### P3: quality decision
+
+The operator asks whether the signal supports reporting for the week beginning January 31. The builder derives a UTC week window and executes:
+
+```text
+inspect_quality_window(
+  2022-01-31T00:00:00Z,
+  2022-02-07T00:00:00Z,
+  week
+)
+-> observed_fraction=1.0, gap_ratio=1.0563, decision=answer
+```
+
+### P4: reporting commitment
+
+The terminal turn asks whether to report, abstain, or request more time. A fixed reporting policy consumes the timestamp and quality phase fields:
+
+```json
+{
+  "commitment_action": "answer",
+  "reason": "nearest_but_acceptable"
+}
+```
+
+The evidence follow-up still requires the original source stream.
+
+## 6. Typed Repair
+
+Typed repair keeps a composed episode internally executable. It is not manual editing and it does not alter source observations.
+
+A repair rule has four parts:
+
+1. **Predicate:** family, phase shape, and required fields that permit the rule.
+2. **Transformation:** a bounded change such as aligning a revised window, replacing a point target, adding exact-to-nearest fallback, or attaching a reporting commitment.
+3. **Re-execution:** if tool arguments change, the affected tool operation runs again against `ToolStoreRuntime`.
+4. **Coupled update:** calls, phase gold, final target, evidence, and verifier are replaced together, then the before/after contract summary is appended to `generation_history`.
+
+For this row, the transformation history records the original static task, E2E contract, missing-time surface, timestamp policy, multi-axis phase composition, reportability alignment, and final family alignment. A surface-only wording normalization leaves tool outputs unchanged. A timestamp or window change cannot reuse an old gold; it must re-execute the runtime operation.
+
+This discipline is what makes the conversion programmatic: templates control language, typed fields control arguments, and executable outputs control labels.
+
+## 7. Contract Preflight
+
+`audit_bts_canonical_contract.py` checks the completed row before release:
+
+- phase count agrees with the user-turn sequence;
+- the final phase is the row's final target;
+- required fields and verifier specifications are nonempty;
+- the scorer accepts each rendered gold answer;
+- exact/nearest timestamps, offsets, values, and fallback flags agree with runtime execution;
+- quality windows and reporting decisions agree with their source phases;
+- evidence IDs agree with the contributing tool path;
+- prompt revisions align with phase order.
+
+The release reports zero coded findings across 532 BTS rows. This means the rows passed these declared checks; it is not a claim about unrestricted operator language.
+
+## 8. Retained Agent Execution
+
+The GPT-5.5 trace for this row follows the contract:
+
+```text
+ask missing timestamp
+  -> resolve point
+  -> exact lookup at 07:03:23.640
+  -> nearest lookup at 07:03
+  -> inspect weekly quality
+  -> answer with nearest qualification
+  -> cite source stream
+```
+
+The retained final answer is:
+
+```text
+Report it as-is, but label it as the nearest available reading—not an exact
+07:03:00 reading. Data quality for that week supports answering, so no need
+to abstain or ask for more time detail.
+```
+
+The evidence response cites `c24589e8_a1f3_4529_b409_5a56761c9d20`. Deterministic rescoring yields `final=1`, `phase=1`, `evidence=1`, `task=1`, `protocol_ok=true`, and `label=accomplished`.
+
+The full 21-message exchange, including tool-result JSON, is in `examples/REPLAY_TRACE.md`.
+
+## 9. Replay Equality
+
+Two independent raw preprocessing runs rebuilt the tool store. Each complete downstream build regenerated this row and all other rows. For this example, the public release row and both replay rows have the same canonical object digest, and their containing split files match the release SHA-256.
+
+The equality check includes every turn, call, phase target, final target, evidence field, verifier, history entry, provenance field, and serialized byte. The expected result is visible in the worked trace:
+
+```text
+Complete JSON-object equality: YES
+```

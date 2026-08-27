@@ -23,8 +23,8 @@ from bts_agentbench.xai4heat import load_xai4heat_tables
 
 from audit_bts_canonical_contract import audit_contract
 from build_bts_e2e_agentic import build_agentic_bts_e2e
-from canonical_repair_single_stream import transform_row as transform_v5
-from canonical_repair_reportability import transform_row as transform_v7
+from canonical_repair_single_stream import transform_row as repair_single_stream_contract
+from canonical_repair_reportability import transform_row as repair_reportability_contract
 from build_canonical_agentic_final import build_canonical_agentic_final, clone, summarize
 from build_explicit_controller_failure_analysis import analyze_rows as analyze_explicit_controller_failures
 from build_explicit_controller_round_report import build_report as build_explicit_controller_round_report
@@ -41,10 +41,10 @@ CANONICAL_SEED_CORE_OUT_DEFAULT = REPO_ROOT / "data" / "local-build" / "xai4heat
 FINAL_OUT_DEFAULT = REPO_ROOT / "data" / "local-build" / "xai4heat" / "final"
 
 CORPUS_NAME = "xai4heat"
-E2E_TRACK_VERSION = "xai4heat-e2e-v1"
-AGENTIC_TRACK_VERSION = "xai4heat-e2e-v1-agentic"
+E2E_TRACK_VERSION = "xai4heat-interaction-contract"
+AGENTIC_TRACK_VERSION = "xai4heat-operator-surface"
 FINAL_CANONICAL_VERSION = "xai4heat-final-canonical"
-FINAL_LIFT_VERSION = "xai4heat-final-lift-v1"
+FINAL_LIFT_VERSION = "xai4heat-episode-final"
 
 
 def parse_args() -> argparse.Namespace:
@@ -152,7 +152,7 @@ def stamp_row(row: dict[str, Any]) -> dict[str, Any]:
     history.append(
         {
             "step_index": len(history),
-            "stage": "final_family_semantics_repair",
+            "stage": "final_family_contract_alignment",
             "stage_type": "repair",
             "builder": "build_xai4heat_final_canonical",
             "status": "applied",
@@ -177,9 +177,9 @@ def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, A
         "timestamp_value_lookup",
         "timestamp_nearest_lookup",
     }:
-        out = transform_v5(out, runtime)
+        out = repair_single_stream_contract(out, runtime)
     if family in {"window_mean_lookup", "timestamp_value_lookup", "timestamp_nearest_lookup"}:
-        out = transform_v7(out)
+        out = repair_reportability_contract(out)
     return stamp_row(out)
 
 
@@ -213,7 +213,7 @@ def run_explicit_controller_audit(
     finally:
         runtime.close()
 
-    round_report = build_explicit_controller_round_report(witness_dir)
+    round_report = build_explicit_controller_round_report(witness_dir, target_splits)
     write_json(benchmark_dir / "explicit_controller_audit_report.json", round_report)
 
     rows: list[dict[str, Any]] = []
@@ -270,8 +270,8 @@ def main() -> None:
         corpus_name=CORPUS_NAME,
         uniform_reference=None,
         use_default_uniform_reference=False,
-        canonical_version="canonical-v15",
-        lifting_version="dal-v14",
+        canonical_version="xai4heat-canonical-seed",
+        lifting_version="xai4heat-episode-seed",
     )
 
     runtime = ToolStoreRuntime(tool_store_db)
@@ -298,11 +298,11 @@ def main() -> None:
         "splits": {split: len(rows) for split, rows in transformed_splits.items()},
         "split_summaries": {split: summarize(rows) for split, rows in transformed_splits.items()},
         "family_repair_policy": {
-            "day_mean_lookup": "v5",
-            "relative_24h_mean_lookup": "v5",
-            "window_mean_lookup": "v5_then_v7",
-            "timestamp_value_lookup": "v5_then_v7",
-            "timestamp_nearest_lookup": "v5_then_v7",
+            "day_mean_lookup": "single-stream-contract-alignment",
+            "relative_24h_mean_lookup": "single-stream-contract-alignment",
+            "window_mean_lookup": "single-stream-and-reportability-alignment",
+            "timestamp_value_lookup": "single-stream-and-reportability-alignment",
+            "timestamp_nearest_lookup": "single-stream-and-reportability-alignment",
         },
         "lineage": {
             "static_rebuild": static_rebuild,

@@ -1,0 +1,34 @@
+{
+  "artifact_type": "evidence-grounded-multi-turn-agent-episodes",
+  "corpus": "xai4heat",
+  "heldout_site": "XAI4HEAT_L17",
+  "static_task_artifact": "artifacts/xai4heat-static-tasks",
+  "splits": {
+    "train": {
+      "path": "train.jsonl",
+      "rows": 132,
+      "bytes": 9981696,
+      "sha256": "e85563fdc3e80fa36c0f284e3a255af1cce2c99e02e1366744951cae12953351"
+    },
+    "dev": {
+      "path": "dev.jsonl",
+      "rows": 31,
+      "bytes": 2351421,
+      "sha256": "035e483a445f9527288c9203539f0b1240303701f3bf0c0a68b0c42436b991f9"
+    },
+    "test": {
+      "path": "test.jsonl",
+      "rows": 41,
+      "bytes": 3135351,
+      "sha256": "860aacd16b1fd8f7114eb05015c18b3a88efba566de3c9330dabed7b7cecb8e9"
+    }
+  },
+  "families": {
+    "day_mean_lookup": 60,
+    "relative_24h_mean_lookup": 60,
+    "timestamp_nearest_lookup": 35,
+    "timestamp_value_lookup": 35,
+    "window_mean_lookup": 14
+  },
+  "contract_preflight_issue_count": 0
+}

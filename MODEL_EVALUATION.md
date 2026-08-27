@@ -1,48 +1,30 @@
 # Model Evaluation Configuration
 
-## Shared Harness
+## Retained Runs
 
-All retained configurations use `scripts/run_bts_e2e_openai_eval.py`, the same read-only tools, deterministic user simulator, stopping logic, and scorer. The complete rendered system prompt is retained as the first message of every trace. Explicit prompt profiles reproduce the recorded BTS GPT-5.5 base prompt, the Gemini/Opus family guidance, and the XAI4HEAT corpus guidance.
+All four evaluations use `scripts/run_bts_e2e_openai_eval.py`, the same deterministic user simulator, read-only tool interface, stopping protocol, and scorer. Every trace retains its complete system/user/assistant/tool exchange and component scores.
 
-Shared settings for the retained runs were:
+| Corpus | Model | Rows | Accomplished | Prompt profile | Output cap |
+|---|---|---:|---:|---|---:|
+| BTS | GPT-5.5 | 89 | 79 | `gpt55-bts` | 512 |
+| BTS | Gemini 3.1 Pro | 89 | 71 | `bts-guided` | 1536 |
+| BTS | Claude Opus 4.7 | 89 | 58 | `bts-guided` | 512 |
+| XAI4HEAT | GPT-5.5 | 41 | 41 | `xai4heat` | 512 |
 
-- one retained API trace per test row;
-- temperature argument `0`;
-- seed argument `0` where the provider accepts it;
-- reasoning effort `medium`;
-- verbosity `low` where the provider accepts it;
-- base turn budget `12`, raised per row to the deterministic minimum required by its tools, phases, clarification, and follow-ups;
-- no parallel tool calls;
-- timeout `180` seconds per request;
-- full 89-row test split, assembled from completed family runs.
+The study records one provider invocation per model-row. Repeated-call variation was not measured. Fixed traces, rather than fresh API calls, are the input to the reported deterministic rescoring results.
 
-The study reports single retained runs. Provider-side nondeterminism remains possible despite temperature and seed controls. The fixed traces, rather than a new API rerun, are the inputs to the reported scorer outputs.
+Shared requested settings were temperature `0`, reasoning effort `medium`, no parallel tool calls, a base turn budget of `12` raised to the row's required minimum, and a 180-second timeout. Seed `0` and low verbosity were sent where supported. Exact provider arguments are retained in each `reports/model-runs/*/run_config.json`.
 
-The paper scores are attached to the submitted test JSONL SHA-256 `a7922313934258dce878a8218ce5bfb87b8628be639a52d279fd5a38304d3867`. `scripts/replay_paper_submission.py` reconstructs that file exactly before any optional new model run.
+The BTS traces are bound to `artifacts/bts-agentbench/test.jsonl` with SHA-256 `91b43d2e424df1146989350a9097a103243b08c1ce1e55f1959bf2913b09dc30`. The XAI4HEAT traces are bound to its public 41-row test split with SHA-256 `860aacd16b1fd8f7114eb05015c18b3a88efba566de3c9330dabed7b7cecb8e9`.
 
-## Provider Settings
+## Runner Commands
 
-| Evaluation | Endpoint | Provider mode | Prompt profile | Output cap |
-|---|---|---|---|---:|
-| GPT-5.5 on BTS | OpenAI direct | `openai` | `gpt55-bts` | 512 |
-| Gemini 3.1 Pro Preview on BTS | OpenRouter | `gemini` | `bts-guided` | 1536 |
-| Claude Opus 4.7 on BTS | OpenRouter | `openai` compatibility | `bts-guided` | 512 |
-| GPT-5.5 on XAI4HEAT | OpenAI direct | `openai` | `xai4heat` | 512 |
-
-The rendered prompt from each profile has been checked against every retained trace: 89/89 for each BTS configuration and 41/41 for XAI4HEAT.
-
-## Commands
-
-Set `BTS_TOOL_STORE_DB`, point `BTS_BENCHMARK_DIR` at an exact replay, and set the relevant API key:
+After constructing the BTS tool store:
 
 ```bash
-export BTS_TOOL_STORE_DB=/absolute/path/to/tool_store.duckdb
-export BTS_BENCHMARK_DIR=/absolute/path/to/paper-submission-replay/run_1/final
-```
+export BTS_TOOL_STORE_DB="$PWD/data/local-build/release-replay/raw-run-1/tool-store/tool_store.duckdb"
+export BTS_BENCHMARK_DIR="$PWD/artifacts/bts-agentbench"
 
-Then run one wrapper:
-
-```bash
 bash runners/gpt55_bts.sh
 bash runners/gemini31pro_bts_openrouter.sh
 bash runners/opus47_bts_openrouter.sh
@@ -51,20 +33,44 @@ bash runners/opus47_bts_openrouter.sh
 For XAI4HEAT:
 
 ```bash
-export XAI4HEAT_TOOL_STORE_DB=/absolute/path/to/xai4heat/tool-store/tool_store.duckdb
-export XAI4HEAT_BENCHMARK_DIR=/absolute/path/to/xai4heat/final
+export XAI4HEAT_TOOL_STORE_DB="$PWD/data/local-build/xai4heat/tool-store/tool_store.duckdb"
+export XAI4HEAT_BENCHMARK_DIR="$PWD/artifacts/xai4heat-agentbench"
+
 bash runners/gpt55_xai4heat.sh
 ```
 
-The BTS wrappers select all 89 test rows; the XAI4HEAT wrapper selects all 41. `--family FAMILY_NAME` can be added to the underlying Python command for family-local execution. New summaries include model/provider arguments, prompt profile, effective token cap, runner hash, benchmark split hash, and system-prompt hashes.
+The wrappers select the complete test split. API keys are required only for new calls.
 
-## Scoring
+## Deterministic Trace Audit
 
-The runner stores every message, tool call, tool result, phase answer, final answer, rationale/evidence reply, issue flag, usage count, and static verifier component. A row is `accomplished` only when its task verifier succeeds and no protocol issue remains. Partial component scores are retained for analysis but do not count as accomplished rows.
+Given fresh tool stores, rescore all retained traces with:
 
-- **Final** checks the required fields of the final phase answer against its typed gold target. The reported mean is a macro-average of row-level final scores.
-- **Evidence** measures required-stream coverage. Every released E2E row has an evidence obligation, so the reported mean includes all 89 test rows.
-- **Phase** is the fraction of that row's ordered phase answers that pass their own typed answer checks; the table-level value is the macro-average over rows, not a phase-level micro-average.
-- **Task** is the row-level mean of core answer, grounding, temporal, and phase scores. `task_ok` requires all four Boolean checks; the partial numeric task score is not itself the accomplished label.
-- **Protocol** is Boolean and requires the interaction to finish without missing clarification/goal-revision/rationale/evidence turns, invalid follow-ups, empty messages, tool errors, or nontermination.
-- **Accomplished** is exactly `task_ok AND protocol_ok`. Process conformance is retained separately and is additionally required only by `strict_label`.
+```bash
+python scripts/audit_model_traces.py \
+  --bts-benchmark-dir artifacts/bts-agentbench \
+  --bts-tool-store-db data/local-build/release-replay/raw-run-1/tool-store/tool_store.duckdb \
+  --bts-raw-dir data/local-build/raw \
+  --xai4heat-benchmark-dir artifacts/xai4heat-agentbench \
+  --xai4heat-tool-store-db data/local-build/xai4heat/tool-store/tool_store.duckdb
+```
+
+The audit verifies:
+
+- every trace scenario ID equals the corresponding public test split;
+- family, interaction mode, and first user message equal the clean episode;
+- each retained system prompt equals the rendered prompt profile;
+- retained calls are reconstructed as `ExecutedCall` objects;
+- `verify_prediction` reproduces the stored component dictionary exactly.
+
+`reports/model-runs/trace_audit.json` records 267/267 exact BTS rescoring matches and 41/41 exact XAI4HEAT matches.
+
+## Score Definitions
+
+- **Final** checks required fields in the final phase response against the typed gold. The table value is the macro-average of row scores.
+- **Evidence** measures required-stream coverage. Every released episode has an evidence follow-up, so all test rows are included.
+- **Phase** is the passing fraction of that row's ordered phase responses. The table value is a row-level macro-average, not a phase micro-average.
+- **Task** is the row-level mean of core answer, grounding, temporal, and phase components. `task_ok` requires all four Boolean checks.
+- **Protocol** requires completion without a missing clarification, revision, rationale/evidence turn, invalid follow-up, empty message, tool error, or nontermination.
+- **Accomplished** is `task_ok AND protocol_ok`.
+
+The runner stores partial component scores for diagnosis, but only `accomplished` contributes to the main success count.

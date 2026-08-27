@@ -20,7 +20,7 @@ from bts_agentbench.bts_e2e import (
 from bts_agentbench.clarify_policy import clarify_policy_manifest_fields
 
 
-AGENTIC_TRACK_VERSION = "bts-e2e-v6-agentic"
+AGENTIC_TRACK_VERSION = "bts-operator-surface"
 
 
 def agentic_mode_for_row(row: dict[str, Any]) -> str:
@@ -106,7 +106,7 @@ def make_agentic_row(
     metadata.update(
         {
             "e2e_track_version": agentic_track_version,
-            "agentic_surface_version": "operator-handoff-v1",
+            "agentic_surface_version": "operator-handoff",
             "rule_solver_stressors": [
                 "noncanonical_wrapper",
                 "missing_slot_dialogue",
@@ -130,7 +130,7 @@ def make_agentic_row(
             "status": "generated",
             "details": {
                 "agentic_track_version": agentic_track_version,
-                "agentic_surface_version": "operator-handoff-v1",
+                "agentic_surface_version": "operator-handoff",
                 "source_e2e_scenario_id": base.get("scenario_id"),
                 "interaction_mode": row.get("interaction_mode"),
                 "initial_user_message": row.get("initial_user_message"),
@@ -251,7 +251,7 @@ def build_agentic_bts_e2e(
         else 0.0,
         "row_level_generation_history": {
             "enabled": True,
-            "history_version": "generation-history-v1",
+            "history_version": "generation-history",
             "stages": [
                 "seed_static_executable_task",
                 "deterministic_e2e_contract_generation",

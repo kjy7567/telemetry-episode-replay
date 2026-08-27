@@ -1,0 +1,266 @@
+{
+  "report_version": "explicit-controller-failure-analysis",
+  "row_count": 532,
+  "controller_reachability": {
+    "supported_family_count": 532,
+    "protocol_trace_nonempty_count": 179,
+    "executed_calls_nonempty_count": 179,
+    "phase_answers_nonempty_count": 179,
+    "final_answer_nonempty_count": 179,
+    "evidence_answer_nonempty_count": 179,
+    "rationale_answer_nonempty_count": 0,
+    "protocol_ok_count": 179
+  },
+  "first_blocking_layers": {
+    "controller_parse_or_binding_failure": 353,
+    "phase_completion_failure": 127,
+    "tool_process_failure": 52
+  },
+  "parse_error_category_counts": {
+    "controller_other_error": 238,
+    "none": 179,
+    "controller_parse_unsupported_revision_surface": 104,
+    "controller_parse_missing_point_class": 6,
+    "controller_grounding_no_point_candidate": 5
+  },
+  "top_parse_errors": [
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?",
+      179
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?",
+      50
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning May 10, 2022, was the week beginning May 17, 2022 better, worse, or about the same for reporting quality?",
+      7
+    ],
+    [
+      "controller_error:ValueError:missing_point_class",
+      6
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning March 15, 2022, was the week beginning March 22, 2022 better, worse, or about the same for reporting quality?",
+      6
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning July 5, 2022, was the week beginning July 12, 2022 better, worse, or about the same for reporting quality?",
+      6
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning August 3, 2021, was the week beginning August 10, 2021 better, worse, or about the same for reporting quality?",
+      5
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning December 22, 2020, was the week beginning December 29, 2020 better, worse, or about the same for reporting quality?",
+      5
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning December 29, 2020, was the week beginning January 5, 2021 better, worse, or about the same for reporting quality?",
+      5
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning September 1, 2021, did the top-ranked stream for the month beginning October 1, 2021 stay the same or change?",
+      4
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning February 2, 2021, was the week beginning February 9, 2021 better, worse, or about the same for reporting quality?",
+      4
+    ],
+    [
+      "controller_error:ValueError:no_point_candidate:BTS_A:Average_Zone_Air_Temperature_Sensor",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning November 1, 2021, did the top-ranked stream for the month beginning December 1, 2021 stay the same or change?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning November 1, 2023, did the top-ranked stream for the month beginning December 1, 2023 stay the same or change?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning January 1, 2021, did the top-ranked stream for the month beginning February 1, 2021 stay the same or change?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning October 1, 2021, did the top-ranked stream for the month beginning November 1, 2021 stay the same or change?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning September 28, 2021, was the week beginning October 5, 2021 better, worse, or about the same for reporting quality?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_surface:Compared with the week beginning June 8, 2021, was the week beginning June 15, 2021 better, worse, or about the same for reporting quality?",
+      3
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning June 1, 2022, did the top-ranked stream for the month beginning July 1, 2022 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning May 1, 2022, did the top-ranked stream for the month beginning June 1, 2022 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning February 1, 2021, did the top-ranked stream for the month beginning March 1, 2021 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning August 1, 2023, did the top-ranked stream for the month beginning September 1, 2023 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning February 1, 2022, did the top-ranked stream for the month beginning March 1, 2022 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning March 1, 2021, did the top-ranked stream for the month beginning April 1, 2021 stay the same or change?",
+      2
+    ],
+    [
+      "controller_error:ValueError:unsupported_revision_direction:Compared with the month beginning September 1, 2022, did the top-ranked stream for the month beginning October 1, 2022 stay the same or change?",
+      2
+    ]
+  ],
+  "issue_category_counts": {
+    "protocol_phase_completion_missing": 1526,
+    "temporal_contract_mismatch": 1173,
+    "other": 719,
+    "process_required_tool_missing": 706,
+    "process_call_sequence_mismatch": 532,
+    "final_answer_content_missing": 518,
+    "grounding_evidence_missing": 414
+  },
+  "by_split": {
+    "dev": {
+      "row_count": 87,
+      "parse_error_categories": {
+        "controller_other_error": 40,
+        "none": 30,
+        "controller_parse_unsupported_revision_surface": 17
+      }
+    },
+    "test": {
+      "row_count": 89,
+      "parse_error_categories": {
+        "controller_other_error": 38,
+        "none": 30,
+        "controller_parse_unsupported_revision_surface": 18,
+        "controller_parse_missing_point_class": 2,
+        "controller_grounding_no_point_candidate": 1
+      }
+    },
+    "train": {
+      "row_count": 356,
+      "parse_error_categories": {
+        "controller_other_error": 160,
+        "none": 119,
+        "controller_parse_unsupported_revision_surface": 69,
+        "controller_grounding_no_point_candidate": 4,
+        "controller_parse_missing_point_class": 4
+      }
+    }
+  },
+  "by_family": {
+    "day_mean_lookup": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "none": 60
+      },
+      "first_blocking_layers": {
+        "phase_completion_failure": 37,
+        "tool_process_failure": 23
+      }
+    },
+    "point_disambiguation": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "controller_other_error": 59,
+        "controller_grounding_no_point_candidate": 1
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 60
+      }
+    },
+    "quality_gate": {
+      "row_count": 59,
+      "parse_error_categories": {
+        "controller_other_error": 59
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 59
+      }
+    },
+    "relative_24h_mean_lookup": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "none": 59,
+        "controller_grounding_no_point_candidate": 1
+      },
+      "first_blocking_layers": {
+        "phase_completion_failure": 35,
+        "tool_process_failure": 24,
+        "controller_parse_or_binding_failure": 1
+      }
+    },
+    "timestamp_nearest_lookup": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "controller_other_error": 60
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 60
+      }
+    },
+    "timestamp_value_lookup": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "controller_other_error": 60
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 60
+      }
+    },
+    "window_mean_lookup": {
+      "row_count": 53,
+      "parse_error_categories": {
+        "controller_parse_unsupported_revision_surface": 50,
+        "controller_grounding_no_point_candidate": 3
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 53
+      }
+    },
+    "window_pairwise_compare": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "none": 60
+      },
+      "first_blocking_layers": {
+        "phase_completion_failure": 55,
+        "tool_process_failure": 5
+      }
+    },
+    "window_rank": {
+      "row_count": 60,
+      "parse_error_categories": {
+        "controller_parse_unsupported_revision_surface": 54,
+        "controller_parse_missing_point_class": 6
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 60
+      }
+    }
+  },
+  "interpretation": {
+    "summary": "The phase-complete stronger controller either fails to complete the released contract or fails downstream on required task fields, so the observed result should be interpreted as controller insufficiency under the released benchmark contract rather than a universal symbolic impossibility claim.",
+    "evidence_focus": [
+      "the stronger controller is capable of protocol-complete multi-phase traces on simpler rows",
+      "remaining failures identify where the released benchmark exceeds this controller's phase-complete capability",
+      "contract-level and downstream target failures are separated in the analysis rather than collapsed into a single zero-success claim"
+    ]
+  }
+}

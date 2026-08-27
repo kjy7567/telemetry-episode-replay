@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 SCENARIO_TOOL_REGISTRY = {
-    "version": "scenario-canonical-v2",
+    "version": "scenario-tool-registry",
     "tools": [
         {
             "tool_name": "resolve_point",
@@ -116,7 +116,7 @@ TIMESTAMP_BLACKLIST_REGEX = r"(_Parameter$)"
 QUALITY_COMPATIBILITY_REGEX = r"(_Sensor|_Setpoint|_Limit)$"
 QUALITY_BLACKLIST_REGEX = r"(^Time_|^Duration_Sensor$|_Energy_Sensor$|_Parameter$|^Min_Limit$|^Max_Limit$)"
 VALID_POINT_CLASS_REGEX = r"^[A-Z][A-Za-z0-9_]*$"
-QUERY_SURFACE_VERSION = "operator-robust-v1"
+QUERY_SURFACE_VERSION = "operator-readable"
 
 EQUIPMENT_ALIAS_REWRITES = [
     ("Conference Room", "conference room"),
@@ -242,7 +242,7 @@ def build_task_accomplish_verifier(
     required_stream_ids: list[str] | None = None,
 ) -> dict:
     return {
-        "verifier_name": "task_accomplish_v1",
+        "verifier_name": "task_accomplishment",
         "label_space": ["accomplished", "partially_accomplished", "not_accomplished"],
         "final_answer_checks": {
             "required_fields": required_answer_fields,

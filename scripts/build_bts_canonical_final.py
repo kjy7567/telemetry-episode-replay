@@ -22,8 +22,8 @@ from audit_bts_canonical_contract import audit_contract
 from build_bts_e2e_agentic import build_agentic_bts_e2e
 from canonical_repair_pairwise import transform_row as repair_pairwise
 from canonical_repair_quality_rank import transform_quality_row as repair_quality
-from canonical_repair_quality_rank import transform_rank_row as repair_rank_semantics
-from canonical_repair_rank import transform_row as repair_rank_contract
+from canonical_repair_quality_rank import transform_rank_row as repair_rank_family_contract
+from canonical_repair_rank import transform_row as repair_rank_phase_contract
 from canonical_repair_reportability import transform_row as repair_reportability
 from canonical_repair_single_stream import transform_row as repair_single_stream
 from build_canonical_agentic_final import build_canonical_agentic_final, clone, reporting_commitment_candidate, summarize
@@ -41,13 +41,7 @@ FINAL_OUT_DEFAULT = REPO_ROOT / "artifacts" / "bts-canonical-final"
 TOOL_STORE_DB = REPO_ROOT / "data" / "local-build" / "tool_store" / "tool_store.duckdb"
 
 FINAL_CANONICAL_VERSION = "bts-canonical-final"
-FINAL_LIFT_VERSION = "bts-agentic-final"
-SUBMISSION_SEED_CANONICAL_VERSION = "canonical-v15"
-SUBMISSION_SEED_LIFT_VERSION = "dal-v14"
-SUBMISSION_FINAL_CANONICAL_VERSION = "canonical-v16-paper-final"
-SUBMISSION_FINAL_LIFT_VERSION = "dal-v15-paper-final"
-
-
+FINAL_LIFT_VERSION = "bts-episode-final"
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--static-dir", type=Path, default=STATIC_DEFAULT)
@@ -62,11 +56,6 @@ def parse_args() -> argparse.Namespace:
         "--skip-controller-audit",
         action="store_true",
         help="Build and preflight the release without recomputing controller witnesses.",
-    )
-    parser.add_argument(
-        "--submission-compatible",
-        action="store_true",
-        help="Reconstruct the immutable paper-submission rows and embedded provenance labels.",
     )
     return parser.parse_args()
 
@@ -106,49 +95,23 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def stamp_row(
     row: dict[str, Any],
-    *,
-    submission_compatibility: bool = False,
 ) -> dict[str, Any]:
     out = dict(row)
     metadata = dict(out.get("metadata", {}))
-    if submission_compatibility:
-        metadata["paper_final_artifact_version"] = SUBMISSION_FINAL_CANONICAL_VERSION
-        metadata["paper_final_lifting_version"] = SUBMISSION_FINAL_LIFT_VERSION
-    else:
-        metadata["final_artifact_version"] = FINAL_CANONICAL_VERSION
-        metadata["final_lifting_version"] = FINAL_LIFT_VERSION
+    metadata["final_artifact_version"] = FINAL_CANONICAL_VERSION
+    metadata["final_lifting_version"] = FINAL_LIFT_VERSION
     out["metadata"] = metadata
 
     lifting = dict(out.get("agentic_lifting", {}))
-    if submission_compatibility:
-        lifting["lifting_version"] = SUBMISSION_FINAL_LIFT_VERSION
-        lifting["paper_final_artifact_version"] = SUBMISSION_FINAL_CANONICAL_VERSION
-    else:
-        lifting["lifting_version"] = FINAL_LIFT_VERSION
-        lifting["final_artifact_version"] = FINAL_CANONICAL_VERSION
+    lifting["lifting_version"] = FINAL_LIFT_VERSION
+    lifting["final_artifact_version"] = FINAL_CANONICAL_VERSION
     out["agentic_lifting"] = lifting
 
     history = list(out.get("generation_history", []))
-    stage = (
-        "paper_final_family_semantics_repair"
-        if submission_compatibility
-        else "final_family_semantics_repair"
-    )
-    builder = (
-        "build_bts_paper_final_canonical"
-        if submission_compatibility
-        else "build_bts_canonical_final"
-    )
-    artifact_version = (
-        SUBMISSION_FINAL_CANONICAL_VERSION
-        if submission_compatibility
-        else FINAL_CANONICAL_VERSION
-    )
-    lifting_version = (
-        SUBMISSION_FINAL_LIFT_VERSION
-        if submission_compatibility
-        else FINAL_LIFT_VERSION
-    )
+    stage = "final_family_contract_alignment"
+    builder = "build_bts_canonical_final"
+    artifact_version = FINAL_CANONICAL_VERSION
+    lifting_version = FINAL_LIFT_VERSION
     history.append(
         {
             "step_index": len(history),
@@ -169,8 +132,6 @@ def stamp_row(
 def transform_row(
     row: dict[str, Any],
     runtime: ToolStoreRuntime,
-    *,
-    submission_compatibility: bool = False,
 ) -> dict[str, Any]:
     family = str(row.get("task_family", ""))
     out = dict(row)
@@ -208,16 +169,8 @@ def transform_row(
                 out["final_phase_example"] = clone(phases[4])
 
     if family == "window_rank":
-        out = repair_rank_contract(
-            out,
-            runtime,
-            submission_compatibility=submission_compatibility,
-        )
-        out = repair_rank_semantics(
-            out,
-            runtime,
-            submission_compatibility=submission_compatibility,
-        )
+        out = repair_rank_phase_contract(out, runtime)
+        out = repair_rank_family_contract(out, runtime)
 
     if family == "quality_gate":
         out = repair_quality(out, runtime)
@@ -227,15 +180,15 @@ def transform_row(
         metadata.pop("reporting_commitment_mode", None)
         out["metadata"] = metadata
 
-    out = stamp_row(out, submission_compatibility=submission_compatibility)
+    out = stamp_row(out)
     if family == "window_pairwise_compare":
         metadata = dict(out.get("metadata", {}))
         metadata["reporting_commitment_mode"] = "quality_only"
         out["metadata"] = metadata
     if family == "window_rank":
         metadata = dict(out.get("metadata", {}))
-        metadata["pairwise_rank_phase_split_v12"] = True
-        metadata["rank_quality_prompt_v12"] = True
+        metadata["pairwise_rank_phase_split"] = True
+        metadata["rank_quality_prompt_aligned"] = True
         out["metadata"] = metadata
     return out
 
@@ -249,7 +202,6 @@ def build_seed_artifact(
     canonical_seed_core_out_dir: Path,
     tool_store_db: Path,
     corpus_name: str,
-    submission_compatibility: bool = False,
 ) -> dict[str, Any]:
     reset_dir(e2e_out_dir)
     reset_dir(agentic_out_dir)
@@ -267,10 +219,8 @@ def build_seed_artifact(
         corpus_name=corpus_name,
         uniform_reference=None,
         use_default_uniform_reference=False,
-        canonical_version=(
-            SUBMISSION_SEED_CANONICAL_VERSION if submission_compatibility else None
-        ),
-        lifting_version=(SUBMISSION_SEED_LIFT_VERSION if submission_compatibility else None),
+        canonical_version=None,
+        lifting_version=None,
     )
     return {
         "e2e": e2e_manifest,
@@ -302,7 +252,7 @@ def run_explicit_controller_audit(benchmark_dir: Path, tool_store_db: Path) -> d
         runtime.close()
 
     round_report = build_explicit_controller_round_report(witness_dir)
-    write_json(benchmark_dir / "explicit_controller_audit_round2_report.json", round_report)
+    write_json(benchmark_dir / "explicit_controller_audit_report.json", round_report)
 
     rows: list[dict[str, Any]] = []
     for split in ("train", "dev", "test"):
@@ -322,7 +272,6 @@ def main() -> None:
         canonical_seed_core_out_dir=args.canonical_seed_core_out_dir,
         tool_store_db=args.tool_store_db,
         corpus_name=args.corpus_name,
-        submission_compatibility=args.submission_compatible,
     )
 
     reset_dir(args.final_out_dir)
@@ -332,11 +281,7 @@ def main() -> None:
         for split in ("train", "dev", "test"):
             source_rows = load_jsonl(args.canonical_seed_out_dir / f"{split}.jsonl")
             transformed_splits[split] = [
-                transform_row(
-                    row,
-                    runtime,
-                    submission_compatibility=args.submission_compatible,
-                )
+                transform_row(row, runtime)
                 for row in source_rows
             ]
     finally:
@@ -346,16 +291,8 @@ def main() -> None:
     for split, rows in transformed_splits.items():
         write_jsonl(args.final_out_dir / f"{split}.jsonl", rows)
 
-    final_canonical_version = (
-        SUBMISSION_FINAL_CANONICAL_VERSION
-        if args.submission_compatible
-        else FINAL_CANONICAL_VERSION
-    )
-    final_lift_version = (
-        SUBMISSION_FINAL_LIFT_VERSION
-        if args.submission_compatible
-        else FINAL_LIFT_VERSION
-    )
+    final_canonical_version = FINAL_CANONICAL_VERSION
+    final_lift_version = FINAL_LIFT_VERSION
     manifest = {
         "track": "bts_e2e_agentic_canonical",
         "artifact_version": final_canonical_version,
@@ -402,7 +339,7 @@ def main() -> None:
 
     write_json(
         args.final_out_dir
-        / ("paper_final_build_report.json" if args.submission_compatible else "final_build_report.json"),
+        / "final_build_report.json",
         {
             "artifact_version": final_canonical_version,
             "lifting_version": final_lift_version,

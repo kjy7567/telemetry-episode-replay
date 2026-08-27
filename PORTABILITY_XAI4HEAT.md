@@ -79,7 +79,7 @@ The released data bundle retains 204 XAI4HEAT episodes:
 | Timestamp nearest lookup | 23 | 5 | 7 | 35 |
 | **Total** | **132** | **31** | **41** | **204** |
 
-The submitted test artifacts report `0/41` rows accomplished by the fixed deterministic controller and `41/41` by the retained GPT-5.5 run. These numbers demonstrate execution of the shared contract on the second telemetry schema; they are not evidence for arbitrary-log portability.
+The public test artifacts report `0/41` rows accomplished by the fixed deterministic controller and `41/41` by the retained GPT-5.5 run. These numbers demonstrate execution of the shared contract on the second telemetry schema; they are not evidence for arbitrary-log portability.
 
 ## Concrete Shared Contract
 
@@ -133,11 +133,18 @@ Build the full episode artifact:
 ```bash
 python scripts/build_xai4heat_final_canonical.py \
   --raw-dir /absolute/path/to/xai4heat \
+  --tool-store-dir ./data/local-build/xai4heat/tool-store \
+  --static-dir ./data/local-build/xai4heat/static \
+  --e2e-out-dir ./data/local-build/xai4heat/interaction-contract \
+  --agentic-out-dir ./data/local-build/xai4heat/operator-surface \
+  --canonical-seed-out-dir ./data/local-build/xai4heat/canonical-seed \
+  --canonical-seed-core-out-dir ./data/local-build/xai4heat/canonical-seed-core \
+  --final-out-dir ./data/local-build/xai4heat/final \
   --rebuild-static \
-  --skip-controller-audit
+  --controller-split test
 ```
 
-The complete submitted XAI4HEAT rows and retained GPT trace are also preserved inside `release/submitted-dataset-bundle.zip`.
+The complete XAI4HEAT rows and retained GPT trace are included in `dist/dataset.zip` and checked into `artifacts/xai4heat-agentbench/` and `reports/model-runs/gpt-5.5-xai4heat/`.
 
 Run the matching retained configuration after construction:
 

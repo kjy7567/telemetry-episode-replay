@@ -1,53 +1,61 @@
-# Public Artifact Guide
+# Artifact Map
 
-The release is organized into two user-facing bundles and one raw-data dependency.
+## Repository Layout
 
-| Item | Contents | Requires API access? |
-|---|---|:---:|
-| `source.zip` | Source, pinned environment, replay wrapper, fixed metadata/selection contracts, controller witnesses, replay reports, runner profiles, and documentation | No |
-| `dataset.zip` | 532 BTS episodes, 204 XAI4HEAT episodes, retained BTS and XAI4HEAT model traces, controller outputs, manifests, and four runner snapshots | No |
-| BTS raw archives | Three upstream ZIP files identified by URL, size, and SHA-256 in `DATA_SOURCES.md` | Download only |
+| Path | Purpose |
+|---|---|
+| `src/bts_agentbench/` | catalog, preprocessing, runtime, builders, simulator, and scorer library |
+| `scripts/` | executable construction, replay, audit, evaluation, and packaging entry points |
+| `data/source/` | BTS metadata and checksummed normalized catalog |
+| `artifacts/bts-static-tasks/` | 532 executable tasks before interaction composition |
+| `artifacts/bts-agentbench/` | 532 final BTS episodes |
+| `artifacts/xai4heat-static-tasks/` | 204 XAI4HEAT static tasks |
+| `artifacts/xai4heat-agentbench/` | 204 final XAI4HEAT episodes |
+| `provenance/release_static_selection.jsonl` | fixed BTS retained-row identities |
+| `provenance/release_stream_lineage.csv` | 212 release streams mapped to raw ZIP members |
+| `replay/release_replay_report.json` | two independent raw-to-episode replay results |
+| `replay/*-controller-witnesses/` | row-level deterministic controller outputs |
+| `reports/model-runs/` | retained GPT-5.5, Gemini 3.1 Pro, and Claude Opus 4.7 traces |
+| `runners/` | four model-run command snapshots |
+| `release/release_manifest.json` | paths, row counts, byte sizes, and SHA-256 hashes |
 
-## Verify the packaged evidence
+## ZIP Bundles
 
-From the source bundle root:
+`python scripts/build_public_bundles.py` creates two deterministic archives under `dist/`.
+
+### `source.zip`
+
+Contains all Python construction and evaluation source, runner wrappers, pinned dependencies, documentation, BTS metadata, the normalized catalog, fixed row-selection contract, stream lineage, replay report, and release manifest. It excludes generated episodes, model traces, raw BTS ZIP archives, local DuckDB files, and intermediate build directories.
+
+### `dataset.zip`
+
+Contains:
+
+- all 532 BTS static tasks and final episodes;
+- all 204 XAI4HEAT static tasks and final episodes;
+- 267 BTS model traces and 41 XAI4HEAT model traces;
+- four run configurations and four shell runners;
+- the shared Python runner;
+- BTS and XAI4HEAT controller audit reports and row witnesses;
+- release selection, stream lineage, replay report, and worked example.
+
+Both ZIPs use the same top-level `telemetry-episode-replay/` directory. Shared manifest, runner, and provenance files are byte-identical; use overwrite mode when combining the archives:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.lock
-pip install -e . --no-deps
-make verify
+unzip -oq dist/source.zip -d ./public-artifact
+unzip -oq dist/dataset.zip -d ./public-artifact
 ```
 
-This checks the submitted code/data snapshot hashes, 532 final rows, all 267 BTS and 41 XAI4HEAT model traces, the row-level replay example, 532 controller witnesses, two recorded raw preprocesses, three exact episode builds, and every retained system prompt against its public runner profile.
+Timestamps and file modes are fixed during packaging, making repeated package builds byte-identical when their inputs are unchanged.
 
-Build deterministic public bundles into a new output directory with:
+## Verify
 
 ```bash
-OUTPUT_DIR=dist make bundles
+python scripts/build_public_bundles.py --output-dir dist
+python scripts/verify_packaged_release.py --dist-dir dist --require-bundles
+sha256sum --check dist/SHA256SUMS
 ```
 
-## Reconstruct from raw telemetry
+Verification checks the release manifest, 532/204 row counts, split and scenario-ID alignment, controller witness coverage, retained model trace coverage, four runner files, ZIP CRCs, bundle checksums, and the complete worked trace. Both ZIPs must remain below 200 MiB.
 
-```bash
-./scripts/download_raw_archives.sh ./data/local-build/raw
-python scripts/replay_paper_submission.py \
-  --raw-dir ./data/local-build/raw \
-  --work-dir ./data/local-build/paper-replay \
-  --runs 2 \
-  --controller-audit
-```
-
-The wrapper contains no construction or scoring logic. It invokes the released stage implementations, records every intermediate directory, and compares newly written train/dev/test files with the paper artifact only after construction.
-
-## Runner map
-
-| Corpus | Model | Wrapper | Test rows |
-|---|---|---|---:|
-| BTS | GPT-5.5 | `runners/gpt55_bts.sh` | 89 |
-| BTS | Gemini 3.1 Pro | `runners/gemini31pro_bts_openrouter.sh` | 89 |
-| BTS | Claude Opus 4.7 | `runners/opus47_bts_openrouter.sh` | 89 |
-| XAI4HEAT | GPT-5.5 | `runners/gpt55_xai4heat.sh` | 41 |
-
-Provider calls are separate from construction replay. The retained traces can be audited and rescored without an API key.
+Raw BTS archives are not redistributed. Their download URLs, byte sizes, licenses, and checksums are listed in `DATA_SOURCES.md`.

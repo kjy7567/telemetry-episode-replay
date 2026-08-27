@@ -742,15 +742,15 @@ def main() -> None:
 
     summary = summarize(rows)
     if args.workflow_mode == "full_protocol":
-        summary["solver"] = "strong_symbolic_sql_solver_v5_full_protocol"
+        summary["solver"] = "full_protocol_symbolic_sql_solver"
     elif args.workflow_mode == "enumerate":
-        summary["solver"] = "strong_symbolic_sql_solver_v4_workflow_aware"
+        summary["solver"] = "workflow_aware_symbolic_sql_solver"
     elif args.index_mode == "builtin":
-        summary["solver"] = "strong_symbolic_sql_solver_v3_index_aware"
+        summary["solver"] = "index_aware_symbolic_sql_solver"
     elif args.alias_mode == "none":
-        summary["solver"] = "strong_symbolic_sql_solver_v1"
+        summary["solver"] = "base_symbolic_sql_solver"
     else:
-        summary["solver"] = "strong_symbolic_sql_solver_v2_alias_aware"
+        summary["solver"] = "alias_aware_symbolic_sql_solver"
     summary["slot_mode"] = args.slot_mode
     summary["alias_mode"] = args.alias_mode
     summary["index_mode"] = args.index_mode

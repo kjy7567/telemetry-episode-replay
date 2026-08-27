@@ -12,14 +12,18 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_report(witness_dir: Path) -> dict[str, Any]:
+def build_report(
+    witness_dir: Path,
+    splits: tuple[str, ...] | list[str] = ("train", "dev", "test"),
+    witness_reference: str | None = None,
+) -> dict[str, Any]:
     split_reports: dict[str, Any] = {}
     family_counts: dict[str, Counter[str]] = defaultdict(Counter)
     global_issues: Counter[str] = Counter()
     total = 0
     total_accomplished = 0
 
-    for split in ("train", "dev", "test"):
+    for split in splits:
         report_path = witness_dir / split / "explicit_controller_report.json"
         payload = load_json(report_path)
         report = payload["reports"]["phase_complete_stronger_controller"]
@@ -33,10 +37,10 @@ def build_report(witness_dir: Path) -> dict[str, Any]:
             global_issues[str(issue)] += int(count)
 
     return {
-        "report_version": "explicit-controller-round-v4",
+        "report_version": "explicit-controller-report",
         "audit_round": "construction_exclusion_verification",
         "controller": "phase_complete_stronger_controller",
-        "witness_dir": str(witness_dir),
+        "witness_directory": witness_reference or witness_dir.name,
         "rationale": [
             "re-run the frozen deterministic controller after construction to verify the predefined exclusion criterion",
             "retain per-row witnesses and summarize which task, temporal, grounding, and protocol checks the controller misses",
@@ -78,9 +82,18 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--witness-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--split", action="append", choices=["train", "dev", "test"])
+    parser.add_argument(
+        "--witness-reference",
+        help="Portable path recorded in the report instead of the local input path.",
+    )
     args = parser.parse_args()
 
-    report = build_report(args.witness_dir)
+    report = build_report(
+        args.witness_dir,
+        args.split or ("train", "dev", "test"),
+        args.witness_reference,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))

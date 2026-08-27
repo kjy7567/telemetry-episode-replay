@@ -120,8 +120,6 @@ def _set_required_fields(phase: dict[str, Any], fields: list[str]) -> dict[str, 
 def _normalize_rank_month_revision(
     out: dict[str, Any],
     runtime: ToolStoreRuntime,
-    *,
-    submission_compatibility: bool = False,
 ) -> dict[str, Any]:
     phases = clone(out.get("phase_examples", []))
     golds = clone(out.get("phase_gold_final_answers", []))
@@ -171,10 +169,9 @@ def _normalize_rank_month_revision(
     # Leave those rows on their existing valid revision path; the final rank
     # transform will use that path as a deterministic fallback.
     if not first_rank_gold.get("stream_id") or not second_rank_gold.get("stream_id"):
-        if not submission_compatibility:
-            metadata = clone(out.get("metadata", {}))
-            metadata["rank_month_normalization_skipped"] = "empty_adjacent_month"
-            out["metadata"] = metadata
+        metadata = clone(out.get("metadata", {}))
+        metadata["rank_month_normalization_skipped"] = "empty_adjacent_month"
+        out["metadata"] = metadata
         recompute_turn_budget(out)
         return sync_phase_examples(out)
 
@@ -281,8 +278,6 @@ def _normalize_rank_month_revision(
 def transform_row(
     row: dict[str, Any],
     runtime: ToolStoreRuntime,
-    *,
-    submission_compatibility: bool = False,
 ) -> dict[str, Any]:
     out = clone(row)
     family = str(out.get("task_family", ""))
@@ -308,18 +303,14 @@ def transform_row(
 
         meta = clone(out.get("metadata", {}))
         meta["quality_preference_mode"] = "reference_only"
-        meta["pairwise_rank_phase_split_v12"] = True
+        meta["pairwise_rank_phase_split"] = True
         meta["quality_preference_basis"] = "quality_only"
         if family == "window_rank":
-            meta["rank_quality_prompt_v12"] = True
+            meta["rank_quality_prompt_aligned"] = True
         out["metadata"] = meta
 
     if family == "window_rank":
-        out = _normalize_rank_month_revision(
-            out,
-            runtime,
-            submission_compatibility=submission_compatibility,
-        )
+        out = _normalize_rank_month_revision(out, runtime)
 
     recompute_turn_budget(out)
     return sync_phase_examples(out)
@@ -347,13 +338,13 @@ def main() -> None:
     write_json(
         args.output_dir / "manifest.json",
         {
-            "artifact_version": "bts-canonical-seed-test-penalty-experiment-v12",
-            "source_artifact_version": "bts-canonical-seed-test-penalty-experiment-v11",
+            "artifact_version": "rank-calendar-contract-repair",
+            "source_artifact_version": "pairwise-rank-phase-repair",
             "row_count": len(rows),
             "split_counts": {"train": 0, "dev": 0, "test": len(rows)},
             "target_families": sorted(TARGET_FAMILIES),
             "experiment_policy": {
-                "name": "pairwise_rank_quality_only_phase4_and_calendar_month_v12",
+                "name": "rank_quality_and_calendar_alignment",
                 "repairs": [
                     "pairwise_rank_phase12_core_only",
                     "pairwise_rank_phase4_quality_only_reference_selection",

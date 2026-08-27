@@ -20,9 +20,9 @@ The release reconstruction uses three Figshare files:
 
 ## Retained Metadata
 
-`data/source/bts-meta/` retains the CSV and Brick graph metadata used to map stream UUIDs to point, equipment, and location concepts. `data/source/bts-processed-catalog/` is the checksummed normalized Parquet mapping used by the submitted build and is an explicit exact-replay input contract.
+`data/source/bts-meta/` retains the CSV and Brick graph metadata used to map stream UUIDs to point, equipment, and location concepts. `data/source/bts-processed-catalog/` is the checksummed normalized Parquet mapping used by the public release and is an explicit replay input contract.
 
-The catalog summary is 19,665 streams, 22,997 entities, and 26,749 relations, with no recorded graph parse issues. `scripts/build_catalog.py` provides a deterministic maintained compiler for auditing and adapting a new corpus; it is not silently substituted for the submitted normalized mapping. The retained-row contract then fixes which regenerated static candidates belong to the evaluated release.
+The catalog summary is 19,665 streams, 22,997 entities, and 26,749 relations, with no recorded graph parse issues. `scripts/build_catalog.py` provides the maintained compiler for adapting new metadata. Exact replay verifies and uses the retained normalized mapping, and the release-row contract fixes which regenerated static candidates belong to the evaluated release.
 
 | Retained catalog file | Bytes | SHA-256 |
 |---|---:|---|

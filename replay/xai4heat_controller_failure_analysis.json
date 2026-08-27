@@ -1,0 +1,97 @@
+{
+  "report_version": "explicit-controller-failure-analysis",
+  "row_count": 41,
+  "controller_reachability": {
+    "supported_family_count": 41,
+    "protocol_trace_nonempty_count": 0,
+    "executed_calls_nonempty_count": 0,
+    "phase_answers_nonempty_count": 0,
+    "final_answer_nonempty_count": 0,
+    "evidence_answer_nonempty_count": 0,
+    "rationale_answer_nonempty_count": 0,
+    "protocol_ok_count": 0
+  },
+  "first_blocking_layers": {
+    "controller_parse_or_binding_failure": 41
+  },
+  "parse_error_category_counts": {
+    "controller_other_error": 41
+  },
+  "top_parse_errors": [
+    [
+      "controller_error:ValueError:missing_site",
+      41
+    ]
+  ],
+  "issue_category_counts": {
+    "protocol_phase_completion_missing": 184,
+    "temporal_contract_mismatch": 157,
+    "process_required_tool_missing": 82,
+    "process_call_sequence_mismatch": 41,
+    "final_answer_content_missing": 41,
+    "grounding_evidence_missing": 41
+  },
+  "by_split": {
+    "test": {
+      "row_count": 41,
+      "parse_error_categories": {
+        "controller_other_error": 41
+      }
+    }
+  },
+  "by_family": {
+    "day_mean_lookup": {
+      "row_count": 10,
+      "parse_error_categories": {
+        "controller_other_error": 10
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 10
+      }
+    },
+    "relative_24h_mean_lookup": {
+      "row_count": 10,
+      "parse_error_categories": {
+        "controller_other_error": 10
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 10
+      }
+    },
+    "timestamp_nearest_lookup": {
+      "row_count": 7,
+      "parse_error_categories": {
+        "controller_other_error": 7
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 7
+      }
+    },
+    "timestamp_value_lookup": {
+      "row_count": 7,
+      "parse_error_categories": {
+        "controller_other_error": 7
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 7
+      }
+    },
+    "window_mean_lookup": {
+      "row_count": 7,
+      "parse_error_categories": {
+        "controller_other_error": 7
+      },
+      "first_blocking_layers": {
+        "controller_parse_or_binding_failure": 7
+      }
+    }
+  },
+  "interpretation": {
+    "summary": "The phase-complete stronger controller either fails to complete the released contract or fails downstream on required task fields, so the observed result should be interpreted as controller insufficiency under the released benchmark contract rather than a universal symbolic impossibility claim.",
+    "evidence_focus": [
+      "the stronger controller is capable of protocol-complete multi-phase traces on simpler rows",
+      "remaining failures identify where the released benchmark exceeds this controller's phase-complete capability",
+      "contract-level and downstream target failures are separated in the analysis rather than collapsed into a single zero-success claim"
+    ]
+  }
+}

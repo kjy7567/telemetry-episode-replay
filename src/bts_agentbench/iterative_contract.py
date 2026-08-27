@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-ITERATIVE_DECISION_CONTRACT_VERSION = "iterative-decision-v1"
+ITERATIVE_DECISION_CONTRACT_VERSION = "iterative-decision-contract"
 ITERATIVE_DECISION_PROBLEM = "clarify_act_answer"
 ITERATIVE_DECISION_TYPES = ("clarify", "act", "answer")
 

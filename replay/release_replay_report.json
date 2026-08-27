@@ -1,0 +1,492 @@
+{
+  "report_type": "raw-to-episode-release-replay",
+  "raw_archives": [
+    {
+      "name": "Site_Aaa.zip",
+      "bytes": 8475679488,
+      "sha256": "ffc13b3710c66de505678cf5b48e8c7b3d5be97900653c82f48c2f5dfec7e77f"
+    },
+    {
+      "name": "Site_Baa.zip",
+      "bytes": 1513172125,
+      "sha256": "fade67675e97274075e003c27e411eadc50f17c5fe0cb294bd3569388a517ef8"
+    },
+    {
+      "name": "Site_Caa.zip",
+      "bytes": 8984334527,
+      "sha256": "fa03a0629fb1da4eb9ef3c430546311470fc9bd8f5e53cfcd76853d535676b5b"
+    }
+  ],
+  "normalized_catalog": [
+    {
+      "name": "catalog_summary.json",
+      "bytes": 248,
+      "sha256": "a9ebb46dc7293fc17230d7d26a8f00b847b23136a6cbf29749db2b547cfcb722"
+    },
+    {
+      "name": "entities.parquet",
+      "bytes": 3151084,
+      "sha256": "fb63ebf4b4cfd63893fa508afacafa1240f2636a9e3a7c0c5725407958613731"
+    },
+    {
+      "name": "relations.parquet",
+      "bytes": 1770519,
+      "sha256": "4a512fc1bdcc93dbf3e822458eb9193cb576dfadafe45f44d4e7298607d530d3"
+    },
+    {
+      "name": "stream_targets.parquet",
+      "bytes": 3706992,
+      "sha256": "7785971531d03a9f80e2c9620fc34d7c828f9892adbad962d8820b3c95599994"
+    },
+    {
+      "name": "streams.parquet",
+      "bytes": 4222572,
+      "sha256": "3e848eb68be296ca39756aeb9ecb6ea5038ab9788df272be898fc27c822e23b7"
+    }
+  ],
+  "normalized_catalog_directory": "data/source/bts-processed-catalog",
+  "selection_contract": "provenance/release_static_selection.jsonl",
+  "selection_contract_sha256": "2487dce6bbb01bb0ab4e1d5b388ff40cc509ab26082770c867ed085e96ecddd6",
+  "release_reference": "release/release_manifest.json",
+  "runs": [
+    {
+      "run": 1,
+      "tool_store": {
+        "calendar_profiles.parquet": "31d91754e7261bdda5f14d48d095d4731bd8a72d6b435c192991768e94559bd7",
+        "daily_aggregates.parquet": "9f29cdc856f1ac94b74821f3dcfa6c237a40a806f729e1b6b3b54cc74ff8947f",
+        "monthly_aggregates.parquet": "0967889d661af2a859b9d535c0cce2f710bbcae6d7c9d579929b075d3c9edff5",
+        "point_inventory.parquet": "e91c0b8ecba2d71348c1e7fdd4e8fffe69f5c5751f88b5b7ca4d74b03d857cae",
+        "preprocess_summary.json": "2b3b68d432781c452d5283b08200fb141386454ec83c87f331ca4d9fa0a4eef3",
+        "quality_metrics.parquet": "8793d436f47c3fe5c3f9780196614e97952791ce34dff54ab0bd1bfa843e4d83",
+        "raw_stream_index.parquet": "3144d0837a7dcd08b0b39b804c2e0d9f36c26ba816e3c1e460ec5c8d54eb3368",
+        "skipped_members.json": "63c9aee10a09a541944d54dd7316b6cf674cf669877dd200de0f296190d24469",
+        "stream_previews.parquet": "f19cc8fbf8e84a62a6666def15fd36ee9b981019d5304fbbcbad25d8eb958172",
+        "tool_ready_points.parquet": "66718b82442deb7cefc2ccdb9cbd874690bbc1d43a674aedb2ec433ba250f838",
+        "weekly_aggregates.parquet": "a84ca5ee84c4d0b26e9300c56921e0ff970d352bf8fc125aafc4aae95013baee"
+      },
+      "static": {
+        "train": {
+          "rows": 356,
+          "bytes": 1144829,
+          "sha256": "6c72b1b0f8f1dcb8560e9adfff3f9af25f4fda4ef144667bee3afd45fce292f3"
+        },
+        "dev": {
+          "rows": 87,
+          "bytes": 273433,
+          "sha256": "7628cbb17f257cede2d0ba5b9bf8a2c685aaf84c4b2f6658e82a0d93bfd12b0b"
+        },
+        "test": {
+          "rows": 89,
+          "bytes": 271563,
+          "sha256": "7b9a7b5f3f70491493637bc79a222394d561a487932424a6774809d7ed6b43c6"
+        }
+      },
+      "final": {
+        "train": {
+          "rows": 356,
+          "bytes": 26426214,
+          "sha256": "49a2c2df2bd23ec22f3cf86c5a9902d18eb5f354d56b022e524a2c7f1ab1ac2f"
+        },
+        "dev": {
+          "rows": 87,
+          "bytes": 6412432,
+          "sha256": "34ab18515ae522cfa59e859830a5d43b22d7b8b356a99aa1984f1bc2b6f7e20c"
+        },
+        "test": {
+          "rows": 89,
+          "bytes": 6544045,
+          "sha256": "91b43d2e424df1146989350a9097a103243b08c1ce1e55f1959bf2913b09dc30"
+        }
+      },
+      "release_static_match": {
+        "train": true,
+        "dev": true,
+        "test": true
+      },
+      "release_final_match": {
+        "train": true,
+        "dev": true,
+        "test": true
+      },
+      "preflight_issue_count": 0,
+      "internal_version_findings": 0
+    },
+    {
+      "run": 2,
+      "tool_store": {
+        "calendar_profiles.parquet": "31d91754e7261bdda5f14d48d095d4731bd8a72d6b435c192991768e94559bd7",
+        "daily_aggregates.parquet": "9f29cdc856f1ac94b74821f3dcfa6c237a40a806f729e1b6b3b54cc74ff8947f",
+        "monthly_aggregates.parquet": "0967889d661af2a859b9d535c0cce2f710bbcae6d7c9d579929b075d3c9edff5",
+        "point_inventory.parquet": "e91c0b8ecba2d71348c1e7fdd4e8fffe69f5c5751f88b5b7ca4d74b03d857cae",
+        "preprocess_summary.json": "2b3b68d432781c452d5283b08200fb141386454ec83c87f331ca4d9fa0a4eef3",
+        "quality_metrics.parquet": "8793d436f47c3fe5c3f9780196614e97952791ce34dff54ab0bd1bfa843e4d83",
+        "raw_stream_index.parquet": "3144d0837a7dcd08b0b39b804c2e0d9f36c26ba816e3c1e460ec5c8d54eb3368",
+        "skipped_members.json": "63c9aee10a09a541944d54dd7316b6cf674cf669877dd200de0f296190d24469",
+        "stream_previews.parquet": "f19cc8fbf8e84a62a6666def15fd36ee9b981019d5304fbbcbad25d8eb958172",
+        "tool_ready_points.parquet": "66718b82442deb7cefc2ccdb9cbd874690bbc1d43a674aedb2ec433ba250f838",
+        "weekly_aggregates.parquet": "a84ca5ee84c4d0b26e9300c56921e0ff970d352bf8fc125aafc4aae95013baee"
+      },
+      "static": {
+        "train": {
+          "rows": 356,
+          "bytes": 1144829,
+          "sha256": "6c72b1b0f8f1dcb8560e9adfff3f9af25f4fda4ef144667bee3afd45fce292f3"
+        },
+        "dev": {
+          "rows": 87,
+          "bytes": 273433,
+          "sha256": "7628cbb17f257cede2d0ba5b9bf8a2c685aaf84c4b2f6658e82a0d93bfd12b0b"
+        },
+        "test": {
+          "rows": 89,
+          "bytes": 271563,
+          "sha256": "7b9a7b5f3f70491493637bc79a222394d561a487932424a6774809d7ed6b43c6"
+        }
+      },
+      "final": {
+        "train": {
+          "rows": 356,
+          "bytes": 26426214,
+          "sha256": "49a2c2df2bd23ec22f3cf86c5a9902d18eb5f354d56b022e524a2c7f1ab1ac2f"
+        },
+        "dev": {
+          "rows": 87,
+          "bytes": 6412432,
+          "sha256": "34ab18515ae522cfa59e859830a5d43b22d7b8b356a99aa1984f1bc2b6f7e20c"
+        },
+        "test": {
+          "rows": 89,
+          "bytes": 6544045,
+          "sha256": "91b43d2e424df1146989350a9097a103243b08c1ce1e55f1959bf2913b09dc30"
+        }
+      },
+      "release_static_match": {
+        "train": true,
+        "dev": true,
+        "test": true
+      },
+      "release_final_match": {
+        "train": true,
+        "dev": true,
+        "test": true
+      },
+      "preflight_issue_count": 0,
+      "internal_version_findings": 0
+    }
+  ],
+  "logical_tool_store_files_exact": {
+    "calendar_profiles.parquet": true,
+    "daily_aggregates.parquet": true,
+    "monthly_aggregates.parquet": true,
+    "point_inventory.parquet": true,
+    "preprocess_summary.json": true,
+    "quality_metrics.parquet": true,
+    "raw_stream_index.parquet": true,
+    "skipped_members.json": true,
+    "stream_previews.parquet": true,
+    "tool_ready_points.parquet": true,
+    "weekly_aggregates.parquet": true
+  },
+  "static_splits_exact": {
+    "train.jsonl": true,
+    "dev.jsonl": true,
+    "test.jsonl": true
+  },
+  "final_splits_exact": {
+    "train.jsonl": true,
+    "dev.jsonl": true,
+    "test.jsonl": true
+  },
+  "release_static_splits_exact": {
+    "run-1/train": true,
+    "run-1/dev": true,
+    "run-1/test": true,
+    "run-2/train": true,
+    "run-2/dev": true,
+    "run-2/test": true
+  },
+  "release_final_splits_exact": {
+    "run-1/train": true,
+    "run-1/dev": true,
+    "run-1/test": true,
+    "run-2/train": true,
+    "run-2/dev": true,
+    "run-2/test": true
+  },
+  "controller_audit": {
+    "report_version": "explicit-controller-report",
+    "audit_round": "construction_exclusion_verification",
+    "controller": "phase_complete_stronger_controller",
+    "totals": {
+      "scenario_count": 532,
+      "accomplished_count": 0,
+      "accomplished_rate": 0.0
+    },
+    "by_split": {
+      "train": {
+        "scenario_count": 356,
+        "label_counts": {
+          "partially_accomplished": 356
+        },
+        "contradiction_count": 0,
+        "top_issues": [
+          [
+            "call_sequence_mismatch",
+            356
+          ],
+          [
+            "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+            356
+          ],
+          [
+            "temporal_mismatch:lookup_observation:timestamp,mode",
+            277
+          ],
+          [
+            "missing_goal_revision_answer",
+            237
+          ],
+          [
+            "missing_evidence_followup_answer",
+            237
+          ],
+          [
+            "missing_answer_fact:final_answer",
+            237
+          ],
+          [
+            "missing_phase_answer:1",
+            237
+          ],
+          [
+            "missing_phase_answer:2",
+            237
+          ],
+          [
+            "missing_phase_answer:3",
+            237
+          ],
+          [
+            "missing_tool:resolve_point",
+            197
+          ]
+        ]
+      },
+      "dev": {
+        "scenario_count": 87,
+        "label_counts": {
+          "partially_accomplished": 87
+        },
+        "contradiction_count": 0,
+        "top_issues": [
+          [
+            "call_sequence_mismatch",
+            87
+          ],
+          [
+            "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+            87
+          ],
+          [
+            "temporal_mismatch:lookup_observation:timestamp,mode",
+            67
+          ],
+          [
+            "missing_goal_revision_answer",
+            57
+          ],
+          [
+            "missing_evidence_followup_answer",
+            57
+          ],
+          [
+            "missing_answer_fact:final_answer",
+            57
+          ],
+          [
+            "missing_phase_answer:1",
+            57
+          ],
+          [
+            "missing_phase_answer:2",
+            57
+          ],
+          [
+            "missing_phase_answer:3",
+            57
+          ],
+          [
+            "missing_tool:resolve_point",
+            47
+          ]
+        ]
+      },
+      "test": {
+        "scenario_count": 89,
+        "label_counts": {
+          "partially_accomplished": 89
+        },
+        "contradiction_count": 0,
+        "top_issues": [
+          [
+            "call_sequence_mismatch",
+            89
+          ],
+          [
+            "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+            88
+          ],
+          [
+            "temporal_mismatch:lookup_observation:timestamp,mode",
+            70
+          ],
+          [
+            "missing_goal_revision_answer",
+            59
+          ],
+          [
+            "missing_evidence_followup_answer",
+            59
+          ],
+          [
+            "missing_answer_fact:final_answer",
+            59
+          ],
+          [
+            "missing_phase_answer:1",
+            59
+          ],
+          [
+            "missing_phase_answer:2",
+            59
+          ],
+          [
+            "missing_phase_answer:3",
+            59
+          ],
+          [
+            "missing_tool:resolve_point",
+            49
+          ]
+        ]
+      }
+    },
+    "by_family": {
+      "day_mean_lookup": {
+        "partially_accomplished": 60
+      },
+      "point_disambiguation": {
+        "partially_accomplished": 60
+      },
+      "quality_gate": {
+        "partially_accomplished": 59
+      },
+      "relative_24h_mean_lookup": {
+        "partially_accomplished": 60
+      },
+      "timestamp_nearest_lookup": {
+        "partially_accomplished": 60
+      },
+      "timestamp_value_lookup": {
+        "partially_accomplished": 60
+      },
+      "window_mean_lookup": {
+        "partially_accomplished": 53
+      },
+      "window_pairwise_compare": {
+        "partially_accomplished": 60
+      },
+      "window_rank": {
+        "partially_accomplished": 60
+      }
+    },
+    "global_top_issues": [
+      [
+        "call_sequence_mismatch",
+        532
+      ],
+      [
+        "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+        531
+      ],
+      [
+        "temporal_mismatch:lookup_observation:timestamp,mode",
+        414
+      ],
+      [
+        "missing_goal_revision_answer",
+        353
+      ],
+      [
+        "missing_evidence_followup_answer",
+        353
+      ],
+      [
+        "missing_answer_fact:final_answer",
+        353
+      ],
+      [
+        "missing_phase_answer:1",
+        353
+      ],
+      [
+        "missing_phase_answer:2",
+        353
+      ],
+      [
+        "missing_phase_answer:3",
+        353
+      ],
+      [
+        "missing_tool:resolve_point",
+        293
+      ],
+      [
+        "missing_phase_answer:4",
+        293
+      ],
+      [
+        "controller_error:ValueError:unsupported_revision_surface:Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?",
+        179
+      ],
+      [
+        "missing_phase_answer:5",
+        174
+      ],
+      [
+        "missing_required_clarification:time_reference",
+        174
+      ],
+      [
+        "missing_answer_fact:commitment_action",
+        164
+      ],
+      [
+        "phase_5:missing_answer_fact:commitment_action",
+        164
+      ],
+      [
+        "temporal_mismatch:rank_window:window_start,window_end,period",
+        120
+      ],
+      [
+        "missing_tool:lookup_observation",
+        120
+      ],
+      [
+        "missing_required_clarification:site_id",
+        119
+      ],
+      [
+        "missing_tool:inspect_quality_window",
+        119
+      ]
+    ],
+    "conclusion": {
+      "controller_witness_rows_remaining": 0,
+      "needs_additional_dataset_repair": false,
+      "summary": "The construction exclusion criterion is satisfied only when the frozen controller accomplishes zero rows. This result is not an independent estimate of benchmark difficulty."
+    }
+  },
+  "passed": true
+}

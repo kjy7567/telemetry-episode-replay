@@ -187,7 +187,7 @@ def transform_row(row: dict[str, Any]) -> dict[str, Any]:
     out["phase_examples"][-1] = clone(out["final_phase_example"])
 
     meta = clone(out.get("metadata", {}))
-    meta["test_penalty_v7_reportability_decision"] = True
+    meta["timestamp_reportability_contract_aligned"] = True
     out["metadata"] = meta
     out["interaction_mode"] = normalized_interaction_mode(out)
     recompute_turn_budget(out)
@@ -212,13 +212,13 @@ def main() -> None:
     write_json(
         args.output_dir / "manifest.json",
         {
-            "artifact_version": "bts-canonical-seed-test-penalty-experiment-v7",
-            "source_artifact_version": "bts-canonical-seed-test-penalty-experiment-v6",
+            "artifact_version": "timestamp-reportability-contract-repair",
+            "source_artifact_version": "single-stream-contract-repair",
             "row_count": len(rows),
             "split_counts": {"train": 0, "dev": 0, "test": len(rows)},
             "target_families": sorted(TARGET_FAMILIES),
             "experiment_policy": {
-                "name": "timestamp_reportability_decision_v7",
+                "name": "timestamp_reportability_contract_alignment",
                 "repairs": [
                     "replace_reporting_commitment_with_single_reportability_decision_phase",
                     "keep_evidence_followup_unchanged",

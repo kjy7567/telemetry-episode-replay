@@ -311,10 +311,10 @@ This is the retained operational message sequence from the fixed model execution
 | 17 | `canonical_pre_hardness_contract_ready` | `generated` |
 | 18 | `declared_solver_hardness_audit` | `generated` |
 | 19 | `canonical_row_acceptance` | `accepted` |
-| 20 | `paper_final_family_semantics_repair` | `applied` |
+| 20 | `final_family_contract_alignment` | `applied` |
 
 ## 9. Replay Check
 
-- Submitted row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
-- Replayed row digest: `be81122fc2edac119aee6a3b8a08dfd838149e3abcb354de32530fc73ddf8510`
+- Release row digest: `de54e5241a0b53e6d479d6f698950ebe079495e69ae6da8790496bfdf997b32b`
+- Replayed row digest: `de54e5241a0b53e6d479d6f698950ebe079495e69ae6da8790496bfdf997b32b`
 - Complete JSON-object equality: **YES**

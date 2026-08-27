@@ -261,7 +261,7 @@ def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, A
     elif fam == "window_rank":
         out = realign_rank_quality(out, runtime)
     meta = clone(out.get("metadata", {}))
-    meta["test_penalty_v8_rest_alignment"] = True
+    meta["comparison_rank_commitment_aligned"] = True
     out["metadata"] = meta
     recompute_turn_budget(out)
     return sync_phase_examples(out)
@@ -289,13 +289,13 @@ def main() -> None:
     write_json(
         args.output_dir / "manifest.json",
         {
-            "artifact_version": "bts-canonical-seed-test-penalty-experiment-v9",
-            "source_artifact_version": "bts-canonical-seed-test-penalty-experiment-v7",
+            "artifact_version": "comparison-rank-commitment-repair",
+            "source_artifact_version": "timestamp-reportability-contract-repair",
             "row_count": len(rows),
             "split_counts": {"train": 0, "dev": 0, "test": len(rows)},
             "target_families": sorted(TARGET_FAMILIES),
             "experiment_policy": {
-                "name": "rest_family_alignment_v9",
+                "name": "comparison_rank_commitment_alignment",
                 "repairs": [
                     "quality_gate_rationale_followup_alignment",
                     "window_pairwise_commitment_alignment_to_quality",

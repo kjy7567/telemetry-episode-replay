@@ -1,0 +1,176 @@
+{
+  "report_version": "explicit-controller-report",
+  "audit_round": "construction_exclusion_verification",
+  "controller": "phase_complete_stronger_controller",
+  "witness_directory": "replay/xai4heat-controller-witnesses",
+  "rationale": [
+    "re-run the frozen deterministic controller after construction to verify the predefined exclusion criterion",
+    "retain per-row witnesses and summarize which task, temporal, grounding, and protocol checks the controller misses",
+    "interpret zero accomplished rows only as confirmation that the construction-time exclusion rule was applied"
+  ],
+  "dataset_repair_policy": {
+    "row_level_repair_trigger": "controller_accomplished_under_frozen_audit",
+    "row_level_repairs_applied_in_this_round": 0,
+    "reason": "this is a post-build rerun of the construction filter; any accomplished row would fail the declared exclusion criterion"
+  },
+  "totals": {
+    "scenario_count": 41,
+    "accomplished_count": 0,
+    "accomplished_rate": 0.0
+  },
+  "by_split": {
+    "test": {
+      "scenario_count": 41,
+      "label_counts": {
+        "partially_accomplished": 41
+      },
+      "contradiction_count": 0,
+      "top_issues": [
+        [
+          "temporal_mismatch:lookup_observation:timestamp,mode",
+          62
+        ],
+        [
+          "temporal_mismatch:aggregate_window:window_start,window_end,period",
+          54
+        ],
+        [
+          "controller_error:ValueError:missing_site",
+          41
+        ],
+        [
+          "missing_goal_revision_answer",
+          41
+        ],
+        [
+          "missing_evidence_followup_answer",
+          41
+        ],
+        [
+          "missing_tool:resolve_point",
+          41
+        ],
+        [
+          "call_sequence_mismatch",
+          41
+        ],
+        [
+          "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+          41
+        ],
+        [
+          "missing_answer_fact:final_answer",
+          41
+        ],
+        [
+          "missing_phase_answer:1",
+          41
+        ]
+      ]
+    }
+  },
+  "by_family": {
+    "day_mean_lookup": {
+      "partially_accomplished": 10
+    },
+    "relative_24h_mean_lookup": {
+      "partially_accomplished": 10
+    },
+    "timestamp_nearest_lookup": {
+      "partially_accomplished": 7
+    },
+    "timestamp_value_lookup": {
+      "partially_accomplished": 7
+    },
+    "window_mean_lookup": {
+      "partially_accomplished": 7
+    }
+  },
+  "global_top_issues": [
+    [
+      "temporal_mismatch:lookup_observation:timestamp,mode",
+      62
+    ],
+    [
+      "temporal_mismatch:aggregate_window:window_start,window_end,period",
+      54
+    ],
+    [
+      "controller_error:ValueError:missing_site",
+      41
+    ],
+    [
+      "missing_goal_revision_answer",
+      41
+    ],
+    [
+      "missing_evidence_followup_answer",
+      41
+    ],
+    [
+      "missing_tool:resolve_point",
+      41
+    ],
+    [
+      "call_sequence_mismatch",
+      41
+    ],
+    [
+      "temporal_mismatch:inspect_quality_window:window_start,window_end,period",
+      41
+    ],
+    [
+      "missing_answer_fact:final_answer",
+      41
+    ],
+    [
+      "missing_phase_answer:1",
+      41
+    ],
+    [
+      "missing_phase_answer:2",
+      41
+    ],
+    [
+      "missing_phase_answer:3",
+      41
+    ],
+    [
+      "missing_required_clarification:time_reference",
+      34
+    ],
+    [
+      "missing_phase_answer:4",
+      34
+    ],
+    [
+      "missing_tool:aggregate_window",
+      27
+    ],
+    [
+      "missing_phase_answer:5",
+      27
+    ],
+    [
+      "missing_tool:lookup_observation",
+      14
+    ],
+    [
+      "missing_evidence:XAI4HEAT_L17__delta_e",
+      7
+    ],
+    [
+      "missing_evidence:XAI4HEAT_L17__t_amb",
+      7
+    ],
+    [
+      "missing_evidence:XAI4HEAT_L17__t_ref",
+      7
+    ]
+  ],
+  "conclusion": {
+    "controller_witness_rows_remaining": 0,
+    "needs_additional_dataset_repair": false,
+    "summary": "The construction exclusion criterion is satisfied only when the frozen controller accomplishes zero rows. This result is not an independent estimate of benchmark difficulty."
+  }
+}

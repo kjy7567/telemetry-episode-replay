@@ -1,5 +1,5 @@
 {
-  "trace_version": "scenario-provenance-v1",
+  "trace_version": "release-scenario-trace",
   "scenario_id": "test_timestamp_value_lookup_00051",
   "raw_sources": [
     {
@@ -97,7 +97,7 @@
       ]
     },
     "task_accomplish_verifier": {
-      "verifier_name": "task_accomplish_v1",
+      "verifier_name": "task_accomplishment",
       "label_space": [
         "accomplished",
         "partially_accomplished",
@@ -133,9 +133,7 @@
       }
     }
   },
-  "final_episode": {
-    "scenario_id": "test_timestamp_value_lookup_00051",
-    "backing_static_scenario_id": "test_timestamp_value_lookup_00051",
+  "agentic_episode": {
     "interaction_mode": "clarify_time_then_quality_decision_then_policy_timestamp_then_goal_revision_then_evidence",
     "initial_user_message": "Operator handoff: \"What was the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
     "required_clarification_slots": [
@@ -149,88 +147,55 @@
       "For the week beginning January 31, 2022, would you answer or abstain based on data quality?",
       "Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?"
     ],
-    "phase_examples": [
+    "post_answer_user_turns": [
+      "Which stream or point did you base that on?"
+    ],
+    "canonical_tool_calls": [
       {
-        "task_family": "timestamp_value_lookup",
-        "gold_final_answer": {
-          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
-          "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
-          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
-          "value": 12.9457,
-          "exact_match_found": true
-        },
-        "task_accomplish_verifier": {
-          "final_answer_checks": {
-            "required_fields": [
-              "observed_timestamp",
-              "value"
-            ],
-            "numeric_tolerance": {},
-            "categorical_exact_match": []
-          }
+        "call_id": "c1",
+        "tool_name": "resolve_point",
+        "arguments": {
+          "site_id": "BTS_C",
+          "point_class": "Air_Differential_Pressure_Sensor",
+          "equipment_label": "BTS_C Zone 005"
         }
       },
       {
-        "task_family": "timestamp_value_lookup",
-        "gold_final_answer": {
-          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
-          "requested_timestamp": "2022-02-03T07:03:00+00:00",
-          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
-          "value": 12.9457,
-          "exact_match_found": false,
-          "fallback_reason": "nearest_available_observation",
-          "offset_seconds": 23.64
-        },
-        "task_accomplish_verifier": {
-          "final_answer_checks": {
-            "required_fields": [
-              "observed_timestamp",
-              "value"
-            ],
-            "numeric_tolerance": {},
-            "categorical_exact_match": []
-          }
+        "call_id": "c2",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "stream_id": "$c1.stream_id",
+          "timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "mode": "exact"
         }
       },
       {
-        "task_family": "quality_gate",
-        "gold_final_answer": {
+        "call_id": "c3",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "stream_id": "$c1.stream_id",
+          "timestamp": "2022-02-03T07:03:00+00:00",
+          "mode": "exact"
+        }
+      },
+      {
+        "call_id": "c4",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "stream_id": "$c1.stream_id",
+          "timestamp": "2022-02-03T07:03:00+00:00",
+          "mode": "nearest"
+        }
+      },
+      {
+        "tool_name": "inspect_quality_window",
+        "arguments": {
           "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
-          "decision": "answer",
-          "reason": "healthy",
-          "observed_fraction": 1.0,
-          "gap_ratio": 1.0563,
           "window_start": "2022-01-31T00:00:00+00:00",
           "window_end": "2022-02-07T00:00:00+00:00",
           "period": "week"
         },
-        "task_accomplish_verifier": {
-          "final_answer_checks": {
-            "required_fields": [
-              "decision",
-              "observed_fraction",
-              "gap_ratio"
-            ],
-            "numeric_tolerance": {},
-            "categorical_exact_match": []
-          }
-        }
-      },
-      {
-        "task_family": "timestamp_reportability_decision",
-        "gold_final_answer": {
-          "commitment_action": "answer",
-          "reason": "nearest_but_acceptable"
-        },
-        "task_accomplish_verifier": {
-          "final_answer_checks": {
-            "required_fields": [
-              "commitment_action"
-            ],
-            "numeric_tolerance": {},
-            "categorical_exact_match": []
-          }
-        }
+        "call_id": "c5"
       }
     ],
     "phase_gold_final_answers": [
@@ -273,11 +238,270 @@
       "stream_ids": [
         "c24589e8_a1f3_4529_b409_5a56761c9d20"
       ]
-    },
-    "release_filter": {
-      "main_release_eligible": true,
-      "main_release_reasons": [
-        "timestamp_policy_template_hardness"
+    }
+  },
+  "recorded_agent_run": {
+    "model": "gpt-5.5",
+    "label": "accomplished",
+    "strict_label": "accomplished",
+    "protocol_ok": true,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Operator handoff: \"What was the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying."
+      },
+      {
+        "role": "assistant",
+        "content": "What exact timestamp should I use for the reading? Please include the UTC offset (and fractional seconds if available)."
+      },
+      {
+        "role": "user",
+        "content": "I mean 07:03:23.64 UTC on February 3, 2022."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_gDx6LjQlFF3TLLV3BfggGwHO",
+            "type": "function",
+            "function": {
+              "name": "resolve_point",
+              "arguments": "{\"equipment_label\": \"Zone 005\", \"location_label\": null, \"point_class\": \"Air_Differential_Pressure_Sensor\", \"site_id\": \"BTS_C\"}"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "call_gDx6LjQlFF3TLLV3BfggGwHO",
+        "content": "{\"call_id\": \"e1\", \"tool_name\": \"resolve_point\", \"output\": {\"match_count\": 1, \"matches\": [{\"stream_id\": \"c24589e8_a1f3_4529_b409_5a56761c9d20\", \"point_class\": \"Air_Differential_Pressure_Sensor\", \"equipment_label\": \"BTS_C Zone 005\", \"location_label\": null, \"point_label\": \"BTS_C Air Differential Pressure Sensor 001\"}], \"stream_id\": \"c24589e8_a1f3_4529_b409_5a56761c9d20\", \"resolution_strategy\": \"normalized_fallback\"}}"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_wNYuHra2k1nT13xrgUaywn5Y",
+            "type": "function",
+            "function": {
+              "name": "lookup_observation",
+              "arguments": "{\"mode\": \"exact\", \"stream_id\": \"$e1.stream_id\", \"timestamp\": \"2022-02-03T07:03:23.64Z\"}"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "call_wNYuHra2k1nT13xrgUaywn5Y",
+        "content": "{\"call_id\": \"e2\", \"tool_name\": \"lookup_observation\", \"output\": {\"stream_id\": \"c24589e8_a1f3_4529_b409_5a56761c9d20\", \"requested_timestamp\": \"2022-02-03T07:03:23.640000+00:00\", \"observed_timestamp\": \"2022-02-03T07:03:23.640000+00:00\", \"value\": 12.9457, \"exact_match_found\": true}}"
+      },
+      {
+        "role": "assistant",
+        "content": "At 2022-02-03T07:03:23.640000+00:00, the air differential pressure reading on BTS_C Zone 005 was 12.9457."
+      },
+      {
+        "role": "user",
+        "content": "Now keep the same signal and site, but if I only know it was around 07:03 UTC on February 3, 2022, give me the nearest available reading."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_TCsXSj1eqhMQldnRmfalC2wL",
+            "type": "function",
+            "function": {
+              "name": "lookup_observation",
+              "arguments": "{\"mode\": \"nearest\", \"stream_id\": \"$e1.stream_id\", \"timestamp\": \"2022-02-03T07:03:00Z\"}"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "call_TCsXSj1eqhMQldnRmfalC2wL",
+        "content": "{\"call_id\": \"e3\", \"tool_name\": \"lookup_observation\", \"output\": {\"stream_id\": \"c24589e8_a1f3_4529_b409_5a56761c9d20\", \"requested_timestamp\": \"2022-02-03T07:03:00+00:00\", \"observed_timestamp\": \"2022-02-03T07:03:23.640000+00:00\", \"value\": 12.9457, \"exact_match_found\": false, \"fallback_reason\": \"nearest_available_observation\", \"offset_seconds\": 23.64}}"
+      },
+      {
+        "role": "assistant",
+        "content": "There was no exact logged reading at 2022-02-03T07:03:00+00:00. The nearest available reading was at 2022-02-03T07:03:23.640000+00:00 with value 12.9457."
+      },
+      {
+        "role": "user",
+        "content": "For the week beginning January 31, 2022, would you answer or abstain based on data quality?"
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_faj3NPLDBwBzEgBq6B0oFSva",
+            "type": "function",
+            "function": {
+              "name": "inspect_quality_window",
+              "arguments": "{\"period\": \"week\", \"stream_id\": \"$e1.stream_id\", \"window_end\": \"2022-02-07T00:00:00Z\", \"window_start\": \"2022-01-31T00:00:00Z\"}"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "tool_call_id": "call_faj3NPLDBwBzEgBq6B0oFSva",
+        "content": "{\"call_id\": \"e4\", \"tool_name\": \"inspect_quality_window\", \"output\": {\"stream_id\": \"c24589e8_a1f3_4529_b409_5a56761c9d20\", \"window_start\": \"2022-01-31T00:00:00+00:00\", \"window_end\": \"2022-02-07T00:00:00+00:00\", \"period\": \"week\", \"observed_fraction\": 1.0, \"gap_ratio\": 1.0563, \"duplicate_timestamp_fraction\": 0.0, \"nan_fraction\": 0.0, \"quality_reference\": {\"abstain_observed_fraction_below\": 0.5147, \"answer_observed_fraction_at_least\": 1.0, \"answer_gap_ratio_at_most\": 2.0178, \"abstain_gap_ratio_above\": 17.0006}}}"
+      },
+      {
+        "role": "assistant",
+        "content": "I would answer. For the week of 2022-01-31 to 2022-02-07, observed coverage was 1.0 and gap ratio was 1.0563, which meet the quality thresholds for answering."
+      },
+      {
+        "role": "user",
+        "content": "Given the public-time reading and the data-quality check, should I report it as-is, abstain, or ask for more time detail before reporting it?"
+      },
+      {
+        "role": "assistant",
+        "content": "Report it as-is, but label it as the nearest available reading—not an exact 07:03:00 reading. Data quality for that week supports answering, so no need to abstain or ask for more time detail."
+      },
+      {
+        "role": "user",
+        "content": "Which stream or point did you base that on?"
+      },
+      {
+        "role": "assistant",
+        "content": "I used stream_id c24589e8_a1f3_4529_b409_5a56761c9d20: BTS_C Air Differential Pressure Sensor 001 on BTS_C Zone 005."
+      },
+      {
+        "role": "user",
+        "content": "Thanks, that's what I needed. ###STOP###"
+      }
+    ],
+    "executed_calls": [
+      {
+        "call_id": "e1",
+        "tool_name": "resolve_point",
+        "arguments": {
+          "equipment_label": "Zone 005",
+          "location_label": null,
+          "point_class": "Air_Differential_Pressure_Sensor",
+          "site_id": "BTS_C"
+        },
+        "output": {
+          "match_count": 1,
+          "matches": [
+            {
+              "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+              "point_class": "Air_Differential_Pressure_Sensor",
+              "equipment_label": "BTS_C Zone 005",
+              "location_label": null,
+              "point_label": "BTS_C Air Differential Pressure Sensor 001"
+            }
+          ],
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "resolution_strategy": "normalized_fallback"
+        }
+      },
+      {
+        "call_id": "e2",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "mode": "exact",
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "timestamp": "2022-02-03T07:03:23.640000+00:00"
+        },
+        "output": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "requested_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "value": 12.9457,
+          "exact_match_found": true
+        }
+      },
+      {
+        "call_id": "e3",
+        "tool_name": "lookup_observation",
+        "arguments": {
+          "mode": "nearest",
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "timestamp": "2022-02-03T07:03:00+00:00"
+        },
+        "output": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "requested_timestamp": "2022-02-03T07:03:00+00:00",
+          "observed_timestamp": "2022-02-03T07:03:23.640000+00:00",
+          "value": 12.9457,
+          "exact_match_found": false,
+          "fallback_reason": "nearest_available_observation",
+          "offset_seconds": 23.64
+        }
+      },
+      {
+        "call_id": "e4",
+        "tool_name": "inspect_quality_window",
+        "arguments": {
+          "period": "week",
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "window_end": "2022-02-07T00:00:00+00:00",
+          "window_start": "2022-01-31T00:00:00+00:00"
+        },
+        "output": {
+          "stream_id": "c24589e8_a1f3_4529_b409_5a56761c9d20",
+          "window_start": "2022-01-31T00:00:00+00:00",
+          "window_end": "2022-02-07T00:00:00+00:00",
+          "period": "week",
+          "observed_fraction": 1.0,
+          "gap_ratio": 1.0563,
+          "duplicate_timestamp_fraction": 0.0,
+          "nan_fraction": 0.0,
+          "quality_reference": {
+            "abstain_observed_fraction_below": 0.5147,
+            "answer_observed_fraction_at_least": 1.0,
+            "answer_gap_ratio_at_most": 2.0178,
+            "abstain_gap_ratio_above": 17.0006
+          }
+        }
+      }
+    ],
+    "phase_answer_texts": [
+      "At 2022-02-03T07:03:23.640000+00:00, the air differential pressure reading on BTS_C Zone 005 was 12.9457.",
+      "There was no exact logged reading at 2022-02-03T07:03:00+00:00. The nearest available reading was at 2022-02-03T07:03:23.640000+00:00 with value 12.9457.",
+      "I would answer. For the week of 2022-01-31 to 2022-02-07, observed coverage was 1.0 and gap ratio was 1.0563, which meet the quality thresholds for answering.",
+      "Report it as-is, but label it as the nearest available reading—not an exact 07:03:00 reading. Data quality for that week supports answering, so no need to abstain or ask for more time detail."
+    ],
+    "final_answer_text": "Report it as-is, but label it as the nearest available reading—not an exact 07:03:00 reading. Data quality for that week supports answering, so no need to abstain or ask for more time detail.",
+    "evidence_answer_text": "I used stream_id c24589e8_a1f3_4529_b409_5a56761c9d20: BTS_C Air Differential Pressure Sensor 001 on BTS_C Zone 005.",
+    "static_verification": {
+      "label": "accomplished",
+      "strict_label": "accomplished",
+      "process_ok": true,
+      "process_score": 1.0,
+      "final_ok": true,
+      "final_score": 1.0,
+      "evidence_ok": true,
+      "evidence_score": 1.0,
+      "core_ok": true,
+      "core_score": 1.0,
+      "reporting_ok": true,
+      "reporting_score": 1.0,
+      "grounding_ok": true,
+      "grounding_score": 1.0,
+      "temporal_ok": true,
+      "temporal_score": 1.0,
+      "phase_ok": true,
+      "phase_score": 1.0,
+      "task_ok": true,
+      "task_score": 1.0,
+      "process_issues": [
+        "call_sequence_mismatch"
+      ],
+      "final_issues": [],
+      "evidence_issues": [],
+      "core_issues": [],
+      "reporting_issues": [],
+      "grounding_issues": [],
+      "temporal_issues": [],
+      "phase_issues": [],
+      "issues": [
+        "call_sequence_mismatch"
       ]
     }
   },
@@ -291,7 +515,7 @@
         "source_static_scenario_id": "test_timestamp_value_lookup_00051",
         "task_family": "timestamp_value_lookup",
         "query": "At 07:03 UTC on February 3, 2022, what reading did the air differential pressure reading attached to Zone 005 report in BTS_C?",
-        "query_surface_version": "operator-robust-v1",
+        "query_surface_version": "operator-readable",
         "canonical_tool_names": [
           "resolve_point",
           "lookup_observation"
@@ -305,7 +529,7 @@
       "builder": "build_bts_e2e",
       "status": "generated",
       "details": {
-        "e2e_track_version": "bts-e2e-v5",
+        "e2e_track_version": "bts-interaction-contract",
         "interaction_mode": "direct_then_evidence",
         "required_clarification_slots": [],
         "goal_revision_turn_count": 0,
@@ -323,8 +547,8 @@
       "builder": "build_bts_e2e_agentic",
       "status": "generated",
       "details": {
-        "agentic_track_version": "bts-e2e-v6-agentic",
-        "agentic_surface_version": "operator-handoff-v1",
+        "agentic_track_version": "bts-operator-surface",
+        "agentic_surface_version": "operator-handoff",
         "source_e2e_scenario_id": "test_timestamp_value_lookup_00051",
         "interaction_mode": "clarify_time_then_evidence",
         "initial_user_message": "Operator handoff: \"What reading did the air differential pressure reading on Zone 005 in BTS_C?\" Use the building tools and ask me for any missing site or time detail before querying.",
@@ -2114,14 +2338,19 @@
     },
     {
       "step_index": 19,
-      "stage": "paper_final_family_semantics_repair",
+      "stage": "final_family_contract_alignment",
       "stage_type": "repair",
-      "builder": "build_bts_paper_final_canonical",
+      "builder": "build_bts_canonical_final",
       "status": "applied",
       "details": {
-        "artifact_version": "canonical-v16-paper-final",
-        "lifting_version": "dal-v15-paper-final"
+        "artifact_version": "bts-canonical-final",
+        "lifting_version": "bts-episode-final"
       }
     }
-  ]
+  ],
+  "replay_check": {
+    "release_digest": "de54e5241a0b53e6d479d6f698950ebe079495e69ae6da8790496bfdf997b32b",
+    "replay_digest": "de54e5241a0b53e6d479d6f698950ebe079495e69ae6da8790496bfdf997b32b",
+    "exact_json_object_match": true
+  }
 }

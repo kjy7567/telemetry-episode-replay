@@ -278,7 +278,7 @@ def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, A
 
         meta = clone(out.get("metadata", {}))
         meta["quality_preference_mode"] = "reference_only"
-        meta["pairwise_rank_phase_split_v11"] = True
+        meta["pairwise_rank_phase_split"] = True
         meta["quality_preference_basis"] = "quality_only"
         if family == "window_pairwise_compare":
             meta["reporting_commitment_mode"] = "quality_only"
@@ -313,13 +313,13 @@ def main() -> None:
     write_json(
         args.output_dir / "manifest.json",
         {
-            "artifact_version": "bts-canonical-seed-test-penalty-experiment-v11",
-            "source_artifact_version": "bts-canonical-seed-test-penalty-experiment-v10",
+            "artifact_version": "pairwise-rank-phase-repair",
+            "source_artifact_version": "comparison-rank-commitment-repair",
             "row_count": len(rows),
             "split_counts": {"train": 0, "dev": 0, "test": len(rows)},
             "target_families": sorted(TARGET_FAMILIES),
             "experiment_policy": {
-                "name": "pairwise_rank_quality_only_phase4_and_calendar_month_v11",
+                "name": "pairwise_rank_quality_and_calendar_alignment",
                 "repairs": [
                     "pairwise_rank_phase12_core_only",
                     "pairwise_rank_phase4_quality_only_reference_selection",

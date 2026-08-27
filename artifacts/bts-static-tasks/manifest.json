@@ -1,0 +1,37 @@
+{
+  "artifact_type": "executable-static-telemetry-tasks",
+  "corpus": "bts",
+  "heldout_site": "BTS_C",
+  "selection_contract": "provenance/release_static_selection.jsonl",
+  "splits": {
+    "train": {
+      "path": "train.jsonl",
+      "rows": 356,
+      "bytes": 1144829,
+      "sha256": "6c72b1b0f8f1dcb8560e9adfff3f9af25f4fda4ef144667bee3afd45fce292f3"
+    },
+    "dev": {
+      "path": "dev.jsonl",
+      "rows": 87,
+      "bytes": 273433,
+      "sha256": "7628cbb17f257cede2d0ba5b9bf8a2c685aaf84c4b2f6658e82a0d93bfd12b0b"
+    },
+    "test": {
+      "path": "test.jsonl",
+      "rows": 89,
+      "bytes": 271563,
+      "sha256": "7b9a7b5f3f70491493637bc79a222394d561a487932424a6774809d7ed6b43c6"
+    }
+  },
+  "families": {
+    "day_mean_lookup": 60,
+    "point_disambiguation": 60,
+    "quality_gate": 59,
+    "relative_24h_mean_lookup": 60,
+    "timestamp_nearest_lookup": 60,
+    "timestamp_value_lookup": 60,
+    "window_mean_lookup": 53,
+    "window_pairwise_compare": 60,
+    "window_rank": 60
+  }
+}

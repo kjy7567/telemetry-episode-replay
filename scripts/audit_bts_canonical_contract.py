@@ -362,7 +362,7 @@ def audit_contract(benchmark_dir: Path, tool_store_db: Path) -> dict[str, Any]:
                     if idx >= 2 and idx - 2 < len(turns):
                         prompt = str(turns[idx - 2])
                         if not quality_prompt_looks_consistent(prompt):
-                            add_issue(row, "quality_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                            add_issue(row, "quality_prompt_contract_mismatch", {"prompt": prompt}, idx)
 
                 if phase_family == "quality_preference":
                     expected = quality_preference_candidate_for_row(row, runtime)
@@ -407,12 +407,12 @@ def audit_contract(benchmark_dir: Path, tool_store_db: Path) -> dict[str, Any]:
                             prompt,
                             reference_only=row.get("metadata", {}).get("quality_preference_mode") == "reference_only",
                         ):
-                            add_issue(row, "quality_preference_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                            add_issue(row, "quality_preference_prompt_contract_mismatch", {"prompt": prompt}, idx)
 
                 if phase_family == "timestamp_nearest_lookup" and idx >= 2 and idx - 2 < len(turns):
                     prompt = str(turns[idx - 2])
                     if not timestamp_prompt_looks_consistent(prompt):
-                        add_issue(row, "timestamp_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                        add_issue(row, "timestamp_prompt_contract_mismatch", {"prompt": prompt}, idx)
 
                 if phase_family == "timestamp_preference":
                     expected = timestamp_preference_candidate_for_row(row)
@@ -442,7 +442,7 @@ def audit_contract(benchmark_dir: Path, tool_store_db: Path) -> dict[str, Any]:
                     if idx >= 2 and idx - 2 < len(turns):
                         prompt = str(turns[idx - 2])
                         if not timestamp_preference_prompt_looks_consistent(prompt):
-                            add_issue(row, "timestamp_preference_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                            add_issue(row, "timestamp_preference_prompt_contract_mismatch", {"prompt": prompt}, idx)
 
                 if phase_family == "reporting_commitment":
                     if idx < 2:
@@ -497,17 +497,17 @@ def audit_contract(benchmark_dir: Path, tool_store_db: Path) -> dict[str, Any]:
                         else:
                             prompt_ok = reporting_commitment_prompt_looks_consistent(prompt)
                         if not prompt_ok:
-                            add_issue(row, "reporting_commitment_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                            add_issue(row, "reporting_commitment_prompt_contract_mismatch", {"prompt": prompt}, idx)
 
                 if phase_family == "point_disambiguation" and idx >= 2 and idx - 2 < len(turns):
                     prompt = str(turns[idx - 2])
                     if not point_prompt_looks_consistent(prompt):
-                        add_issue(row, "point_prompt_semantic_mismatch", {"prompt": prompt}, idx)
+                        add_issue(row, "point_prompt_contract_mismatch", {"prompt": prompt}, idx)
     finally:
         runtime.close()
 
     return {
-        "report_version": "contract-preflight-v5",
+        "report_version": "contract-preflight",
         "artifact_version": manifest.get("artifact_version", CANONICAL_VERSION),
         "lifting_version": manifest.get("lifting_version", LIFT_VERSION),
         "row_count": len(rows),

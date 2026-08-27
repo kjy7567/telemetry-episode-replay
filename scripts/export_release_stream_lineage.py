@@ -35,7 +35,11 @@ def collect_stream_ids(value: Any) -> set[str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export raw-archive lineage for streams referenced by the release.")
     parser.add_argument("--tool-store-db", type=Path, required=True)
-    parser.add_argument("--static-dir", type=Path, default=REPO_ROOT / "artifacts" / "bts-static-seed")
+    parser.add_argument(
+        "--static-dir",
+        type=Path,
+        default=REPO_ROOT / "artifacts" / "bts-static-tasks",
+    )
     parser.add_argument(
         "--output",
         type=Path,

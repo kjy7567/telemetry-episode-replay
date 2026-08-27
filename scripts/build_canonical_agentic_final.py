@@ -38,7 +38,7 @@ OUT_DEFAULT = REPO_ROOT / "artifacts" / "bts-canonical-seed"
 CORE_OUT_DEFAULT = REPO_ROOT / "artifacts" / "bts-canonical-seed-core"
 EXPLICIT_CONTROLLER_WITNESS_DIR = REPO_ROOT / "reports" / "controller" / "explicit_controller_witnesses"
 
-LIFT_VERSION = "bts-agentic-seed"
+LIFT_VERSION = "bts-episode-seed"
 CANONICAL_VERSION = "bts-canonical-seed"
 
 DSL_ATOMS = [
@@ -570,27 +570,27 @@ def add_timestamp_cached_reuse_variants(
 
 
 
-def has_lookup_observation_semantics(row: dict[str, Any]) -> bool:
+def uses_lookup_observation(row: dict[str, Any]) -> bool:
     return "lookup_observation" in canonical_tool_names(row) and any(
         family in {"timestamp_value_lookup", "timestamp_nearest_lookup"} for family in phase_task_families(row)
     )
 
 
-def has_aggregate_window_semantics(row: dict[str, Any]) -> bool:
+def uses_aggregate_window(row: dict[str, Any]) -> bool:
     return "aggregate_window" in canonical_tool_names(row) and any(
         family in {"day_mean_lookup", "relative_24h_mean_lookup", "window_mean_lookup"} for family in phase_task_families(row)
     )
 
 
-def has_compare_window_semantics(row: dict[str, Any]) -> bool:
+def uses_compare_window(row: dict[str, Any]) -> bool:
     return "compare_window" in canonical_tool_names(row) and "window_pairwise_compare" in phase_task_families(row)
 
 
-def has_rank_window_semantics(row: dict[str, Any]) -> bool:
+def uses_rank_window(row: dict[str, Any]) -> bool:
     return "rank_window" in canonical_tool_names(row) and "window_rank" in phase_task_families(row)
 
 
-def has_quality_decision_semantics(row: dict[str, Any]) -> bool:
+def uses_quality_decision(row: dict[str, Any]) -> bool:
     return bool({"quality_gate", "quality_preference"} & phase_task_families(row))
 
 
@@ -656,11 +656,11 @@ def adjacent_window_with_data(
 ) -> dict[str, Any] | None:
     if not eligible_for_goal_revision(static_row):
         return None
-    if has_compare_window_semantics(static_row):
+    if uses_compare_window(static_row):
         return adjacent_compare_window_with_data(static_row, runtime)
-    if has_rank_window_semantics(static_row):
+    if uses_rank_window(static_row):
         return adjacent_rank_window_with_data(static_row, runtime)
-    if not has_aggregate_window_semantics(static_row):
+    if not uses_aggregate_window(static_row):
         return None
     gold = static_row.get("gold_final_answer", {})
     stream_id = gold.get("stream_id")
@@ -3374,7 +3374,7 @@ def interaction_primitives(row: dict[str, Any]) -> list[str]:
         primitives.append("clarify_time")
     if any(family in {"timestamp_value_lookup", "timestamp_nearest_lookup"} for family in phase_task_families(row)):
         primitives.append("timestamp_policy_choice")
-    if has_quality_decision_semantics(row):
+    if uses_quality_decision(row):
         primitives.append("quality_decision_branch")
     if row.get("goal_revision_turns"):
         primitives.append("goal_revision")
@@ -3390,7 +3390,7 @@ def interaction_primitives(row: dict[str, Any]) -> list[str]:
 def normalized_interaction_mode(row: dict[str, Any]) -> str:
     slots = set(row.get("required_clarification_slots", []))
     has_policy = any(family in {"timestamp_value_lookup", "timestamp_nearest_lookup"} for family in phase_task_families(row))
-    has_quality = has_quality_decision_semantics(row)
+    has_quality = uses_quality_decision(row)
     has_rationale = has_rationale_followup(row)
     has_goal_revision = bool(row.get("goal_revision_turns"))
     phase_sequence = [str(phase.get("task_family", "")) for phase in row_phase_examples(row)]
@@ -3430,14 +3430,14 @@ def interaction_necessity(row: dict[str, Any]) -> dict[str, Any]:
     rationale_followup = has_rationale_followup(row)
     evidence_followup = bool(post_turns)
     goal_revision = bool(row.get("goal_revision_turns"))
-    aggregate_reasoning = has_aggregate_window_semantics(row)
-    group_reasoning = has_compare_window_semantics(row) or has_rank_window_semantics(row)
+    aggregate_reasoning = uses_aggregate_window(row)
+    group_reasoning = uses_compare_window(row) or uses_rank_window(row)
     target_resolution = row.get("task_family") in {"point_disambiguation", "timestamp_value_lookup"}
-    quality_decision = has_quality_decision_semantics(row)
+    quality_decision = uses_quality_decision(row)
     timestamp_policy = any(family in {"timestamp_value_lookup", "timestamp_nearest_lookup"} for family in phase_task_families(row))
     needs = {
         "clarification_necessity": bool(row.get("required_clarification_slots")),
-        "policy_branch_necessity": bool(row.get("policy_choice_contract")) or has_quality_decision_semantics(row),
+        "policy_branch_necessity": bool(row.get("policy_choice_contract")) or uses_quality_decision(row),
         "aggregate_reasoning_necessity": aggregate_reasoning,
         "group_reasoning_necessity": group_reasoning,
         "target_resolution_necessity": target_resolution,
@@ -3448,7 +3448,7 @@ def interaction_necessity(row: dict[str, Any]) -> dict[str, Any]:
         "evidence_gated_commitment": evidence_followup,
         "rationale_gated_commitment": rationale_followup,
     }
-    semantic_axes = {
+    operation_axes = {
         "policy_branch_necessity": needs["policy_branch_necessity"],
         "aggregate_reasoning_necessity": needs["aggregate_reasoning_necessity"],
         "group_reasoning_necessity": needs["group_reasoning_necessity"],
@@ -3461,20 +3461,20 @@ def interaction_necessity(row: dict[str, Any]) -> dict[str, Any]:
         "goal_revision_necessity": needs["goal_revision_necessity"],
         "rationale_gated_commitment": needs["rationale_gated_commitment"],
     }
-    needs["accepted_as_agentic"] = any(semantic_axes.values()) and any(interaction_axes.values())
+    needs["accepted_as_agentic"] = any(operation_axes.values()) and any(interaction_axes.values())
     needs["accepted_as_agentic_basis"] = [
-        axis for axis, active in {**semantic_axes, **interaction_axes}.items() if active
+        axis for axis, active in {**operation_axes, **interaction_axes}.items() if active
     ]
     return needs
 
 
 def generic_audit_predicates(static_row: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
     return {
-        "lookup_observation_semantics": has_lookup_observation_semantics(row),
-        "aggregate_window_semantics": has_aggregate_window_semantics(static_row),
-        "compare_window_semantics": has_compare_window_semantics(static_row),
-        "rank_window_semantics": has_rank_window_semantics(static_row),
-        "quality_decision_semantics": has_quality_decision_semantics(row),
+        "lookup_observation_required": uses_lookup_observation(row),
+        "aggregate_window_required": uses_aggregate_window(static_row),
+        "compare_window_required": uses_compare_window(static_row),
+        "rank_window_required": uses_rank_window(static_row),
+        "quality_decision_required": uses_quality_decision(row),
         "timestamp_policy_choice_eligible": eligible_for_timestamp_policy_choice(static_row, row),
         "goal_revision_eligible": eligible_for_goal_revision(static_row),
         "has_required_clarification_slots": bool(row.get("required_clarification_slots")),
@@ -3528,17 +3528,17 @@ def dsl_required_atoms(row: dict[str, Any]) -> list[str]:
         atoms.append("ASK_SITE")
     if "time_reference" in slots:
         atoms.append("ASK_TIME")
-    if "resolve_point" in tool_names and not has_compare_window_semantics(row) and not has_rank_window_semantics(row):
+    if "resolve_point" in tool_names and not uses_compare_window(row) and not uses_rank_window(row):
         atoms.append("RESOLVE_SINGLE_STREAM")
-    if has_compare_window_semantics(row):
+    if uses_compare_window(row):
         atoms.append("RESOLVE_STREAM_PAIR")
-    if has_rank_window_semantics(row):
+    if uses_rank_window(row):
         atoms.append("RESOLVE_RANK_SCOPE")
-    if has_aggregate_window_semantics(row):
+    if uses_aggregate_window(row):
         atoms.append("AGGREGATE_WINDOW")
-    if has_compare_window_semantics(row):
+    if uses_compare_window(row):
         atoms.append("COMPARE_WINDOW")
-    if has_rank_window_semantics(row):
+    if uses_rank_window(row):
         atoms.append("RANK_WINDOW")
     if any(family in {"timestamp_value_lookup", "timestamp_nearest_lookup"} for family in phase_families):
         atoms.append("PROBE_EXACT")
@@ -3548,7 +3548,7 @@ def dsl_required_atoms(row: dict[str, Any]) -> list[str]:
             for phase in phase_examples
         ):
             atoms.append("PROBE_NEAREST")
-    if has_quality_decision_semantics(row):
+    if uses_quality_decision(row):
         atoms.append("DECIDE_QUALITY")
     if row.get("goal_revision_turns"):
         atoms.extend(["ANSWER_INITIAL", "REVISE_SAME_CONTEXT", "ANSWER_FINAL"])
@@ -3708,16 +3708,16 @@ def core_release_filter(row: dict[str, Any]) -> dict[str, Any]:
     reasons: list[str] = []
     if row.get("goal_revision_turns") and row.get("task_family") == "point_disambiguation" and "RS14_point_target_revision_template" in blocked:
         reasons.append("point_target_revision_template_hardness")
-    if row.get("goal_revision_turns") and has_aggregate_window_semantics(row) and "RS8_stateful_single_stream_revision" in blocked:
+    if row.get("goal_revision_turns") and uses_aggregate_window(row) and "RS8_stateful_single_stream_revision" in blocked:
         reasons.append("single_stream_revision_template_hardness")
-    if row.get("goal_revision_turns") and has_compare_window_semantics(row) and "RS9_stateful_pairwise_revision" in blocked:
+    if row.get("goal_revision_turns") and uses_compare_window(row) and "RS9_stateful_pairwise_revision" in blocked:
         reasons.append("pairwise_revision_template_hardness")
-    if row.get("goal_revision_turns") and has_rank_window_semantics(row) and "RS10_rank_template_solver" in blocked:
+    if row.get("goal_revision_turns") and uses_rank_window(row) and "RS10_rank_template_solver" in blocked:
         reasons.append("ranking_revision_template_hardness")
     contract = row.get("policy_choice_contract")
     if contract and contract.get("gold_policy") == "nearest_after_exact_miss" and "RS12_timestamp_policy_template" in blocked:
         reasons.append("timestamp_policy_template_hardness")
-    if has_quality_decision_semantics(row) and "RS11_quality_gate_template_solver" in blocked:
+    if uses_quality_decision(row) and "RS11_quality_gate_template_solver" in blocked:
         reasons.append("quality_gate_template_hardness")
     return {
         "main_release_eligible": bool(reasons),
@@ -4010,7 +4010,7 @@ def build_latent_risk_report(
                     "severity": "medium",
                     "summary": "Explicit-controller error patterns are still heavily protocol- and trace-dominant.",
                     "evidence": {"accomplished_count": accomplished_count, "top_issues": top_issues},
-                    "why_it_matters": "Even when controllers reach many rows, the remaining failures can still concentrate on trace choreography rather than purely semantic contradiction.",
+                    "why_it_matters": "Even when controllers reach many rows, the remaining failures can still concentrate on trace choreography rather than target contradiction.",
                 }
             )
     if clarification_rows > no_clarification_rows * 2:
@@ -4035,11 +4035,11 @@ def build_latent_risk_report(
                 "evidence": {
                     "acceptable_tool_call_set_count_histogram": {str(key): value for key, value in acceptable_set_histogram.items()}
                 },
-                "why_it_matters": "Process scoring can still be brittle for semantically harmless tool-order deviations on those rows.",
+                "why_it_matters": "Process scoring can still be brittle for equivalent tool-order deviations on those rows.",
             }
         )
     return {
-        "report_version": "latent-risk-v3",
+        "report_version": "latent-risk-report",
         "artifact_version": CANONICAL_VERSION,
         "lifting_version": LIFT_VERSION,
         "critical_contract_issues": {
@@ -4193,7 +4193,7 @@ def _build_canonical_agentic_final(
         "groups": collision_index,
     }
     dsl_search_report = {
-        "dsl_version": "capability-subset-dsl-v2",
+        "dsl_version": "capability-subset-dsl",
         "interpreter_order": DSL_ATOMS,
         "search_bound": {name: spec["max_atoms"] for name, spec in DSL_SOLVER_CLASSES.items()},
         "solver_classes": dsl_search_result["solver_classes"],
@@ -4262,7 +4262,7 @@ def _build_canonical_agentic_final(
     manifest["e2e_audit"] = str(out_dir / "e2e_audit.json")
     manifest["deterministic_agentic_lifting"]["bounded_dsl_search"] = {
         "enabled": True,
-        "dsl_version": "capability-subset-dsl-v2",
+        "dsl_version": "capability-subset-dsl",
         "program_form": "capability subset interpreted by a fixed deterministic execution order",
         "solver_class_bounds": {name: spec["max_atoms"] for name, spec in DSL_SOLVER_CLASSES.items()},
     }

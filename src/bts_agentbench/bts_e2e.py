@@ -10,7 +10,7 @@ from typing import Any
 from .clarify_policy import clarify_policy_manifest_fields
 
 
-E2E_TRACK_VERSION = "bts-e2e-v5"
+E2E_TRACK_VERSION = "bts-interaction-contract"
 FOLLOWUP_PROMPT = "Which stream or point did you base that on?"
 FOLLOWUP_PROMPT_MULTI = "Which streams or points did you base that on?"
 RATIONALE_FOLLOWUP_PROMPT = "Why do you think the signal is reliable enough, or not?"
@@ -989,7 +989,7 @@ def build_bts_e2e(
         ),
         "row_level_generation_history": {
             "enabled": True,
-            "history_version": "generation-history-v1",
+            "history_version": "generation-history",
             "stages": [
                 "seed_static_executable_task",
                 "deterministic_e2e_contract_generation",

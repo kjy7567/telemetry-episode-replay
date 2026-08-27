@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-DETERMINISTIC_CLARIFY_POLICY_VERSION = "deterministic-recoverable-slot-v2"
+DETERMINISTIC_CLARIFY_POLICY_VERSION = "deterministic-recoverable-slot"
 DETERMINISTIC_CLARIFY_POLICY_RULE = (
     "Mask exactly one recoverable slot from the initial user request, "
     "require one clarification question before acting, and provide the slot "

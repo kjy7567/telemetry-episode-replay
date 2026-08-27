@@ -296,7 +296,7 @@ def main() -> None:
         "row_count": len(test_rows),
         "split_counts": {"train": 0, "dev": 0, "test": len(test_rows)},
         "experiment_policy": {
-            "name": "test_penalty_repair_v2",
+            "name": "telemetry_contract_alignment",
             "repairs": [
                 "timestamp_rows_add_local_quality_gate",
                 "timestamp_rows_use_strict_timestamp_quality_reporting_commitment",

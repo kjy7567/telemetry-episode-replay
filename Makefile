@@ -1,26 +1,36 @@
-.PHONY: paper-replay paper-replay-fast trace verify bundles
+.PHONY: replay trace manifest verify bundles audit-traces
 
-paper-replay:
+replay:
 	@test -n "$(RAW_DIR)" || (echo "Set RAW_DIR" >&2; exit 2)
-	python scripts/replay_paper_submission.py \
+	python scripts/replay_release.py \
 		--raw-dir "$(RAW_DIR)" \
-		--work-dir "$${WORK_DIR:-data/local-build/paper-replay}" \
-		--runs "$${RUNS:-2}"
-
-paper-replay-fast:
-	@test -n "$(BTS_TOOL_STORE_DB)" || (echo "Set BTS_TOOL_STORE_DB" >&2; exit 2)
-	python scripts/replay_paper_submission.py \
-		--tool-store-db "$(BTS_TOOL_STORE_DB)" \
-		--work-dir "$${WORK_DIR:-data/local-build/paper-replay-fast}" \
-		--runs "$${RUNS:-2}"
+		--work-dir "$${WORK_DIR:-data/local-build/release-replay}" \
+		--raw-runs "$${RUNS:-2}" \
+		--controller-audit
 
 trace:
 	@test -n "$(SCENARIO_ID)" || (echo "Set SCENARIO_ID" >&2; exit 2)
 	python scripts/trace_scenario.py "$(SCENARIO_ID)" $(TRACE_ARGS)
 
+manifest:
+	python scripts/build_release_manifest.py
+
 verify:
+	python scripts/build_release_manifest.py --check
 	python scripts/verify_packaged_release.py
-	python scripts/audit_model_traces.py --check
 
 bundles:
 	python scripts/build_public_bundles.py --output-dir "$${OUTPUT_DIR:-dist}"
+	python scripts/verify_packaged_release.py \
+		--dist-dir "$${OUTPUT_DIR:-dist}" \
+		--require-bundles
+
+audit-traces:
+	@test -n "$(BTS_TOOL_STORE_DB)" || (echo "Set BTS_TOOL_STORE_DB" >&2; exit 2)
+	@test -n "$(XAI4HEAT_TOOL_STORE_DB)" || (echo "Set XAI4HEAT_TOOL_STORE_DB" >&2; exit 2)
+	python scripts/audit_model_traces.py \
+		--bts-benchmark-dir artifacts/bts-agentbench \
+		--bts-tool-store-db "$(BTS_TOOL_STORE_DB)" \
+		--xai4heat-benchmark-dir artifacts/xai4heat-agentbench \
+		--xai4heat-tool-store-db "$(XAI4HEAT_TOOL_STORE_DB)" \
+		--check

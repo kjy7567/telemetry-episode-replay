@@ -1,0 +1,38 @@
+{
+  "artifact_type": "evidence-grounded-multi-turn-agent-episodes",
+  "corpus": "bts",
+  "heldout_site": "BTS_C",
+  "static_task_artifact": "artifacts/bts-static-tasks",
+  "splits": {
+    "train": {
+      "path": "train.jsonl",
+      "rows": 356,
+      "bytes": 26426214,
+      "sha256": "49a2c2df2bd23ec22f3cf86c5a9902d18eb5f354d56b022e524a2c7f1ab1ac2f"
+    },
+    "dev": {
+      "path": "dev.jsonl",
+      "rows": 87,
+      "bytes": 6412432,
+      "sha256": "34ab18515ae522cfa59e859830a5d43b22d7b8b356a99aa1984f1bc2b6f7e20c"
+    },
+    "test": {
+      "path": "test.jsonl",
+      "rows": 89,
+      "bytes": 6544045,
+      "sha256": "91b43d2e424df1146989350a9097a103243b08c1ce1e55f1959bf2913b09dc30"
+    }
+  },
+  "families": {
+    "day_mean_lookup": 60,
+    "point_disambiguation": 60,
+    "quality_gate": 59,
+    "relative_24h_mean_lookup": 60,
+    "timestamp_nearest_lookup": 60,
+    "timestamp_value_lookup": 60,
+    "window_mean_lookup": 53,
+    "window_pairwise_compare": 60,
+    "window_rank": 60
+  },
+  "contract_preflight_issue_count": 0
+}

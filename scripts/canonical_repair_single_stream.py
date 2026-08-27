@@ -220,7 +220,7 @@ def transform_row(row: dict[str, Any], runtime: ToolStoreRuntime) -> dict[str, A
         out = append_quality_for_timestamp_or_point(out, runtime)
         out = append_strict_timestamp_reporting_commitment(out)
     meta = clone(out.get("metadata", {}))
-    meta["test_penalty_v5_intermediate_semantics_only"] = True
+    meta["single_stream_contract_aligned"] = True
     out["metadata"] = meta
     return out
 
@@ -247,13 +247,13 @@ def main() -> None:
     write_json(
         args.output_dir / "manifest.json",
         {
-            "artifact_version": "bts-canonical-seed-test-penalty-experiment-v5",
-            "source_artifact_version": "bts-canonical-seed-test-penalty-experiment",
+            "artifact_version": "single-stream-contract-repair",
+            "source_artifact_version": "bts-canonical-seed",
             "row_count": len(rows),
             "split_counts": {"train": 0, "dev": 0, "test": len(rows)},
             "target_families": sorted(TARGET_FAMILIES),
             "experiment_policy": {
-                "name": "intermediate_semantics_only_v5",
+                "name": "single_stream_contract_alignment",
                 "repairs": [
                     "replace_quality_or_timestamp_preference_with_quality_gate_for_target_families",
                     "keep_evidence_followup_unchanged",
